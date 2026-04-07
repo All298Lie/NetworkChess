@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edf11e5151a4a46488d1287f3824a3f4, type: 3}
+  m_Name: Board4
+  m_EditorClassIdentifier: Assembly-CSharp::BoardThemeData
+  themeName: Board 4
+  boardSprite: {fileID: 21300000, guid: d814841d77f00dc4591ba48be81ec567, type: 3}

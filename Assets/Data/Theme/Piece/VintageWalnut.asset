@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: VintageWalnut
+  m_EditorClassIdentifier: Assembly-CSharp::PieceThemeData
+  themeName: Vintage Walnut
+  whiteSprites:
+    pawn: {fileID: 2454893153782364972, guid: dbe079bb60ab67d4a84707ee7f35f789, type: 3}
+    knight: {fileID: -7284278781835591336, guid: dbe079bb60ab67d4a84707ee7f35f789, type: 3}
+    bishop: {fileID: -1670916735818975938, guid: dbe079bb60ab67d4a84707ee7f35f789, type: 3}
+    rook: {fileID: 3345171117644450418, guid: dbe079bb60ab67d4a84707ee7f35f789, type: 3}
+    queen: {fileID: 6376080482177612213, guid: dbe079bb60ab67d4a84707ee7f35f789, type: 3}
+    king: {fileID: -676085467325407313, guid: dbe079bb60ab67d4a84707ee7f35f789, type: 3}
+  blackSprites:
+    pawn: {fileID: -286217294561345733, guid: 71348e20fbc349f4eaf32ace3b07be69, type: 3}
+    knight: {fileID: 2992556274498044698, guid: 71348e20fbc349f4eaf32ace3b07be69, type: 3}
+    bishop: {fileID: -6469710009584360088, guid: 71348e20fbc349f4eaf32ace3b07be69, type: 3}
+    rook: {fileID: -2564767036621108804, guid: 71348e20fbc349f4eaf32ace3b07be69, type: 3}
+    queen: {fileID: 4350466282024432982, guid: 71348e20fbc349f4eaf32ace3b07be69, type: 3}
+    king: {fileID: -3422593793159610341, guid: 71348e20fbc349f4eaf32ace3b07be69, type: 3}

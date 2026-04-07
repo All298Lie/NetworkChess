@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Piece", menuName = "Chess/Piece")]
+[CreateAssetMenu(fileName = "Piece", menuName = "Chess/Piece", order = 1)]
 public class Piece : ScriptableObject
 {
     [Header("이동/공격 관련")]
@@ -14,8 +14,4 @@ public class Piece : ScriptableObject
 
     [Header("열거형")]
     public PieceType type; // 기물 종류
-    
-    [Header("아트 리소스")]
-    public Sprite blackPieceSprite; // 흑팀용 이미지
-    public Sprite whitePieceSprite; // 백팀용 이미지
 }
