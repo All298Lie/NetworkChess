@@ -2,7 +2,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Piece", menuName = "Chess/Piece", order = 1)]
-public class Piece : ScriptableObject
+public class PieceData : ScriptableObject
 {
     [Header("이동/공격 관련")]
     public List<Vector2Int> moveOffsets; // 이동 오프셋
