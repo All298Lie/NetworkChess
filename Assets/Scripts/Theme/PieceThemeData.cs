@@ -29,7 +29,7 @@ public class PieceThemeData : ScriptableObject
 
         switch (type)
         {
-            case PieceType.Night:
+            case PieceType.Knight:
                 return target.knight;
 
             case PieceType.Bishop:

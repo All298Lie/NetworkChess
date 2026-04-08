@@ -3,7 +3,7 @@ public enum PieceType
 {
     Pawn, // 폰
     Rook, // 룩
-    Night, // 나이트
+    Knight, // 나이트
     Bishop, // 비숍
     Queen, // 퀸
     King // 킹
