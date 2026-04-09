@@ -11,6 +11,8 @@ public class Board : MonoBehaviour
         {
             ThemeManager.OnBoardThemeChanged += RefreshSprite;
         }
+
+        RefreshSprite();
     }
 
     // 객체가 비활성화될 때 작동하는 함수

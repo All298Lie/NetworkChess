@@ -19,6 +19,16 @@ public class BoardManager : MonoBehaviour
 
     Piece[,] board;
 
+    Vector2Int? enPassant;
+
+    public Vector2Int? EnPassant
+    { 
+        get { return enPassant; }
+    }
+
+    Vector2Int whiteKing;
+    Vector2Int blackKing;
+
     // FEN 표기법을 통해 초기 보드판 세팅 상태 설정
     const string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
@@ -40,6 +50,8 @@ public class BoardManager : MonoBehaviour
     void Start()
     {
         this.board = new Piece[8, 8];
+
+        this.enPassant = null;
 
         this.pieceDic = new Dictionary<PieceType, PieceData>();
         foreach (PieceData pieceData in pieceDatas)
@@ -128,6 +140,18 @@ public class BoardManager : MonoBehaviour
         newPiece.Setup(data, isWhite, new Vector2Int(x, y));
 
         this.board[x, y] = newPiece;
+
+        if (type == PieceType.King)
+        {
+            if (isWhite == true)
+            {
+                this.whiteKing = new Vector2Int(x, y);
+            }
+            else
+            {
+                this.blackKing = new Vector2Int(x, y);
+            }
+        }
     }
 
     // 타일을 생성하는 함수
@@ -153,5 +177,24 @@ public class BoardManager : MonoBehaviour
     public Vector3 GetWorldPosition(int x, int y)
     {
         return new Vector3(a1Position.x + (x * tileSize), a1Position.y + (y * tileSize), 0.0f);
+    }
+
+    // 킹 좌표가 갱신되었을 때 작동하는 함수
+    public void UpdateKingPosition(Vector2Int pos, bool isWhite)
+    {
+        if (isWhite == true)
+        {
+            this.whiteKing = pos;
+        }
+        else
+        {
+            this.blackKing = pos;
+        }
+    }
+
+    // 킹의 현재 좌표를 확인하는 함수
+    public Vector2Int GetKingPosition(bool isWhite)
+    {
+        return isWhite ? whiteKing : blackKing;
     }
 }

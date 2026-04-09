@@ -6,10 +6,31 @@ public class Piece : MonoBehaviour
 
     PieceData data;
 
+    public PieceData Data
+    {
+        get { return data; }
+    }
+
     Vector2Int currentPosition;
 
+    public Vector2Int CurrentPosition
+    { 
+        get { return currentPosition; }
+    }
+
     bool isWhite;
+
+    public bool IsWhite
+    { 
+        get { return isWhite; }
+    }
+
     bool hasMoved;
+
+    public bool HasMoved
+    {
+        get { return hasMoved; }
+    }
 
     // 객체가 활성화되면 작동하는 함수
     void OnEnable()
