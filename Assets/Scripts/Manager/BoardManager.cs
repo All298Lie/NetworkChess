@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 public class BoardManager : MonoBehaviour
@@ -18,13 +19,12 @@ public class BoardManager : MonoBehaviour
     Dictionary<PieceType, PieceData> pieceDic;
 
     Piece[,] board;
-
-    Vector2Int? enPassant;
-
-    public Vector2Int? EnPassant
-    { 
-        get { return enPassant; }
+    public Piece[,] Board
+    {
+        get { return board; }
     }
+
+    public Vector2Int? enPassant;
 
     Vector2Int whiteKing;
     Vector2Int blackKing;
@@ -196,5 +196,50 @@ public class BoardManager : MonoBehaviour
     public Vector2Int GetKingPosition(bool isWhite)
     {
         return isWhite ? whiteKing : blackKing;
+    }
+
+    public void ExecuteMoveOnBoard(Piece piece, Vector2Int targetPos)
+    {
+        // 1. 기존 타일에 기물 비우기
+        Vector2Int originPos = piece.CurrentPosition;
+
+        this.board[originPos.x, originPos.y] = null;
+
+        // 2. 도착지에 적 기물이 있으면 파괴
+        Piece targetPiece = board[targetPos.x, targetPos.y];
+        if (targetPiece != null)
+        {
+            Destroy(targetPiece.gameObject);
+        }
+
+        // 3. 배열 데이터 갱신
+        this.board[targetPos.x, targetPos.y] = piece;
+
+        // 4. 기물의 실제 이동 처리
+        piece.MoveTo(targetPos, GetWorldPosition(targetPos.x, targetPos.y));
+
+        // 5. 해당 기물이 킹일 경우, 킹 위치 갱신
+        if (piece.Data.type == PieceType.King)
+        {
+            UpdateKingPosition(targetPos, piece.IsWhite);
+        }
+    }
+
+    public void promotePawn(Piece pawn, PieceType type)
+    {
+        if (this.pieceDic.ContainsKey(type) == true)
+        {
+            pawn.Setup(this.pieceDic[type], pawn.IsWhite, pawn.CurrentPosition);
+
+            pawn.gameObject.name = $"{(pawn.IsWhite ? "White" : "Black")}_{pieceDic[type].name}";
+
+            Debug.Log("폰이 무사히 승급했습니다!");
+        }
+    }
+
+    public void CancelPieceMove(Piece piece)
+    {
+        Vector3 originalWorldPos = GetWorldPosition(piece.CurrentPosition.x, piece.CurrentPosition.y);
+        piece.MoveTo(piece.CurrentPosition, originalWorldPos);
     }
 }

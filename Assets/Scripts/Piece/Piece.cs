@@ -25,12 +25,7 @@ public class Piece : MonoBehaviour
         get { return isWhite; }
     }
 
-    bool hasMoved;
-
-    public bool HasMoved
-    {
-        get { return hasMoved; }
-    }
+    public bool hasMoved;
 
     // 객체가 활성화되면 작동하는 함수
     void OnEnable()
