@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class ThemeManager : MonoBehaviour
 {
-    public static ThemeManager Instance;
+    public static ThemeManager Instance { get; private set; }
 
     [Header("현재 적용된 테마")]
     [SerializeField] PieceThemeData currentPieceTheme;
@@ -32,7 +32,7 @@ public class ThemeManager : MonoBehaviour
         else
         {
             Debug.LogWarning("테마매니저가 이미 존재합니다.");
-            Destroy(this);
+            Destroy(gameObject);
         }
     }
 

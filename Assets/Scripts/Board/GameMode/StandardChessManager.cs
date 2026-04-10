@@ -10,6 +10,8 @@ public class StandardChessManager : GameModeBase
     {
         this.legalMovesCache = new Dictionary<Piece, List<Vector2Int>>();
         this.selectedPiece = null;
+
+        GameManager.Instance.RegisterModeManager(this);
     }
 
     // 게임 시작 시 실행되는 함수

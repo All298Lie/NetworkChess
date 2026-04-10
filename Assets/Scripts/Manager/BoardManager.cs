@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BoardManager : MonoBehaviour
 {
-    public static BoardManager Instance;
+    public static BoardManager Instance { get; private set; }
 
     [Header("게임 에셋")]
     [SerializeField] GameObject piecePrefab;
@@ -42,7 +42,7 @@ public class BoardManager : MonoBehaviour
         else
         {
             Debug.LogWarning("보드 매니저가 이미 존재합니다.");
-            Destroy(this);
+            Destroy(gameObject);
         }
     }
 
