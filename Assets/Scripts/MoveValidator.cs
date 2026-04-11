@@ -186,7 +186,7 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
     }
 
     // 해당 위치가 보드 안인지 확인하는 함수
-    private static bool IsOnBoard(Vector2Int pos)
+    public static bool IsOnBoard(Vector2Int pos)
     {
         if (pos.x < 0 || pos.x > 7) return false;
         if (pos.y < 0 || pos.y > 7) return false;

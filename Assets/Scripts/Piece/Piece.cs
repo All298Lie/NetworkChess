@@ -73,7 +73,6 @@ public class Piece : MonoBehaviour
     public void MoveTo(Vector2Int newArrayPos, Vector3 newWorldPos)
     {
         this.currentPosition = newArrayPos;
-        hasMoved = true;
 
         transform.position = newWorldPos;
     }

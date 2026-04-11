@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class BoardManager : MonoBehaviour
 {
@@ -15,6 +17,11 @@ public class BoardManager : MonoBehaviour
     [Header("보드판 세팅")]
     [SerializeField] Vector2 a1Position;
     [SerializeField] float tileSize;
+
+    [Header("Input 시스템")]
+    private readonly Vector3 boardOffset = new Vector3(-3.5f, -3.5f, 0.0f);
+    private Piece draggingPiece;
+    private Camera mainCamera;
 
     Dictionary<PieceType, PieceData> pieceDic;
 
@@ -44,11 +51,9 @@ public class BoardManager : MonoBehaviour
             Debug.LogWarning("보드 매니저가 이미 존재합니다.");
             Destroy(gameObject);
         }
-    }
 
-    // Update() 함수 실행 전 딱 한 번 실행되는 함수
-    void Start()
-    {
+        mainCamera = Camera.main;
+
         this.board = new Piece[8, 8];
 
         this.enPassant = null;
@@ -65,6 +70,13 @@ public class BoardManager : MonoBehaviour
 
         GenerateTiles();
         InitializeBoard(START_FEN);
+    }
+
+    void Update()
+    {
+        if (GameManager.Instance == null || GameManager.Instance.ActiveMode == null) return;
+
+        HandleInput();
     }
 
     // FEN 기보법을 통해 표기된 문자열을 통해 보드판 세팅 
@@ -173,6 +185,66 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    private void HandleInput()
+    {
+        // 마우스 왼쪽 버튼을 방금 눌렀을 경우
+        if (Mouse.current.leftButton.wasPressedThisFrame == true)
+        {
+            Vector2Int tilePos = GetTilePosFromMouse();
+
+            if (MoveValidator.IsOnBoard(tilePos) == true)
+            {
+                Piece clickedPiece = board[tilePos.x, tilePos.y];
+                if (clickedPiece != null)
+                {
+                    draggingPiece = clickedPiece;
+                }
+            }
+        }
+
+        // 마우스 왼쪽 버튼을 누르고 있는 중일 경우
+        if (this.draggingPiece != null && Mouse.current.leftButton.isPressed == true)
+        {
+            Vector3 mouseWorldPos = GetMouseWorldPosition();
+            this.draggingPiece.transform.position = new Vector3(mouseWorldPos.x, mouseWorldPos.y, -1f);
+        }
+
+        // 마우스 왼쪽 버튼을 방금 뗐을 경우
+        if (this.draggingPiece != null && Mouse.current.leftButton.wasReleasedThisFrame == true)
+        {
+            Vector2Int targetPos = GetTilePosFromMouse();
+
+            if (MoveValidator.IsOnBoard(targetPos) == false)
+            {
+                CancelPieceMove(this.draggingPiece);
+            }
+            else
+            {
+                GameManager.Instance.ActiveMode.HandlePieceMoveRequest(this.draggingPiece, targetPos);
+            }
+
+            this.draggingPiece = null;
+        }
+    }
+
+    private Vector3 GetMouseWorldPosition()
+    {
+        Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
+        mouseScreenPos.z = Mathf.Abs(mainCamera.transform.position.z);
+
+        return mainCamera.ScreenToWorldPoint(mouseScreenPos);
+    }
+
+    private Vector2Int GetTilePosFromMouse()
+    {
+        Vector3 worldPos = GetMouseWorldPosition();
+
+        int x = Mathf.FloorToInt(worldPos.x - boardOffset.x + 0.5f);
+        int y = Mathf.FloorToInt(worldPos.y - boardOffset.y + 0.5f);
+
+        return new Vector2Int(x, y);
+    }
+
     // x, y 값 기준 객체가 존재해야할 월드 포지션을 가져오는 함수
     public Vector3 GetWorldPosition(int x, int y)
     {
@@ -198,6 +270,7 @@ public class BoardManager : MonoBehaviour
         return isWhite ? whiteKing : blackKing;
     }
 
+    // 보드에서 기물을 이동 처리하는 함수
     public void ExecuteMoveOnBoard(Piece piece, Vector2Int targetPos)
     {
         // 1. 기존 타일에 기물 비우기
@@ -225,6 +298,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    // 폰을 프로모션 처리하는 함수
     public void promotePawn(Piece pawn, PieceType type)
     {
         if (this.pieceDic.ContainsKey(type) == true)
@@ -237,6 +311,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    // 기물 이동을 취소 처리하는 함수
     public void CancelPieceMove(Piece piece)
     {
         Vector3 originalWorldPos = GetWorldPosition(piece.CurrentPosition.x, piece.CurrentPosition.y);
