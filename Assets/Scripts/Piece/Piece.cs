@@ -2,29 +2,14 @@
 
 public class Piece : MonoBehaviour
 {
+    [Header("기물 속성")]
     [SerializeField] SpriteRenderer spriteRenderer;
 
-    PieceData data;
+    public PieceData Data { get; private set; }
 
-    public PieceData Data
-    {
-        get { return data; }
-    }
+    public Vector2Int CurrentPosition { get; private set; }
 
-    Vector2Int currentPosition;
-
-    public Vector2Int CurrentPosition
-    { 
-        get { return currentPosition; }
-    }
-
-    bool isWhite;
-
-    public bool IsWhite
-    { 
-        get { return isWhite; }
-    }
-
+    public bool IsWhite { get; private set; }
     public bool hasMoved;
 
     // 객체가 활성화되면 작동하는 함수
@@ -48,22 +33,22 @@ public class Piece : MonoBehaviour
     // 기물 Sprite를 새로고침 하는 함수
     private void RefreshSprite()
     {
-        if (data == null || ThemeManager.Instance == null) return;
+        if (this.Data == null || ThemeManager.Instance == null) return;
 
         PieceThemeData activeTheme = ThemeManager.Instance.CurrentPieceTheme;
 
         if (activeTheme != null)
         {
-            spriteRenderer.sprite = activeTheme.GetSprite(this.data.type, this.isWhite);
+            spriteRenderer.sprite = activeTheme.GetSprite(this.Data.type, this.IsWhite);
         }
     }
 
     // BoardManager가 기물을 스폰할 때 딱 한 번 호출하는 함수
     public void Setup(PieceData data, bool isWhite, Vector2Int startPos)
     {
-        this.data = data;
-        this.isWhite = isWhite;
-        this.currentPosition = startPos;
+        this.Data = data;
+        this.IsWhite = isWhite;
+        this.CurrentPosition = startPos;
         this.hasMoved = false;
 
         RefreshSprite(); // 생성 즉시 테마에 맞는 기물 Sprite 입히기
@@ -72,7 +57,7 @@ public class Piece : MonoBehaviour
     // 기물을 이동할 때 호출되는 함수
     public void MoveTo(Vector2Int newArrayPos, Vector3 newWorldPos)
     {
-        this.currentPosition = newArrayPos;
+        this.CurrentPosition = newArrayPos;
 
         transform.position = newWorldPos;
     }

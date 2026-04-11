@@ -2,7 +2,7 @@
 
 public abstract class GameModeBase : MonoBehaviour
 {
-    protected bool isWhiteTurn;
+    public bool IsWhiteTurn { get; protected set; }
 
     // 게임 시작할때 작동하는 함수
     public virtual void StartGame() { }

@@ -6,18 +6,8 @@ public class ThemeManager : MonoBehaviour
     public static ThemeManager Instance { get; private set; }
 
     [Header("현재 적용된 테마")]
-    [SerializeField] PieceThemeData currentPieceTheme;
-    [SerializeField] BoardThemeData currentBoardTheme;
-
-    public PieceThemeData CurrentPieceTheme
-    {
-        get { return currentPieceTheme; }
-    }
-
-    public BoardThemeData CurrentBoardTheme
-    {
-        get { return currentBoardTheme; }
-    }
+    [field: SerializeField] public PieceThemeData CurrentPieceTheme { get; private set; }
+    [field: SerializeField] public BoardThemeData CurrentBoardTheme { get; private set; }
 
     public static event Action OnPieceThemeChanged;
     public static event Action OnBoardThemeChanged;
@@ -39,7 +29,7 @@ public class ThemeManager : MonoBehaviour
     // 설정 화면에서 기물 테마를 바꿀 때 호출되는 함수
     public void ChangePieceTheme(PieceThemeData newTheme)
     {
-        this.currentPieceTheme = newTheme;
+        this.CurrentPieceTheme = newTheme;
 
         OnPieceThemeChanged?.Invoke();
     }
@@ -47,7 +37,7 @@ public class ThemeManager : MonoBehaviour
     // 설정 화면에서 보드 테마를 바꿀 때 호출되는 함수
     public void ChangeBoardTheme(BoardThemeData newTheme)
     {
-        this.currentBoardTheme = newTheme;
+        this.CurrentBoardTheme = newTheme;
 
         OnBoardThemeChanged?.Invoke();
     }

@@ -458,8 +458,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1725da2c1f16f07459d3bffce77183d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThemeManager
-  currentPieceTheme: {fileID: 11400000, guid: 41d588e75c1222a4196d37b673818370, type: 2}
-  currentBoardTheme: {fileID: 11400000, guid: a64db549490e3f1448f149718dac9de6, type: 2}
+  <CurrentPieceTheme>k__BackingField: {fileID: 11400000, guid: 41d588e75c1222a4196d37b673818370, type: 2}
+  <CurrentBoardTheme>k__BackingField: {fileID: 11400000, guid: a64db549490e3f1448f149718dac9de6, type: 2}
 --- !u!4 &1588176861
 Transform:
   m_ObjectHideFlags: 0
@@ -516,6 +516,9 @@ MonoBehaviour:
   tilePrefab: {fileID: 1892945322073482518, guid: 15eb88e4db4d8ef42ac6217174e63ec6, type: 3}
   a1Position: {x: -3.5, y: -3.5}
   tileSize: 1
+  defaultCursor: {fileID: 2800000, guid: 1d0854c36aeee294092d2642acd17247, type: 3}
+  hoverCursor: {fileID: 2800000, guid: 4e50db20eb510dd4c82c3c06b62b96ca, type: 3}
+  grabCursor: {fileID: 2800000, guid: a61948c36fcdc344ca1dddc35701e682, type: 3}
 --- !u!4 &2103080531
 Transform:
   m_ObjectHideFlags: 0

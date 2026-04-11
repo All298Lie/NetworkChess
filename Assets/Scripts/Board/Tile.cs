@@ -14,10 +14,4 @@ public class Tile : MonoBehaviour
         this.arrayPosition = new Vector2Int(x, y);
         gameObject.name = $"Tile_{x}_{y}";
     }
-
-    // 마우스로 클릭 시 호출하는 함수
-    private void OnMouseDown()
-    {
-        // TODO : BoardManager에게 클릭처리 전달
-    }
 }

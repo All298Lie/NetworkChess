@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class StandardChessManager : GameModeBase
@@ -25,7 +24,7 @@ public class StandardChessManager : GameModeBase
     // 게임 시작 시 실행되는 함수
     public override void StartGame()
     {
-        this.isWhiteTurn = true;
+        this.IsWhiteTurn = true;
         BoardManager.Instance.enPassant = null;
         CalculateLegalMovesForTurn();
     }
@@ -34,7 +33,7 @@ public class StandardChessManager : GameModeBase
     public override void HandlePieceMoveRequest(Piece piece, Vector2Int targetPos)
     {
         // 잘못된 기물 이동 방식일 경우, 취소 후 리턴
-        if (piece.IsWhite != this.isWhiteTurn || this.legalMovesCache.ContainsKey(piece) == false || this.legalMovesCache[piece].Contains(targetPos) == false)
+        if (piece.IsWhite != this.IsWhiteTurn || this.legalMovesCache.ContainsKey(piece) == false || this.legalMovesCache[piece].Contains(targetPos) == false)
         {
             BoardManager.Instance.CancelPieceMove(piece);
             this.selectedPiece = null;
@@ -71,12 +70,12 @@ public class StandardChessManager : GameModeBase
         // 스테일메이트 또는 체크메이트 상황일 경우
         if (this.legalMovesCache.Count == 0)
         {
-            Vector2Int myKingPos = BoardManager.Instance.GetKingPosition(isWhiteTurn);
-            bool inCheck = MoveValidator.IsKingInCheck(BoardManager.Instance.Board, isWhiteTurn, myKingPos);
+            Vector2Int myKingPos = BoardManager.Instance.GetKingPosition(this.IsWhiteTurn);
+            bool inCheck = MoveValidator.IsKingInCheck(BoardManager.Instance.Board, this.IsWhiteTurn, myKingPos);
 
             if (inCheck == true)
             {
-                Debug.Log($"체크메이트! {(this.isWhiteTurn ? "흑" : "백")} 승리 !");
+                Debug.Log($"체크메이트! {(this.IsWhiteTurn ? "흑" : "백")} 승리 !");
             }
             else
             {
@@ -107,7 +106,7 @@ public class StandardChessManager : GameModeBase
             for (int y = 0; y < 8; y++)
             {
                 Piece piece = BoardManager.Instance.Board[x, y];
-                if (piece != null && piece.IsWhite == this.isWhiteTurn)
+                if (piece != null && piece.IsWhite == this.IsWhiteTurn)
                 {
                     List<Vector2Int> moves = MoveValidator.GetLegalMoves(BoardManager.Instance.Board, piece);
 
@@ -120,7 +119,7 @@ public class StandardChessManager : GameModeBase
         }
 
         // 현재까지의 게임 진행 상황을 FEN 형식으로 생성해 저장
-        this.currentTurnFEN = FENUtility.GeneratingStateString(BoardManager.Instance.Board, isWhiteTurn);
+        this.currentTurnFEN = FENUtility.GeneratingStateString(BoardManager.Instance.Board, IsWhiteTurn);
 
         if (this.stateHistory.ContainsKey(this.currentTurnFEN) == true) // 이미 존재하는 FEN 형식일 경우
         {
@@ -172,7 +171,7 @@ public class StandardChessManager : GameModeBase
         // 4. 턴 넘기기
         piece.hasMoved = true;
         selectedPiece = null;
-        isWhiteTurn = !isWhiteTurn;
+        IsWhiteTurn = !IsWhiteTurn;
 
         CalculateLegalMovesForTurn();
     }
@@ -181,7 +180,6 @@ public class StandardChessManager : GameModeBase
     private void HandleCastling(Piece king, bool isKingSide)
     {
         int y = king.CurrentPosition.y;
-        int kingX = king.CurrentPosition.x;
 
         // 룩의 출발점, 도착점 x값 찾기
         int oldRookX = isKingSide ? 7 : 0;

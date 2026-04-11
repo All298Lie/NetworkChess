@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -14,30 +13,37 @@ public class BoardManager : MonoBehaviour
     [SerializeField] GameObject boardPrefab;
     [SerializeField] GameObject tilePrefab;
 
+    Dictionary<PieceType, PieceData> pieceDic;
+
     [Header("보드판 세팅")]
     [SerializeField] Vector2 a1Position;
     [SerializeField] float tileSize;
 
-    [Header("Input 시스템")]
-    private readonly Vector3 boardOffset = new Vector3(-3.5f, -3.5f, 0.0f);
-    private Piece draggingPiece;
-    private Camera mainCamera;
-
-    Dictionary<PieceType, PieceData> pieceDic;
-
-    Piece[,] board;
-    public Piece[,] Board
-    {
-        get { return board; }
-    }
+    public Piece[,] Board { get; private set; }
 
     public Vector2Int? enPassant;
-
     Vector2Int whiteKing;
     Vector2Int blackKing;
 
     // FEN 표기법을 통해 초기 보드판 세팅 상태 설정
     const string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+    [Header("Input 시스템")]
+    private readonly Vector3 boardOffset = new Vector3(-3.5f, -3.5f, 0.0f);
+
+    InputState inputState;
+
+    private Piece selectedPiece;
+    private Vector2Int dragStartTile;
+
+    private Camera mainCamera;
+
+    [Header("커서 설정")]
+    [SerializeField] Texture2D defaultCursor; // 기본 동작
+    [SerializeField] Texture2D hoverCursor; // 선택 가능 동작
+    [SerializeField] Texture2D grabCursor; // 잡기 동작
+
+    private readonly Vector2Int hotSpot = new Vector2Int(8, 8);
 
     // 오브젝트가 생성된 즉시 호출되는 함수
     void Awake()
@@ -54,7 +60,9 @@ public class BoardManager : MonoBehaviour
 
         mainCamera = Camera.main;
 
-        this.board = new Piece[8, 8];
+        inputState = InputState.None;
+
+        this.Board = new Piece[8, 8];
 
         this.enPassant = null;
 
@@ -77,6 +85,7 @@ public class BoardManager : MonoBehaviour
         if (GameManager.Instance == null || GameManager.Instance.ActiveMode == null) return;
 
         HandleInput();
+        UpdateCursorState();
     }
 
     // FEN 기보법을 통해 표기된 문자열을 통해 보드판 세팅 
@@ -151,7 +160,7 @@ public class BoardManager : MonoBehaviour
 
         newPiece.Setup(data, isWhite, new Vector2Int(x, y));
 
-        this.board[x, y] = newPiece;
+        this.Board[x, y] = newPiece;
 
         if (type == PieceType.King)
         {
@@ -185,62 +194,128 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private void HandleInput()
+    private void UpdateCursorState()
     {
-        // 마우스 왼쪽 버튼을 방금 눌렀을 경우
-        if (Mouse.current.leftButton.wasPressedThisFrame == true)
+        if (this.inputState == InputState.Selected || Mouse.current.leftButton.isPressed == true)
         {
-            Vector2Int tilePos = GetTilePosFromMouse();
+            Cursor.SetCursor(grabCursor, hotSpot, CursorMode.Auto);
 
-            if (MoveValidator.IsOnBoard(tilePos) == true)
+            return;
+        }
+
+        Vector2Int tilePos = GetTilePosFromMouse();
+
+        if (MoveValidator.IsOnBoard(tilePos) == true)
+        {
+            Piece hoveredPiece = Board[tilePos.x, tilePos.y];
+
+            if (hoveredPiece != null && hoveredPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
             {
-                Piece clickedPiece = board[tilePos.x, tilePos.y];
-                if (clickedPiece != null)
-                {
-                    draggingPiece = clickedPiece;
-                }
+                Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.Auto);
+
+                return;
             }
         }
 
-        // 마우스 왼쪽 버튼을 누르고 있는 중일 경우
-        if (this.draggingPiece != null && Mouse.current.leftButton.isPressed == true)
-        {
-            Vector3 mouseWorldPos = GetMouseWorldPosition();
-            this.draggingPiece.transform.position = new Vector3(mouseWorldPos.x, mouseWorldPos.y, -1f);
-        }
+        Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.Auto);
+    }
 
-        // 마우스 왼쪽 버튼을 방금 뗐을 경우
-        if (this.draggingPiece != null && Mouse.current.leftButton.wasReleasedThisFrame == true)
-        {
-            Vector2Int targetPos = GetTilePosFromMouse();
+    private void HandleInput()
+    {
+        Vector2Int tilePos = GetTilePosFromMouse();
 
-            if (MoveValidator.IsOnBoard(targetPos) == false)
+        // 1. 마우스 클릭을 한 상태
+        if (Mouse.current.leftButton.wasPressedThisFrame == true)
+        {
+            if (MoveValidator.IsOnBoard(tilePos) == true)
             {
-                CancelPieceMove(this.draggingPiece);
+                Piece clickedPiece = this.Board[tilePos.x, tilePos.y];
+
+                if (clickedPiece != null && clickedPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
+                {
+                    this.selectedPiece = clickedPiece;
+                    this.dragStartTile = tilePos;
+                    this.inputState = InputState.Dragging;
+
+                    //  TODO : 이동 가능 경로 하이라이트 켜기
+                }
+                else if (this.inputState == InputState.Selected)
+                {
+                    TryMovePiece(this.selectedPiece, tilePos);
+                }
+                else
+                {
+                    ClearSelection();
+                }
             }
             else
             {
-                GameManager.Instance.ActiveMode.HandlePieceMoveRequest(this.draggingPiece, targetPos);
+                ClearSelection();
             }
-
-            this.draggingPiece = null;
         }
+
+        // 2. 마우스 클릭을 누르고 있는 상태
+        if (inputState == InputState.Dragging && Mouse.current.leftButton.isPressed == true)
+        {
+            Vector3 mouseWorldPos = GetMouseWorldPosition();
+
+            this.selectedPiece.transform.position = new Vector3(mouseWorldPos.x, mouseWorldPos.y, -1f);
+        }
+
+        // 3. 마우스 클릭을 뗀 상태
+        if (Mouse.current.leftButton.wasReleasedThisFrame == true && inputState == InputState.Dragging)
+        {
+            if (tilePos == this.dragStartTile)
+            {
+                this.inputState = InputState.Selected;
+
+                CancelPieceMove(this.selectedPiece);
+            }
+            else
+            {
+                TryMovePiece(this.selectedPiece, tilePos);
+            }
+        }
+    }
+
+    // 기물 이동을 시도하는 함수
+    private void TryMovePiece(Piece piece, Vector2Int targetPos)
+    {
+        if (MoveValidator.IsOnBoard(targetPos) == true)
+        {
+            GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, targetPos);
+        }
+        else
+        {
+            CancelPieceMove(piece);
+        }
+
+        ClearSelection();
+    }
+
+    // 기물 이동 가능 타일 표현 및 선택 판정 기물을 초기화하는 함수
+    private void ClearSelection()
+    {
+        this.selectedPiece = null;
+        this.inputState = InputState.None;
+
+        // TODO : 켜져있는 타일 하이라이트 끄기
     }
 
     private Vector3 GetMouseWorldPosition()
     {
         Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
-        mouseScreenPos.z = Mathf.Abs(mainCamera.transform.position.z);
+        mouseScreenPos.z = Mathf.Abs(this.mainCamera.transform.position.z);
 
-        return mainCamera.ScreenToWorldPoint(mouseScreenPos);
+        return this.mainCamera.ScreenToWorldPoint(mouseScreenPos);
     }
 
     private Vector2Int GetTilePosFromMouse()
     {
         Vector3 worldPos = GetMouseWorldPosition();
 
-        int x = Mathf.FloorToInt(worldPos.x - boardOffset.x + 0.5f);
-        int y = Mathf.FloorToInt(worldPos.y - boardOffset.y + 0.5f);
+        int x = Mathf.FloorToInt(worldPos.x - this.boardOffset.x + 0.5f);
+        int y = Mathf.FloorToInt(worldPos.y - this.boardOffset.y + 0.5f);
 
         return new Vector2Int(x, y);
     }
@@ -248,7 +323,7 @@ public class BoardManager : MonoBehaviour
     // x, y 값 기준 객체가 존재해야할 월드 포지션을 가져오는 함수
     public Vector3 GetWorldPosition(int x, int y)
     {
-        return new Vector3(a1Position.x + (x * tileSize), a1Position.y + (y * tileSize), 0.0f);
+        return new Vector3(this.a1Position.x + (x * this.tileSize), this.a1Position.y + (y * this.tileSize), 0.0f);
     }
 
     // 킹 좌표가 갱신되었을 때 작동하는 함수
@@ -267,7 +342,7 @@ public class BoardManager : MonoBehaviour
     // 킹의 현재 좌표를 확인하는 함수
     public Vector2Int GetKingPosition(bool isWhite)
     {
-        return isWhite ? whiteKing : blackKing;
+        return isWhite ? this.whiteKing : this.blackKing;
     }
 
     // 보드에서 기물을 이동 처리하는 함수
@@ -276,17 +351,17 @@ public class BoardManager : MonoBehaviour
         // 1. 기존 타일에 기물 비우기
         Vector2Int originPos = piece.CurrentPosition;
 
-        this.board[originPos.x, originPos.y] = null;
+        this.Board[originPos.x, originPos.y] = null;
 
         // 2. 도착지에 적 기물이 있으면 파괴
-        Piece targetPiece = board[targetPos.x, targetPos.y];
+        Piece targetPiece = this.Board[targetPos.x, targetPos.y];
         if (targetPiece != null)
         {
             Destroy(targetPiece.gameObject);
         }
 
         // 3. 배열 데이터 갱신
-        this.board[targetPos.x, targetPos.y] = piece;
+        this.Board[targetPos.x, targetPos.y] = piece;
 
         // 4. 기물의 실제 이동 처리
         piece.MoveTo(targetPos, GetWorldPosition(targetPos.x, targetPos.y));
@@ -305,7 +380,7 @@ public class BoardManager : MonoBehaviour
         {
             pawn.Setup(this.pieceDic[type], pawn.IsWhite, pawn.CurrentPosition);
 
-            pawn.gameObject.name = $"{(pawn.IsWhite ? "White" : "Black")}_{pieceDic[type].name}";
+            pawn.gameObject.name = $"{(pawn.IsWhite ? "White" : "Black")}_{this.pieceDic[type].name}";
 
             Debug.Log("폰이 무사히 승급했습니다!");
         }

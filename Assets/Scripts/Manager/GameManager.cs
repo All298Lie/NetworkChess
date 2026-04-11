@@ -4,12 +4,12 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    public enum GameMode { Standard, ForOfWar, FischerRoandom }
-
     [Header("게임 세팅")]
     [SerializeField] GameMode currentMode = GameMode.Standard;
 
     public GameModeBase ActiveMode { get; private set; }
+
+    public bool IsGameEnd { get; private set; }
 
     void Awake()
     {
