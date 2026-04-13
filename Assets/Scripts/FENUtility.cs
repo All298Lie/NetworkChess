@@ -47,9 +47,9 @@ public static class FENUtility
         fen.Append(castling).Append(" ");
 
         // 4. 앙파상 가능한 칸
-        if (BoardManager.Instance.enPassant.HasValue == true)
+        if (BoardManager.Instance.EnPassant.HasValue == true)
         {
-            Vector2Int ep = BoardManager.Instance.enPassant.Value;
+            Vector2Int ep = BoardManager.Instance.EnPassant.Value;
 
             char file = (char)(ep.x + 'a'); // 0~7 -> a->h
             int rank = ep.y + 1; // 0~7 -> 1~8
@@ -111,7 +111,7 @@ public static class FENUtility
         Piece king = BoardManager.Instance.Board[kingPos.x, kingPos.y];
 
         // 1. 킹이 존재하지 않거나 킹이 움직였을 경우
-        if (king == null || king.hasMoved == true) return "";
+        if (king == null || king.HasMoved == true) return "";
 
         // 2. 룩 위치 확인
         Piece targetRook = null;
@@ -141,7 +141,7 @@ public static class FENUtility
         }
 
         // 3. 룩이 움직이지 않았을 경우 캐슬링 위치 및 진영에 따라 문자 반환
-        if (targetRook != null && targetRook.hasMoved == false)
+        if (targetRook != null && targetRook.HasMoved == false)
         {
             string symbol = isKingSide ? "K" : "Q";
 

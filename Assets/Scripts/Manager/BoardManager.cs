@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,35 +7,37 @@ public class BoardManager : MonoBehaviour
     public static BoardManager Instance { get; private set; }
 
     [Header("게임 에셋")]
-    [SerializeField] GameObject piecePrefab;
-    [SerializeField] PieceData[] pieceDatas;
-    [SerializeField] GameObject boardPrefab;
-    [SerializeField] GameObject tilePrefab;
+    [SerializeField] private GameObject piecePrefab;
+    [SerializeField] private PieceData[] pieceDatas;
+    [SerializeField] private GameObject boardPrefab;
+    [SerializeField] private GameObject tilePrefab;
 
-    Dictionary<PieceType, PieceData> pieceDic;
+    private Dictionary<PieceType, PieceData> pieceDic;
 
     [Header("보드판 세팅")]
-    [SerializeField] Vector2 a1Position;
-    [SerializeField] float tileSize;
+    [SerializeField] private Vector2 a1Position;
+    [SerializeField] private float tileSize;
 
     public Piece[,] Board { get; private set; }
+    private Tile[,] tiles;
+    private List<Vector2Int> highlightedTiles;
 
-    public Vector2Int? enPassant;
-    Vector2Int whiteKing;
-    Vector2Int blackKing;
+    public Vector2Int? EnPassant;
+    private Vector2Int whiteKing;
+    private Vector2Int blackKing;
 
     // FEN 표기법을 통해 초기 보드판 세팅 상태 설정
-    const string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    private const string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
     [Header("Input 시스템")]
     private readonly Vector3 boardOffset = new Vector3(-3.5f, -3.5f, 0.0f);
-
-    InputState inputState;
+    private Vector2Int dragStartTile;
+    private InputState inputState;
 
     private Piece selectedPiece;
-    private Vector2Int dragStartTile;
-
     private Camera mainCamera;
+
+    private bool isSelected;
 
     [Header("커서 설정")]
     [SerializeField] Texture2D defaultCursor; // 기본 동작
@@ -58,13 +59,14 @@ public class BoardManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        mainCamera = Camera.main;
+        this.mainCamera = Camera.main;
 
-        inputState = InputState.None;
+        this.inputState = InputState.None;
 
         this.Board = new Piece[8, 8];
+        this.tiles = new Tile[8, 8];
 
-        this.enPassant = null;
+        this.EnPassant = null;
 
         this.pieceDic = new Dictionary<PieceType, PieceData>();
         foreach (PieceData pieceData in pieceDatas)
@@ -75,6 +77,10 @@ public class BoardManager : MonoBehaviour
                 this.pieceDic.Add(type, pieceData);
             }
         }
+
+        highlightedTiles = new List<Vector2Int>();
+
+        this.isSelected = false;
 
         GenerateTiles();
         InitializeBoard(START_FEN);
@@ -190,41 +196,62 @@ public class BoardManager : MonoBehaviour
                 
                 Tile tile = tileObject.GetComponent<Tile>();
                 tile.Setup(x, y);
+
+                this.tiles[x, y] = tile;
             }
         }
     }
 
+    // 마우스 커서 상태를 업데이트하는 함수
     private void UpdateCursorState()
     {
-        if (this.inputState == InputState.Selected || Mouse.current.leftButton.isPressed == true)
+        // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
+        if (this.inputState == InputState.Dragging)
         {
-            Cursor.SetCursor(grabCursor, hotSpot, CursorMode.Auto);
+            Cursor.SetCursor(grabCursor, hotSpot, CursorMode.ForceSoftware);
 
             return;
         }
 
         Vector2Int tilePos = GetTilePosFromMouse();
 
+        // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
         if (MoveValidator.IsOnBoard(tilePos) == true)
         {
             Piece hoveredPiece = Board[tilePos.x, tilePos.y];
 
             if (hoveredPiece != null && hoveredPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
             {
-                Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.Auto);
+                Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.ForceSoftware);
 
                 return;
             }
         }
 
-        Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.Auto);
+        // 3. 평상 시 상태일 경우 (기본 커서)
+        Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.ForceSoftware);
     }
 
+    // 조작과 관련된 함수
     private void HandleInput()
     {
+        if (PromotionUI.Instance != null && PromotionUI.Instance.IsActive() == true) return;
+
         Vector2Int tilePos = GetTilePosFromMouse();
 
-        // 1. 마우스 클릭을 한 상태
+        // 1. 기물 선택, 드래그 상태에서 마우스 우클릭을 한 상태
+        if (Mouse.current.rightButton.wasPressedThisFrame == true)
+        {
+            if (this.inputState == InputState.Dragging || this.inputState == InputState.Selected)
+            {
+                CancelPieceMove(this.selectedPiece);
+                ClearSelection();
+
+                return;
+            }
+        }
+
+        // 2. 마우스 좌클릭을 한 상태
         if (Mouse.current.leftButton.wasPressedThisFrame == true)
         {
             if (MoveValidator.IsOnBoard(tilePos) == true)
@@ -233,11 +260,24 @@ public class BoardManager : MonoBehaviour
 
                 if (clickedPiece != null && clickedPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
                 {
+                    if (this.selectedPiece != null && this.selectedPiece != clickedPiece)
+                    {
+                        ClearSelection();
+                    }
+
                     this.selectedPiece = clickedPiece;
                     this.dragStartTile = tilePos;
                     this.inputState = InputState.Dragging;
 
-                    //  TODO : 이동 가능 경로 하이라이트 켜기
+                    this.selectedPiece.GrabPiece(true);
+
+                    // 이동할 수 있는 기물일 경우, 이동 가능한 타일에 하이라이트 표시
+                    if (GameManager.Instance.ActiveMode.LegalMovesCache.ContainsKey(this.selectedPiece) == true)
+                    {
+                        List<Vector2Int> legalMoves = GameManager.Instance.ActiveMode.LegalMovesCache[this.selectedPiece];
+
+                        ShowHighLights(this.selectedPiece, legalMoves);
+                    }
                 }
                 else if (this.inputState == InputState.Selected)
                 {
@@ -254,22 +294,31 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // 2. 마우스 클릭을 누르고 있는 상태
-        if (inputState == InputState.Dragging && Mouse.current.leftButton.isPressed == true)
+        // 3. 마우스 좌클릭을 누르고 있는 상태
+        if (this.inputState == InputState.Dragging && Mouse.current.leftButton.isPressed == true)
         {
             Vector3 mouseWorldPos = GetMouseWorldPosition();
 
             this.selectedPiece.transform.position = new Vector3(mouseWorldPos.x, mouseWorldPos.y, -1f);
         }
 
-        // 3. 마우스 클릭을 뗀 상태
+        // 4. 마우스 좌클릭을 뗀 상태
         if (Mouse.current.leftButton.wasReleasedThisFrame == true && inputState == InputState.Dragging)
         {
             if (tilePos == this.dragStartTile)
             {
-                this.inputState = InputState.Selected;
-
                 CancelPieceMove(this.selectedPiece);
+
+                if (this.isSelected == true) // 기존 기물을 두번 들었다 놨을 경우, 선택 취소
+                {
+                    ClearSelection();
+                }
+                else // 처음 기물을 들었다 놨을 경우, 선택 모드
+                {
+                    this.isSelected = true;
+
+                    this.inputState = InputState.Selected;
+                }
             }
             else
             {
@@ -296,10 +345,20 @@ public class BoardManager : MonoBehaviour
     // 기물 이동 가능 타일 표현 및 선택 판정 기물을 초기화하는 함수
     private void ClearSelection()
     {
+        if (this.selectedPiece != null)
+        {
+            // 1. 기물 이동이 가능했을 경우, 해당 타일에 켜져있던 하이라이트 표시 끄기
+            if (highlightedTiles.Count > 0)
+            {
+                HideHighlights();
+            }
+
+            this.selectedPiece.GrabPiece(false);
+        }
+
+        this.isSelected = false;
         this.selectedPiece = null;
         this.inputState = InputState.None;
-
-        // TODO : 켜져있는 타일 하이라이트 끄기
     }
 
     private Vector3 GetMouseWorldPosition()
@@ -318,6 +377,45 @@ public class BoardManager : MonoBehaviour
         int y = Mathf.FloorToInt(worldPos.y - this.boardOffset.y + 0.5f);
 
         return new Vector2Int(x, y);
+    }
+
+    // 해당 타일의 하이라이트를 설정하는 함수
+    private void SetTileHighLight(Vector2Int tilePos, bool show, bool isCapture)
+    {
+        if (MoveValidator.IsOnBoard(tilePos) == false) return;
+
+        Tile tile = tiles[tilePos.x, tilePos.y];
+
+        tile.SetHighlight(show, isCapture);
+    }
+    
+    // 타일 부분에 하이라이트를 키는 함수
+    private void ShowHighLights(Piece piece, List<Vector2Int> legalMoves)
+    {
+        foreach (Vector2Int pos in legalMoves)
+        {
+            bool isCapture = (Board[pos.x, pos.y] != null);
+
+            if (EnPassant.HasValue && EnPassant.Value == pos && piece.Data.type == PieceType.Pawn)
+            {
+                isCapture = true;
+            }
+
+            SetTileHighLight(pos, true, isCapture);
+
+            highlightedTiles.Add(pos);
+        }
+    }
+
+    // 타일 부분에 하이라이트를 숨기는 함수
+    private void HideHighlights()
+    {
+        foreach (Vector2Int pos in highlightedTiles)
+        {
+            SetTileHighLight(pos, false, false);
+        }
+
+        highlightedTiles.Clear();
     }
 
     // x, y 값 기준 객체가 존재해야할 월드 포지션을 가져오는 함수
@@ -357,7 +455,7 @@ public class BoardManager : MonoBehaviour
         Piece targetPiece = this.Board[targetPos.x, targetPos.y];
         if (targetPiece != null)
         {
-            Destroy(targetPiece.gameObject);
+            targetPiece.gameObject.SetActive(false);
         }
 
         // 3. 배열 데이터 갱신
@@ -374,7 +472,7 @@ public class BoardManager : MonoBehaviour
     }
 
     // 폰을 프로모션 처리하는 함수
-    public void promotePawn(Piece pawn, PieceType type)
+    public void PromotePawn(Piece pawn, PieceType type)
     {
         if (this.pieceDic.ContainsKey(type) == true)
         {

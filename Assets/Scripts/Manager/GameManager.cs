@@ -5,7 +5,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("게임 세팅")]
-    [SerializeField] GameMode currentMode = GameMode.Standard;
+    [SerializeField] private GameMode currentMode = GameMode.Standard;
 
     public GameModeBase ActiveMode { get; private set; }
 

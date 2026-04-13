@@ -3,14 +3,14 @@
 public class Piece : MonoBehaviour
 {
     [Header("기물 속성")]
-    [SerializeField] SpriteRenderer spriteRenderer;
+    [SerializeField] private SpriteRenderer spriteRenderer;
 
     public PieceData Data { get; private set; }
 
     public Vector2Int CurrentPosition { get; private set; }
 
     public bool IsWhite { get; private set; }
-    public bool hasMoved;
+    public bool HasMoved;
 
     // 객체가 활성화되면 작동하는 함수
     void OnEnable()
@@ -49,7 +49,7 @@ public class Piece : MonoBehaviour
         this.Data = data;
         this.IsWhite = isWhite;
         this.CurrentPosition = startPos;
-        this.hasMoved = false;
+        this.HasMoved = false;
 
         RefreshSprite(); // 생성 즉시 테마에 맞는 기물 Sprite 입히기
     }
@@ -60,5 +60,17 @@ public class Piece : MonoBehaviour
         this.CurrentPosition = newArrayPos;
 
         transform.position = newWorldPos;
+    }
+
+    public void GrabPiece(bool isGrab)
+    {
+        if (isGrab == true)
+        {
+            spriteRenderer.sortingOrder = 3;
+        }
+        else
+        {
+            spriteRenderer.sortingOrder = 0;
+        }
     }
 }

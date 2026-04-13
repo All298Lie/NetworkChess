@@ -21,7 +21,7 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
         }
 
         // 3. 기물이 킹일 경우, 캐슬링 이동도 추가
-        if (piece.Data.type == PieceType.King && piece.hasMoved == false)
+        if (piece.Data.type == PieceType.King && piece.HasMoved == false)
         {
             moves.AddRange(GetCastlingMoves(board, piece));
         }
@@ -77,7 +77,7 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
         List<Vector2Int> pieceMoveOffsets = new List<Vector2Int>();
         pieceMoveOffsets.AddRange(piece.Data.moveOffsets);
 
-        if (piece.Data.type == PieceType.Pawn && piece.hasMoved == false) // 폰이 2칸 이동이 가능한지 확인
+        if (piece.Data.type == PieceType.Pawn && piece.HasMoved == false) // 폰이 2칸 이동이 가능한지 확인
         {
             Vector2Int target = pos + Vector2Int.up * (piece.IsWhite ? 1 : -1); // 진영에 따라 이동하는 방향이 다름
 
@@ -114,7 +114,7 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
             Piece targetPiece = board[target.x, target.y];
             if (targetPiece == null)
             {
-                if (BoardManager.Instance.enPassant != target) continue;
+                if (BoardManager.Instance.EnPassant != target) continue;
             }
             else
             {
@@ -264,7 +264,7 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
             Piece piece = board[x, y];
             if (piece != null)
             {
-                if (piece.Data.type == PieceType.Rook && piece.IsWhite == king.IsWhite && piece.hasMoved == false)
+                if (piece.Data.type == PieceType.Rook && piece.IsWhite == king.IsWhite && piece.HasMoved == false)
                 {
                     if (x < king.CurrentPosition.x) leftRookX = x; // 킹보다 왼쪽에 있으면 퀸사이드 룩
                     else if (x > king.CurrentPosition.x) rightRookX = x; // 킹보다 오른쪽에 있으면 킹사이드 룩

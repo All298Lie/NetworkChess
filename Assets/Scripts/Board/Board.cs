@@ -2,7 +2,7 @@
 
 public class Board : MonoBehaviour
 {
-    [SerializeField] SpriteRenderer spriteRenderer;
+    [SerializeField] private SpriteRenderer spriteRenderer;
 
     // 객체가 활성화될 때 작동하는 함수
     void OnEnable()

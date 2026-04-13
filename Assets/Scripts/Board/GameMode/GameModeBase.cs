@@ -1,7 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public abstract class GameModeBase : MonoBehaviour
 {
+    public Dictionary<Piece, List<Vector2Int>> LegalMovesCache { get; protected set; }
+
     public bool IsWhiteTurn { get; protected set; }
 
     // 게임 시작할때 작동하는 함수
