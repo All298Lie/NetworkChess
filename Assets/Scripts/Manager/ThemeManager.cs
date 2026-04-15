@@ -18,6 +18,7 @@ public class ThemeManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
         }
         else
         {
