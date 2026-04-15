@@ -5,8 +5,13 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("게임 세팅")]
+    [SerializeField] private Transform canvas;
     [SerializeField] private GameMode currentMode = GameMode.Standard;
 
+    [Header("프리팹")]
+    [SerializeField] private GameObject gameOverUIPrefab;
+
+    public GameOverUIController GameOverUI { get; private set; }
     public GameModeBase ActiveMode { get; private set; }
 
     public bool IsGameEnd { get; private set; }
@@ -16,13 +21,20 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // 씬이 넘어가도 파괴되지 않도록 설정
         }
         else
         {
             Debug.LogWarning("게임 매니저가 이미 존재합니다.");
             Destroy(gameObject);
         }
+    }
+
+    void Start()
+    {
+        GameObject gameOverUI = Instantiate(gameOverUIPrefab, canvas);
+        gameOverUI.name = "GameOverUI";
+
+        this.GameOverUI = gameOverUI.GetComponent<GameOverUIController>();
     }
 
     public void RegisterModeManager(GameModeBase modeManager)

@@ -54,9 +54,8 @@ public class StandardChessManager : GameModeBase
         // 50수 규칙
         if (halfMoveClock >= 100)
         {
-            Debug.Log("스테일메이트! 무승부! (50수 규칙)");
-
-            // TODO : UI 띄우기
+            Debug.Log("무승부! (50수 규칙)");
+            GameOver("$Draw", "50수 규칙");
 
             return;
         }
@@ -64,9 +63,8 @@ public class StandardChessManager : GameModeBase
         // 3회 동형 상황일 경우
         if (this.stateHistory.ContainsKey(this.currentTurnFEN) == true && this.stateHistory[this.currentTurnFEN] >= 3)
         {
-            Debug.Log("스테일메이트! 무승부! (3회 동형 반복)");
-
-            // TODO : UI 띄우기
+            Debug.Log("무승부! (3회 동형 반복)");
+            GameOver("$Draw", "3회 동형 반복");
 
             return;
         }
@@ -80,13 +78,15 @@ public class StandardChessManager : GameModeBase
             if (inCheck == true)
             {
                 Debug.Log($"체크메이트! {(this.IsWhiteTurn ? "흑" : "백")} 승리 !");
+                GameOver($"{(this.IsWhiteTurn ? "Black" : "White")}", "체크메이트");
+
+                // TODO : 네트워크 통신을 통해 대전이 이뤄질 경우, 해당 유저의 닉네임을 UI에 띄우도록 수정
             }
             else
             {
-                Debug.Log("스테일메이트! 무승부!");
+                Debug.Log("무승부! (스테일메이트)");
+                GameOver("$Draw", "스테일메이트");
             }
-
-            // TODO : UI 띄우기
 
             return;
         }
@@ -95,8 +95,12 @@ public class StandardChessManager : GameModeBase
         if (IsInsufficientMaterial() == true)
         {
             Debug.Log("무승부! (기물 부족으로 인한 체크메이트 불가)");
+            GameOver("$Draw", "기물 부족");
+
             return;
         }
+
+        // TODO : 기권, 시간패, 합의 추가
     }
 
     // 내 기물의 이동 범위를 미리 계산하는 함수
@@ -272,10 +276,10 @@ public class StandardChessManager : GameModeBase
 
         if (targetPos.y == promotionY)
         {
-            PromotionUI.Instance.IsWhite = piece.IsWhite;
+            PromotionUIController.Instance.IsWhite = piece.IsWhite;
 
             // UI를 통해 승급할 기물 선택
-            PieceType? selectedType = await PromotionUI.Instance.SelectPieceAsync(targetPos, piece.IsWhite); // 현재 isTopRank를 IsWhite로 판정. 나중에 보드를 뒤집을 수 있게 할경우 변경해야함
+            PieceType? selectedType = await PromotionUIController.Instance.SelectPieceAsync(targetPos, piece.IsWhite); // 현재 isTopRank를 IsWhite로 판정. 나중에 보드를 뒤집을 수 있게 할경우 변경해야함
 
             if (selectedType == null) return true;
 

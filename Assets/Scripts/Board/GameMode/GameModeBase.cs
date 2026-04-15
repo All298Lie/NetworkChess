@@ -16,4 +16,9 @@ public abstract class GameModeBase : MonoBehaviour
     // 승리/종료 판정을 내리는 함수
     protected abstract void CheckWinCondition();
 
+    // 게임 종료 시 결과와 함께 UI를 띄우는 함수
+    protected void GameOver(string winnerName, string reason)
+    {
+        GameManager.Instance.GameOverUI.ShowGameOver(winnerName, reason);   
+    }
 }

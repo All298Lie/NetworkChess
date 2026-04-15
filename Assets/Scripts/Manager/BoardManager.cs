@@ -235,7 +235,7 @@ public class BoardManager : MonoBehaviour
     // 조작과 관련된 함수
     private void HandleInput()
     {
-        if (PromotionUI.Instance != null && PromotionUI.Instance.IsActive() == true) return;
+        if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
         Vector2Int tilePos = GetTilePosFromMouse();
 

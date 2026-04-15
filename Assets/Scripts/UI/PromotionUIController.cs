@@ -3,9 +3,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class PromotionUI : MonoBehaviour
+public class PromotionUIController : MonoBehaviour
 {
-    public static PromotionUI Instance { get; private set; }
+    public static PromotionUIController Instance { get; private set; }
 
     [Header("UI 오브젝트")]
     [SerializeField] private GameObject promotionPanel; // 취소 버튼 판정용 패널

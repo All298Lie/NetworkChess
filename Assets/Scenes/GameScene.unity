@@ -244,7 +244,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.039215688, g: 0.05490196, b: 0.09019608, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -647,7 +647,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -701,7 +701,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 794123a9065feeb4bb3248734fba60fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  canvas: {fileID: 989493748}
   currentMode: 0
+  gameOverUIPrefab: {fileID: 4433659120488585683, guid: bc7efc8b36e2c154dbcf0b783bba61d7, type: 3}
 --- !u!4 &1344243723
 Transform:
   m_ObjectHideFlags: 0
@@ -709,52 +711,6 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1344243721}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1588176859
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1588176861}
-  - component: {fileID: 1588176860}
-  m_Layer: 0
-  m_Name: ThemeManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1588176860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1588176859}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1725da2c1f16f07459d3bffce77183d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ThemeManager
-  <CurrentPieceTheme>k__BackingField: {fileID: 11400000, guid: 41d588e75c1222a4196d37b673818370, type: 2}
-  <CurrentBoardTheme>k__BackingField: {fileID: 11400000, guid: a64db549490e3f1448f149718dac9de6, type: 2}
---- !u!4 &1588176861
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1588176859}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -908,7 +864,6 @@ SceneRoots:
   - {fileID: 519420032}
   - {fileID: 619394802}
   - {fileID: 2103080531}
-  - {fileID: 1588176861}
   - {fileID: 1344243723}
   - {fileID: 234979514}
   - {fileID: 989493748}
