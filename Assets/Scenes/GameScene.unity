@@ -119,6 +119,101 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &16320115
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 16320117}
+  - component: {fileID: 16320116}
+  m_Layer: 0
+  m_Name: InputHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &16320116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16320115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef9b0434feddff44ebe757156a8a35d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InputHandler
+  leftClickAction:
+    m_Name: Left Click
+    m_Type: 1
+    m_ExpectedControlType: Button
+    m_Id: a7e6e073-ab14-4e45-885b-fbf2e760adfd
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: e62d3be6-5ae4-45e5-9b2f-3d10009c83ed
+      m_Path: <Mouse>/leftButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Left Click
+      m_Flags: 0
+    m_Flags: 0
+  rightClickAction:
+    m_Name: Right Click
+    m_Type: 1
+    m_ExpectedControlType: Button
+    m_Id: 4ee681bb-df13-411e-8b7a-018652aae487
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: dcf0ed65-3431-46af-9883-01a61565b93a
+      m_Path: <Mouse>/rightButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Right Click
+      m_Flags: 0
+    m_Flags: 0
+  pointerPositionAction:
+    m_Name: Pointer Position
+    m_Type: 0
+    m_ExpectedControlType: Vector2
+    m_Id: e06f493e-7787-4a9e-8335-627e7716e0ea
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: ba612500-edd9-4840-afd7-6a215d529631
+      m_Path: <Mouse>/position
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Pointer Position
+      m_Flags: 0
+    m_Flags: 0
+--- !u!4 &16320117
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16320115}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &234979512
 GameObject:
   m_ObjectHideFlags: 0
@@ -868,3 +963,4 @@ SceneRoots:
   - {fileID: 234979514}
   - {fileID: 989493748}
   - {fileID: 1733073771}
+  - {fileID: 16320117}

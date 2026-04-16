@@ -90,8 +90,7 @@ public class BoardManager : MonoBehaviour
     {
         if (GameManager.Instance == null || GameManager.Instance.ActiveMode == null) return;
 
-        HandleInput();
-        UpdateCursorState();
+        // UpdateCursorState();
     }
 
     // FEN 기보법을 통해 표기된 문자열을 통해 보드판 세팅 
@@ -203,129 +202,34 @@ public class BoardManager : MonoBehaviour
     }
 
     // 마우스 커서 상태를 업데이트하는 함수
-    private void UpdateCursorState()
-    {
-        // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
-        if (this.inputState == InputState.Dragging)
-        {
-            Cursor.SetCursor(grabCursor, hotSpot, CursorMode.ForceSoftware);
+    //private void UpdateCursorState()
+    //{
+    //    // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
+    //    if (this.inputState == InputState.Dragging)
+    //    {
+    //        Cursor.SetCursor(grabCursor, hotSpot, CursorMode.ForceSoftware);
 
-            return;
-        }
+    //        return;
+    //    }
 
-        Vector2Int tilePos = GetTilePosFromMouse();
+    //    Vector2Int tilePos = GetTilePosFromMouse();
 
-        // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
-        if (MoveValidator.IsOnBoard(tilePos) == true)
-        {
-            Piece hoveredPiece = Board[tilePos.x, tilePos.y];
+    //    // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
+    //    if (MoveValidator.IsOnBoard(tilePos) == true)
+    //    {
+    //        Piece hoveredPiece = Board[tilePos.x, tilePos.y];
 
-            if (hoveredPiece != null && hoveredPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
-            {
-                Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.ForceSoftware);
+    //        if (hoveredPiece != null && hoveredPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
+    //        {
+    //            Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.ForceSoftware);
 
-                return;
-            }
-        }
+    //            return;
+    //        }
+    //    }
 
-        // 3. 평상 시 상태일 경우 (기본 커서)
-        Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.ForceSoftware);
-    }
-
-    // 조작과 관련된 함수
-    private void HandleInput()
-    {
-        if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
-
-        Vector2Int tilePos = GetTilePosFromMouse();
-
-        // 1. 기물 선택, 드래그 상태에서 마우스 우클릭을 한 상태
-        if (Mouse.current.rightButton.wasPressedThisFrame == true)
-        {
-            if (this.inputState == InputState.Dragging || this.inputState == InputState.Selected)
-            {
-                CancelPieceMove(this.selectedPiece);
-                ClearSelection();
-
-                return;
-            }
-        }
-
-        // 2. 마우스 좌클릭을 한 상태
-        if (Mouse.current.leftButton.wasPressedThisFrame == true)
-        {
-            if (MoveValidator.IsOnBoard(tilePos) == true)
-            {
-                Piece clickedPiece = this.Board[tilePos.x, tilePos.y];
-
-                if (clickedPiece != null && clickedPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
-                {
-                    if (this.selectedPiece != null && this.selectedPiece != clickedPiece)
-                    {
-                        ClearSelection();
-                    }
-
-                    this.selectedPiece = clickedPiece;
-                    this.dragStartTile = tilePos;
-                    this.inputState = InputState.Dragging;
-
-                    this.selectedPiece.GrabPiece(true);
-
-                    // 이동할 수 있는 기물일 경우, 이동 가능한 타일에 하이라이트 표시
-                    if (GameManager.Instance.ActiveMode.LegalMovesCache.ContainsKey(this.selectedPiece) == true)
-                    {
-                        List<Vector2Int> legalMoves = GameManager.Instance.ActiveMode.LegalMovesCache[this.selectedPiece];
-
-                        ShowHighLights(this.selectedPiece, legalMoves);
-                    }
-                }
-                else if (this.inputState == InputState.Selected)
-                {
-                    TryMovePiece(this.selectedPiece, tilePos);
-                }
-                else
-                {
-                    ClearSelection();
-                }
-            }
-            else
-            {
-                ClearSelection();
-            }
-        }
-
-        // 3. 마우스 좌클릭을 누르고 있는 상태
-        if (this.inputState == InputState.Dragging && Mouse.current.leftButton.isPressed == true)
-        {
-            Vector3 mouseWorldPos = GetMouseWorldPosition();
-
-            this.selectedPiece.transform.position = new Vector3(mouseWorldPos.x, mouseWorldPos.y, -1f);
-        }
-
-        // 4. 마우스 좌클릭을 뗀 상태
-        if (Mouse.current.leftButton.wasReleasedThisFrame == true && inputState == InputState.Dragging)
-        {
-            if (tilePos == this.dragStartTile)
-            {
-                CancelPieceMove(this.selectedPiece);
-
-                if (this.isSelected == true) // 기존 기물을 두번 들었다 놨을 경우, 선택 취소
-                {
-                    ClearSelection();
-                }
-                else // 처음 기물을 들었다 놨을 경우, 선택 모드
-                {
-                    this.isSelected = true;
-
-                    this.inputState = InputState.Selected;
-                }
-            }
-            else
-            {
-                TryMovePiece(this.selectedPiece, tilePos);
-            }
-        }
-    }
+    //    // 3. 평상 시 상태일 경우 (기본 커서)
+    //    Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.ForceSoftware);
+    //}
 
     // 기물 이동을 시도하는 함수
     private void TryMovePiece(Piece piece, Vector2Int targetPos)
@@ -361,20 +265,21 @@ public class BoardManager : MonoBehaviour
         this.inputState = InputState.None;
     }
 
-    private Vector3 GetMouseWorldPosition()
+    // 마우스 좌표를 월드 좌표로 치환해주는 함수
+    private Vector3 GetMouseWorldPosition(Vector2 screenPos)
     {
-        Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
+        Vector3 mouseScreenPos = new Vector3(screenPos.x, screenPos.y, 0.0f);
         mouseScreenPos.z = Mathf.Abs(this.mainCamera.transform.position.z);
 
         return this.mainCamera.ScreenToWorldPoint(mouseScreenPos);
     }
 
-    private Vector2Int GetTilePosFromMouse()
+    private Vector2Int GetTilePosFromMouse(Vector2 screenPos)
     {
-        Vector3 worldPos = GetMouseWorldPosition();
+        Vector3 worldPos = GetMouseWorldPosition(screenPos);
 
-        int x = Mathf.FloorToInt(worldPos.x - this.boardOffset.x + 0.5f);
-        int y = Mathf.FloorToInt(worldPos.y - this.boardOffset.y + 0.5f);
+        int x = Mathf.RoundToInt((worldPos.x - this.a1Position.x) / this.tileSize);
+        int y = Mathf.RoundToInt((worldPos.y - this.a1Position.y) / this.tileSize);
 
         return new Vector2Int(x, y);
     }
@@ -471,6 +376,24 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    // 기물 이동을 취소시키는 함수
+    public void CancelMoveOnBoard(Piece piece, Vector2Int originalPos, Piece capturePiece)
+    {
+        // 1. 이동시킨 기물 복구
+        this.Board[piece.CurrentPosition.x, piece.CurrentPosition.y] = null;
+        this.Board[originalPos.x, originalPos.y] = piece;
+
+        // 2. 잡힌 기물 복구
+        if (capturePiece != null)
+        {
+            this.Board[piece.CurrentPosition.x, piece.CurrentPosition.y] = capturePiece;
+            capturePiece.gameObject.SetActive(true);
+        }
+
+        // 3. 물리적 위치 복구
+        piece.MoveTo(originalPos, GetWorldPosition(originalPos.x, originalPos.y));
+    }
+
     // 폰을 프로모션 처리하는 함수
     public void PromotePawn(Piece pawn, PieceType type)
     {
@@ -489,5 +412,112 @@ public class BoardManager : MonoBehaviour
     {
         Vector3 originalWorldPos = GetWorldPosition(piece.CurrentPosition.x, piece.CurrentPosition.y);
         piece.MoveTo(piece.CurrentPosition, originalWorldPos);
+    }
+
+    // 좌클릭 드래그 시 실행되는 함수
+    public void OnDragPiece(Vector2 mousePos)
+    {
+        if (this.selectedPiece != null)
+        {
+            Vector3 mouseWorldPos = GetMouseWorldPosition(mousePos);
+
+            this.selectedPiece.transform.position = mouseWorldPos;
+        }
+    }
+
+    // 좌클릭 시작 시 실행되는 함수
+    public bool OnLeftClickStarted(Vector2 mousePos)
+    {
+        // 1. 마우스가 올려져있는 타일 좌표 가져오기
+        Vector2Int tilePos = GetTilePosFromMouse(mousePos);
+
+        // 2. 마우스 위에 있는 타일이 보드 위인지 확인
+        if (MoveValidator.IsOnBoard(tilePos) == true)
+        {
+            Piece clickedPiece = this.Board[tilePos.x, tilePos.y];
+
+            if (clickedPiece != null && clickedPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn) // 클릭한 기물 진영의 턴이 아닐 경우(싱글플레이)
+            {
+                if (this.selectedPiece != null && this.selectedPiece != clickedPiece)
+                {
+                    ClearSelection();
+                }
+
+                this.selectedPiece = clickedPiece;
+                this.dragStartTile = tilePos;
+                this.inputState = InputState.Dragging;
+
+                this.selectedPiece.GrabPiece(true);
+
+                // 이동할 수 있는 기물일 경우, 이동 가능한 타일에 하이라이트 표시
+                if (GameManager.Instance.ActiveMode.LegalMovesCache.ContainsKey(this.selectedPiece) == true)
+                {
+                    List<Vector2Int> legalMoves = GameManager.Instance.ActiveMode.LegalMovesCache[this.selectedPiece];
+
+                    ShowHighLights(this.selectedPiece, legalMoves);
+                }
+
+                return true;
+            }
+            else if (this.inputState == InputState.Selected) // 기존에 클릭-클릭 방식으로 선택되어있는 기물이 존재할 경우
+            {
+                TryMovePiece(this.selectedPiece, tilePos);
+
+                return false;
+            }
+            else
+            {
+                ClearSelection();
+
+                return false;
+            }
+        }
+        else
+        {
+            ClearSelection();
+
+            return false;
+        }
+    }
+
+    // 좌클릭 취소 시 실행되는 함수
+    public void OnLeftClickCanceled(Vector2 mousePos)
+    {
+        // 1. 예외 처리
+        if (inputState != InputState.Dragging) return;
+
+        // 2. 마우스가 올려져있는 타일 좌표 가져오기
+        Vector2Int tilePos = GetTilePosFromMouse(mousePos);
+
+        if (tilePos == this.dragStartTile)
+        {
+            CancelPieceMove(this.selectedPiece);
+
+            if (this.isSelected == true) // 기존 기물을 두번 들었다 놨을 경우, 선택 취소
+            {
+                ClearSelection();
+            }
+            else // 처음 기물을 들었다 놨을 경우, 선택 모드
+            {
+                this.isSelected = true;
+
+                this.inputState = InputState.Selected;
+            }
+        }
+        else
+        {
+            TryMovePiece(this.selectedPiece, tilePos);
+        }
+    }
+
+    // 우클릭 시작 시 실행되는 함수
+    public void OnRightClickStarted()
+    {
+        // 1. 예외 처리
+        if (this.inputState == InputState.None) return;
+
+        // 2. 작업 취소
+        CancelPieceMove(this.selectedPiece);
+        ClearSelection();
     }
 }

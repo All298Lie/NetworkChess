@@ -5,7 +5,6 @@ using UnityEngine;
 public class StandardChessManager : GameModeBase
 {
     private Dictionary<string, int> stateHistory;
-    private Piece selectedPiece;
 
     private string currentTurnFEN;
     private int halfMoveClock = 0;
@@ -15,7 +14,6 @@ public class StandardChessManager : GameModeBase
     {
         this.LegalMovesCache = new Dictionary<Piece, List<Vector2Int>>();
         this.stateHistory = new Dictionary<string, int>();
-        this.selectedPiece = null;
 
         this.isProcessingMove = false;
 
@@ -39,7 +37,7 @@ public class StandardChessManager : GameModeBase
         if (piece.IsWhite != this.IsWhiteTurn || this.LegalMovesCache.ContainsKey(piece) == false || this.LegalMovesCache[piece].Contains(targetPos) == false)
         {
             BoardManager.Instance.CancelPieceMove(piece);
-            this.selectedPiece = null;
+
             return;
         }
 
@@ -164,16 +162,7 @@ public class StandardChessManager : GameModeBase
         // 4. 롤백 필요 여부 처리
         if (needRollback == true)
         {
-            BoardManager.Instance.Board[targetPos.x, targetPos.y] = null;
-
-            BoardManager.Instance.Board[originalPos.x, originalPos.y] = piece;
-            piece.MoveTo(originalPos, BoardManager.Instance.GetWorldPosition(originalPos.x, originalPos.y));
-            
-            if (targetPiece != null)
-            {
-                BoardManager.Instance.Board[targetPos.x, targetPos.y] = targetPiece;
-                targetPiece.gameObject.SetActive(true);
-            }
+            BoardManager.Instance.CancelMoveOnBoard(piece, originalPos, targetPiece);
 
             isProcessingMove = false;
 
@@ -207,7 +196,6 @@ public class StandardChessManager : GameModeBase
 
         // 8. 턴 넘기기
         piece.HasMoved = true;
-        selectedPiece = null;
         IsWhiteTurn = !IsWhiteTurn;
 
         CalculateLegalMovesForTurn();
