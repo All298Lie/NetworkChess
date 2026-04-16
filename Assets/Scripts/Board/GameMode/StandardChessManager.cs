@@ -29,21 +29,23 @@ public class StandardChessManager : GameModeBase
     }
 
     // 기물 이동 리퀘스트 관련 처리를 하는 함수
-    public override void HandlePieceMoveRequest(Piece piece, Vector2Int targetPos)
+    public override async UniTask<bool> HandlePieceMoveRequest(Piece piece, Vector2Int targetPos)
     {
-        if (isProcessingMove == true) return;
+        if (isProcessingMove == true) return false;
 
         // 잘못된 기물 이동 방식일 경우, 취소 후 리턴
         if (piece.IsWhite != this.IsWhiteTurn || this.LegalMovesCache.ContainsKey(piece) == false || this.LegalMovesCache[piece].Contains(targetPos) == false)
         {
             BoardManager.Instance.CancelPieceMove(piece);
 
-            return;
+            return false;
         }
 
         // 정상적인 기물 이동 방식일 경우, 기물 이동 처리
         isProcessingMove = true;
-        FinalizeMove(piece, targetPos).Forget();
+        bool moveSuccess = await FinalizeMove(piece, targetPos);
+
+        return moveSuccess;
     }
 
     // 승리/종료 판정을 내리는 함수
@@ -140,7 +142,7 @@ public class StandardChessManager : GameModeBase
     }
 
     // 기물의 이동을 처리하는 함수
-    private async UniTaskVoid FinalizeMove(Piece piece, Vector2Int targetPos)
+    private async UniTask<bool> FinalizeMove(Piece piece, Vector2Int targetPos)
     {
         Piece targetPiece = BoardManager.Instance.Board[targetPos.x, targetPos.y];
         Vector2Int originalPos = piece.CurrentPosition;
@@ -163,10 +165,9 @@ public class StandardChessManager : GameModeBase
         if (needRollback == true)
         {
             BoardManager.Instance.CancelMoveOnBoard(piece, originalPos, targetPiece);
-
             isProcessingMove = false;
 
-            return;
+            return false;
         }
 
         // 6. 50수 규칙과 3회 동형 관련 로직
@@ -196,11 +197,13 @@ public class StandardChessManager : GameModeBase
 
         // 8. 턴 넘기기
         piece.HasMoved = true;
-        IsWhiteTurn = !IsWhiteTurn;
+        this.IsWhiteTurn = !IsWhiteTurn;
 
         CalculateLegalMovesForTurn();
 
-        isProcessingMove = false;
+        this.isProcessingMove = false;
+
+        return true;
     }
 
     // 캐슬링 관련 처리를 하는 함수

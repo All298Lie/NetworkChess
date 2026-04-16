@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -232,18 +233,29 @@ public class BoardManager : MonoBehaviour
     //}
 
     // 기물 이동을 시도하는 함수
-    private void TryMovePiece(Piece piece, Vector2Int targetPos)
+    private async UniTaskVoid TryMovePiece(Piece piece, Vector2Int targetPos)
     {
+        ClearSelection();
+
+        Vector2Int originalPos = piece.CurrentPosition;
+
         if (MoveValidator.IsOnBoard(targetPos) == true)
         {
-            GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, targetPos);
+            bool isMoveValid = await GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, targetPos);
+
+            if (isMoveValid == true)
+            {
+                HighlightManager.Instance.UpdateLastMoveHighlight(originalPos, targetPos);
+            }
+            else
+            {
+                CancelPieceMove(piece);
+            }
         }
         else
         {
             CancelPieceMove(piece);
         }
-
-        ClearSelection();
     }
 
     // 기물 이동 가능 타일 표현 및 선택 판정 기물을 초기화하는 함수
@@ -251,12 +263,7 @@ public class BoardManager : MonoBehaviour
     {
         if (this.selectedPiece != null)
         {
-            // 1. 기물 이동이 가능했을 경우, 해당 타일에 켜져있던 하이라이트 표시 끄기
-            if (highlightedTiles.Count > 0)
-            {
-                HideHighlights();
-            }
-
+            HighlightManager.Instance.HideMoveHighlights();
             this.selectedPiece.GrabPiece(false);
         }
 
@@ -284,43 +291,15 @@ public class BoardManager : MonoBehaviour
         return new Vector2Int(x, y);
     }
 
-    // 해당 타일의 하이라이트를 설정하는 함수
-    private void SetTileHighLight(Vector2Int tilePos, bool show, bool isCapture)
+    // 외부 매니저가 특정 좌표의 Tile 컴포넌트를 가져갈 수 있게 하는 함수
+    public Tile GetTile(Vector2Int pos)
     {
-        if (MoveValidator.IsOnBoard(tilePos) == false) return;
-
-        Tile tile = tiles[tilePos.x, tilePos.y];
-
-        tile.SetHighlight(show, isCapture);
-    }
-    
-    // 타일 부분에 하이라이트를 키는 함수
-    private void ShowHighLights(Piece piece, List<Vector2Int> legalMoves)
-    {
-        foreach (Vector2Int pos in legalMoves)
+        if (MoveValidator.IsOnBoard(pos) == true)
         {
-            bool isCapture = (Board[pos.x, pos.y] != null);
-
-            if (EnPassant.HasValue && EnPassant.Value == pos && piece.Data.type == PieceType.Pawn)
-            {
-                isCapture = true;
-            }
-
-            SetTileHighLight(pos, true, isCapture);
-
-            highlightedTiles.Add(pos);
-        }
-    }
-
-    // 타일 부분에 하이라이트를 숨기는 함수
-    private void HideHighlights()
-    {
-        foreach (Vector2Int pos in highlightedTiles)
-        {
-            SetTileHighLight(pos, false, false);
+            return this.tiles[pos.x, pos.y];
         }
 
-        highlightedTiles.Clear();
+        return null;
     }
 
     // x, y 값 기준 객체가 존재해야할 월드 포지션을 가져오는 함수
@@ -452,14 +431,14 @@ public class BoardManager : MonoBehaviour
                 {
                     List<Vector2Int> legalMoves = GameManager.Instance.ActiveMode.LegalMovesCache[this.selectedPiece];
 
-                    ShowHighLights(this.selectedPiece, legalMoves);
+                    HighlightManager.Instance.ShowMoveHighlights(this.selectedPiece, legalMoves);
                 }
 
                 return true;
             }
             else if (this.inputState == InputState.Selected) // 기존에 클릭-클릭 방식으로 선택되어있는 기물이 존재할 경우
             {
-                TryMovePiece(this.selectedPiece, tilePos);
+                TryMovePiece(this.selectedPiece, tilePos).Forget();
 
                 return false;
             }
@@ -504,7 +483,7 @@ public class BoardManager : MonoBehaviour
         }
         else
         {
-            TryMovePiece(this.selectedPiece, tilePos);
+            TryMovePiece(this.selectedPiece, tilePos).Forget();
         }
     }
 

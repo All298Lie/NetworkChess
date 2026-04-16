@@ -34,6 +34,8 @@ public class PromotionUIController : MonoBehaviour
 
     private UniTaskCompletionSource<PieceType?> promotionTcs;
 
+    private bool canSelect;
+
 
     void Awake()
     {
@@ -54,6 +56,7 @@ public class PromotionUIController : MonoBehaviour
         }
 
         this.isSizeCached = false;
+        this.canSelect = false;
 
         BindButtonEvents();
 
@@ -212,12 +215,16 @@ public class PromotionUIController : MonoBehaviour
     // 프로모션 버튼 외의 화면을 눌렀을 때 작동하는 함수
     private void OnCancelPromotion()
     {
+        if (this.canSelect == false) return;
+
         this.promotionTcs?.TrySetResult(null);
     }
 
     // 프로모션 버튼을 눌렀을 때 작동하는 함수
     private void OnSelectPiece(PieceType type)
     {
+        if (this.canSelect == false) return;
+
         this.promotionTcs?.TrySetResult(type);
     }
 
@@ -234,13 +241,20 @@ public class PromotionUIController : MonoBehaviour
 
         SyncTransformWithBoard(targetPos, isTopRank);
 
-        // 버튼을 누를 때까지 대기
         this.promotionTcs = new UniTaskCompletionSource<PieceType?>();
+
+        await UniTask.Delay(150);
+
+        this.canSelect = true;
+
+        // 버튼을 누를 때까지 대기
         PieceType? selectedType = await this.promotionTcs.Task;
 
         // 버튼 비활성화
         this.promotionPanel.SetActive(false);
         this.promotionSelects.SetActive(false);
+
+        this.canSelect = false;
 
         return selectedType;
     }
