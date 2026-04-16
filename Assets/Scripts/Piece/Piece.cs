@@ -2,14 +2,15 @@
 
 public class Piece : MonoBehaviour
 {
-    [SerializeField] SpriteRenderer spriteRenderer;
+    [Header("기물 속성")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
 
-    PieceData data;
+    public PieceData Data { get; private set; }
 
-    Vector2Int currentPosition;
+    public Vector2Int CurrentPosition { get; private set; }
 
-    bool isWhite;
-    bool hasMoved;
+    public bool IsWhite { get; private set; }
+    public bool HasMoved;
 
     // 객체가 활성화되면 작동하는 함수
     void OnEnable()
@@ -32,23 +33,23 @@ public class Piece : MonoBehaviour
     // 기물 Sprite를 새로고침 하는 함수
     private void RefreshSprite()
     {
-        if (data == null || ThemeManager.Instance == null) return;
+        if (this.Data == null || ThemeManager.Instance == null) return;
 
         PieceThemeData activeTheme = ThemeManager.Instance.CurrentPieceTheme;
 
         if (activeTheme != null)
         {
-            spriteRenderer.sprite = activeTheme.GetSprite(this.data.type, this.isWhite);
+            spriteRenderer.sprite = activeTheme.GetSprite(this.Data.type, this.IsWhite);
         }
     }
 
     // BoardManager가 기물을 스폰할 때 딱 한 번 호출하는 함수
     public void Setup(PieceData data, bool isWhite, Vector2Int startPos)
     {
-        this.data = data;
-        this.isWhite = isWhite;
-        this.currentPosition = startPos;
-        this.hasMoved = false;
+        this.Data = data;
+        this.IsWhite = isWhite;
+        this.CurrentPosition = startPos;
+        this.HasMoved = false;
 
         RefreshSprite(); // 생성 즉시 테마에 맞는 기물 Sprite 입히기
     }
@@ -56,9 +57,20 @@ public class Piece : MonoBehaviour
     // 기물을 이동할 때 호출되는 함수
     public void MoveTo(Vector2Int newArrayPos, Vector3 newWorldPos)
     {
-        this.currentPosition = newArrayPos;
-        hasMoved = true;
+        this.CurrentPosition = newArrayPos;
 
         transform.position = newWorldPos;
+    }
+
+    public void GrabPiece(bool isGrab)
+    {
+        if (isGrab == true)
+        {
+            spriteRenderer.sortingOrder = 3;
+        }
+        else
+        {
+            spriteRenderer.sortingOrder = 0;
+        }
     }
 }
