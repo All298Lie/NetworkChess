@@ -402,8 +402,6 @@ public class BoardManager : MonoBehaviour
             pawn.Setup(this.pieceDic[type], pawn.IsWhite, pawn.CurrentPosition);
 
             pawn.gameObject.name = $"{(pawn.IsWhite ? "White" : "Black")}_{this.pieceDic[type].name}";
-
-            Debug.Log("폰이 무사히 승급했습니다!");
         }
     }
 

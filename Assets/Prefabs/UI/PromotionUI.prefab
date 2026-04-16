@@ -271,19 +271,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5580899090225506923}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 650745446343005623}
-        m_TargetAssemblyTypeName: PromotionUI, Assembly-CSharp
-        m_MethodName: OnSelectQueen
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &1825322621597664827
 GameObject:
   m_ObjectHideFlags: 0
@@ -622,19 +610,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4803041930997053534}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 650745446343005623}
-        m_TargetAssemblyTypeName: PromotionUI, Assembly-CSharp
-        m_MethodName: OnCancelPromotion
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &5019058284871444201
 GameObject:
   m_ObjectHideFlags: 0
@@ -756,19 +732,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 7146749155541959446}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 650745446343005623}
-        m_TargetAssemblyTypeName: PromotionUI, Assembly-CSharp
-        m_MethodName: OnSelectRook
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &5458535921815484369
 GameObject:
   m_ObjectHideFlags: 0
@@ -965,19 +929,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8370080389703406682}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 650745446343005623}
-        m_TargetAssemblyTypeName: PromotionUI, Assembly-CSharp
-        m_MethodName: OnSelectBishop
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &6703226035936436821
 GameObject:
   m_ObjectHideFlags: 0
@@ -1405,16 +1357,4 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5067129423213977665}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 650745446343005623}
-        m_TargetAssemblyTypeName: PromotionUI, Assembly-CSharp
-        m_MethodName: OnSelectKnight
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []

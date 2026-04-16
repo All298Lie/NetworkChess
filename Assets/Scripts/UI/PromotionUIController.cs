@@ -55,6 +55,8 @@ public class PromotionUIController : MonoBehaviour
 
         this.isSizeCached = false;
 
+        BindButtonEvents();
+
         this.promotionPanel.SetActive(false);
         this.promotionSelects.SetActive(false);
     }
@@ -86,6 +88,17 @@ public class PromotionUIController : MonoBehaviour
         }
     }
 
+    // 버튼 이벤트를 연결하는 함수
+    private void BindButtonEvents()
+    {
+        this.selectQueen.transform.parent.GetComponent<Button>().onClick.AddListener(() => OnSelectPiece(PieceType.Queen));
+        this.selectRook.transform.parent.GetComponent<Button>().onClick.AddListener(() => OnSelectPiece(PieceType.Rook));
+        this.selectBishop.transform.parent.GetComponent<Button>().onClick.AddListener(() => OnSelectPiece(PieceType.Bishop));
+        this.selectKnight.transform.parent.GetComponent<Button>().onClick.AddListener(() => OnSelectPiece(PieceType.Knight));
+
+        this.promotionPanel.GetComponent<Button>().onClick.AddListener(OnCancelPromotion);
+    }
+
     // 프로모션 버튼의 기물 스프라이트를 새로고침 해주는 함수
     private void RefreshImage()
     {
@@ -114,7 +127,7 @@ public class PromotionUIController : MonoBehaviour
         }
     }
 
-    // UI와 보드 동기화 작업을 하는 ㅎ마수
+    // UI와 보드 동기화 작업을 하는 함수
     private void SyncTransformWithBoard(Vector2Int targetPos, bool isTopRank)
     {
         // 1. 버튼 정렬
@@ -196,6 +209,18 @@ public class PromotionUIController : MonoBehaviour
         this.isSizeCached = true;
     }
 
+    // 프로모션 버튼 외의 화면을 눌렀을 때 작동하는 함수
+    private void OnCancelPromotion()
+    {
+        this.promotionTcs?.TrySetResult(null);
+    }
+
+    // 프로모션 버튼을 눌렀을 때 작동하는 함수
+    private void OnSelectPiece(PieceType type)
+    {
+        this.promotionTcs?.TrySetResult(type);
+    }
+
     // 폰이 프로모션할 기물의 형태를 띄워주는 비동기 함수
     public async UniTask<PieceType?> SelectPieceAsync(Vector2Int targetPos, bool isTopRank)
     {
@@ -220,6 +245,7 @@ public class PromotionUIController : MonoBehaviour
         return selectedType;
     }
 
+    // 프로모션 UI의 활성화 상태를 확인하는 함수
     public bool IsActive()
     {
         if (this.promotionPanel == null || this.promotionSelects == null) return false;
@@ -227,35 +253,5 @@ public class PromotionUIController : MonoBehaviour
         if (this.promotionPanel.activeSelf == false || this.promotionSelects.activeSelf == false) return false;
         
         return true;
-    }
-
-    // 프로모션 버튼 외의 화면을 눌렀을 때 작동하는 함수
-    public void OnCancelPromotion()
-    {
-        this.promotionTcs?.TrySetResult(null);
-    }
-
-    // 퀸 프로모션 버튼을 눌렀을 때 작동하는 함수
-    public void OnSelectQueen()
-    {
-        this.promotionTcs?.TrySetResult(PieceType.Queen);
-    }
-
-    // 룩 프로모션 버튼을 눌렀을 때 작동하는 함수
-    public void OnSelectRook()
-    {
-        this.promotionTcs?.TrySetResult(PieceType.Rook);
-    }
-
-    // 비숍 프로모션 버튼을 눌렀을 때 작동하는 함수
-    public void OnSelectBishop()
-    {
-        this.promotionTcs?.TrySetResult(PieceType.Bishop);
-    }
-
-    // 나이트 프로모션 버튼을 눌렀을 때 작동하는 함수
-    public void OnSelectKnight()
-    {
-        this.promotionTcs?.TrySetResult(PieceType.Knight);
     }
 }
