@@ -1,12 +1,23 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Pool;
 
 public class HighlightManager : MonoBehaviour
 {
     public static HighlightManager Instance { get; private set; }
 
+    [Header("프리팹")]
+    [SerializeField] private GameObject arrowPrefab; 
+
     private List<Vector2Int> highlightedTiles; // 이동  가능 영역
     private List<Vector2Int> lastMoveTiles; // 최근 이동 흔적
+    private List<Vector2Int> selectHighlightTiles; // 선택 하이라이트
+    private List<Arrow> activeArrows; // 화살표 어노테이션
+
+    private ObjectPool<Arrow> arrowPool;
+    
+    private Vector2Int startPos;
     
     void Awake()
     {
@@ -22,8 +33,37 @@ public class HighlightManager : MonoBehaviour
 
         this.highlightedTiles = new List<Vector2Int>();
         this.lastMoveTiles = new List<Vector2Int>();
+        this.selectHighlightTiles = new List<Vector2Int>();
+        this.activeArrows = new List<Arrow>();
+
+        arrowPool = new ObjectPool<Arrow>(OnCreateArrow, OnGetArrow, OnReleaseArrow);
+
+        this.startPos = new Vector2Int(-1, -1);
     }
 
+    // 오브젝트 풀링 : 가져오기 함수
+    private void OnGetArrow(Arrow arrow)
+    {
+        arrow.gameObject.SetActive(true);
+    }
+
+    // 오브젝트 풀링 : 반환 함수
+    private void OnReleaseArrow(Arrow arrow)
+    {
+        arrow.Clear();
+    }
+
+    // 오브젝트 풀링 : 생성 함수
+    private Arrow OnCreateArrow()
+    {
+        GameObject arrowObject = Instantiate(arrowPrefab, Vector3.zero, Quaternion.identity, transform);
+        arrowObject.name = "AnnotationArrow";
+        Arrow arrow = arrowObject.GetComponent<Arrow>();
+
+        return arrow;
+    }
+
+    // 이동/공격 하이라이트를 상태에 맞게 켜주는 함수
     private void SetMoveHighlight(Vector2Int tilePos, bool show, bool isCapture)
     {
         if (MoveValidator.IsOnBoard(tilePos) == false) return;
@@ -34,6 +74,48 @@ public class HighlightManager : MonoBehaviour
         {
             tile.SetMoveHighlight(show, isCapture);
         }
+    }
+
+    // 선택 하이라이트 토글 함수
+    private void ToggleSelectHighlight(Vector2Int tilePos)
+    {
+        if (MoveValidator.IsOnBoard(tilePos) == false) return;
+
+        Tile tile = BoardManager.Instance.GetTile(tilePos);
+
+        if (tile != null)
+        {
+            tile.ToggleSelectHighlight();
+        }
+    }
+
+    private void HideSelectHighlight(Vector2Int tilePos)
+    {
+        if (MoveValidator.IsOnBoard(tilePos) == false) return;
+
+        Tile tile = BoardManager.Instance.GetTile(tilePos);
+
+        if (tile != null)
+        {
+            tile.HideSelectHighlight();
+        }
+    }
+
+    private void ClearHighlight()
+    {
+        // 1. 선택 하이라이트 제거
+        foreach (Vector2Int tilePos in this.selectHighlightTiles.ToList())
+        {
+            HideSelectHighlight(tilePos);
+        }
+        selectHighlightTiles.Clear();
+
+        // 2. 어노테이션 화살표 제거
+        foreach (Arrow arrow in this.activeArrows.ToList())
+        {
+            arrowPool.Release(arrow);
+        }
+        activeArrows.Clear();
     }
 
     // 이동/공격 하이라이트를 켜주는 함수
@@ -96,5 +178,88 @@ public class HighlightManager : MonoBehaviour
             toTile.SetLastMoveHighlight(true);
             this.lastMoveTiles.Add(toPos);
         }
+    }
+
+    public void UpdateAnnotationArrow(Vector2Int startPos, Vector2Int endPos)
+    {
+        Arrow arrow = arrowPool.Get();
+        activeArrows.Add(arrow);
+
+        Vector3 startWorldPos = BoardManager.Instance.GetWorldPosition(startPos.x, startPos.y);
+        Vector3 endWorldPos = BoardManager.Instance.GetWorldPosition(endPos.x, endPos.y);
+
+        int dx = Mathf.Abs(endPos.x - startPos.x);
+        int dy = Mathf.Abs(endPos.y - startPos.y);
+
+        if ((dx == 2 && dy == 1) || (dx == 1 && dy == 2)) // 나이트 행마법일 경우
+        {
+            bool isFirstX = dx > dy;
+
+            Vector2Int middlePos;
+            if (isFirstX == true)
+            {
+                middlePos = new Vector2Int(endPos.x, startPos.y);
+            }
+            else
+            {
+                middlePos = new Vector2Int(startPos.x, endPos.y);
+            }
+
+            Vector3 middleWorldPos = BoardManager.Instance.GetWorldPosition(middlePos.x, middlePos.y);
+
+
+            arrow.DrawArrow(new Vector3[] { startWorldPos, middleWorldPos, endWorldPos });
+        }
+        else
+        {
+            arrow.DrawArrow(new Vector3[] { startWorldPos, endWorldPos });
+        }
+    }
+
+    public void OnLeftClickStarted(Vector2 screenPos)
+    {
+        Vector2Int tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
+
+        if (MoveValidator.IsOnBoard(tilePos) == true)
+        {
+            ClearHighlight();
+        }
+    }
+
+    public void OnRightClickStarted(Vector2 screenPos)
+    {
+        Vector2Int tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
+
+        if (MoveValidator.IsOnBoard(tilePos) == true)
+        {
+            this.startPos = tilePos;
+        }
+    }
+
+    public void OnRightClickCanceled(Vector2 screenPos)
+    {
+        Vector2Int tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
+
+        if (MoveValidator.IsOnBoard(tilePos) == true)
+        {
+            if (this.startPos == tilePos) // 우클릭 시작점과 끝점이 같은 경우, 현재 위치 타일 우클릭 하이라이트
+            {
+                ToggleSelectHighlight(tilePos);
+
+                if (this.selectHighlightTiles.Contains(tilePos) == true)
+                {
+                    this.selectHighlightTiles.Remove(tilePos);
+                }
+                else
+                {
+                    this.selectHighlightTiles.Add(tilePos);
+                }
+            }
+            else // 다를 경우, 시작점과 끝점을 잇는 화살표 어노테이션
+            {
+                UpdateAnnotationArrow(this.startPos, tilePos);
+            }
+        }
+
     }
 }

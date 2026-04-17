@@ -281,7 +281,7 @@ public class BoardManager : MonoBehaviour
         return this.mainCamera.ScreenToWorldPoint(mouseScreenPos);
     }
 
-    private Vector2Int GetTilePosFromMouse(Vector2 screenPos)
+    public Vector2Int GetTilePosFromMouse(Vector2 screenPos)
     {
         Vector3 worldPos = GetMouseWorldPosition(screenPos);
 

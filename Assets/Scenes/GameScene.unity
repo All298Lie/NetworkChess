@@ -843,6 +843,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a71e072508bf5b840a4c9275aa3392c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HighlightManager
+  arrowPrefab: {fileID: 2606448096418964933, guid: 894671af884d8ef44917a4c21390408f, type: 3}
 --- !u!4 &1437467296
 Transform:
   m_ObjectHideFlags: 0
