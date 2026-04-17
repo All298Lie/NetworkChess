@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,18 @@ public class SettingsUIController : MonoBehaviour
 
     void Start()
     {
+        // 해상도 설정 초기화
+
+        this.resDropdown.ClearOptions();
+        List<Resolution> resolutions = GlobalSettingsManager.Instance.AvilableResolutions;
+        List<string> options = new List<string>();
+
+        foreach (Resolution res in resolutions)
+        {
+            options.Add($"{res.width} x {res.height}");
+        }
+        this.resDropdown.AddOptions(options);
+
         // 1. 기존 설정값으로 UI 초기화
 
         // 해상도
