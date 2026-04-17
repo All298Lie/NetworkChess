@@ -38,12 +38,12 @@ public class SettingsUIController : MonoBehaviour
     // 해상도 설정을 적용하는 함수
     private void ApplyVideoSettings()
     {
-        GlobalSettingsManager.Instance.ApplyResolution(resDropdown.value, fullscreenToggle);
+        GlobalSettingsManager.Instance.ApplyResolution(this.resDropdown.value, this.fullscreenToggle.isOn);
     }
 
     // 테마 설정을 적용하는 함수
     private void ApplyThemeSettings()
     {
-        GlobalSettingsManager.Instance.ApplyTheme(boardThemeDropdown.value, pieceThemeDropdown.value);
+        GlobalSettingsManager.Instance.ApplyTheme(this.boardThemeDropdown.value, this.pieceThemeDropdown.value);
     }
 }

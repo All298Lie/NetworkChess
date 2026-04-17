@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GlobalSettingsManager : MonoBehaviour
 {
@@ -19,6 +18,10 @@ public class GlobalSettingsManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(transform.root.gameObject);
+
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
+
             LoadAndApplyVideoSettings();
         }
         else
@@ -53,7 +56,9 @@ public class GlobalSettingsManager : MonoBehaviour
     // 해상도 조정하는 함수
     public void ApplyResolution(int index, bool isFullscreen)
     {
-        Screen.SetResolution(this.widthList[index], this.heightList[index], isFullscreen);
+        FullScreenMode mode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+
+        Screen.SetResolution(this.widthList[index], this.heightList[index], mode);
 
         PlayerPrefs.SetInt("ResIndex", index);
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
