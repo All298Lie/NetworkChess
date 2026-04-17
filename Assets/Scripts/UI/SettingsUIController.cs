@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,18 @@ public class SettingsUIController : MonoBehaviour
 
     void Start()
     {
+        // 해상도 설정 초기화
+
+        this.resDropdown.ClearOptions();
+        List<Resolution> resolutions = GlobalSettingsManager.Instance.AvilableResolutions;
+        List<string> options = new List<string>();
+
+        foreach (Resolution res in resolutions)
+        {
+            options.Add($"{res.width} x {res.height}");
+        }
+        this.resDropdown.AddOptions(options);
+
         // 1. 기존 설정값으로 UI 초기화
 
         // 해상도
@@ -38,12 +51,12 @@ public class SettingsUIController : MonoBehaviour
     // 해상도 설정을 적용하는 함수
     private void ApplyVideoSettings()
     {
-        GlobalSettingsManager.Instance.ApplyResolution(resDropdown.value, fullscreenToggle);
+        GlobalSettingsManager.Instance.ApplyResolution(this.resDropdown.value, this.fullscreenToggle.isOn);
     }
 
     // 테마 설정을 적용하는 함수
     private void ApplyThemeSettings()
     {
-        GlobalSettingsManager.Instance.ApplyTheme(boardThemeDropdown.value, pieceThemeDropdown.value);
+        GlobalSettingsManager.Instance.ApplyTheme(this.boardThemeDropdown.value, this.pieceThemeDropdown.value);
     }
 }

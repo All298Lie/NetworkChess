@@ -39,7 +39,7 @@ public class Piece : MonoBehaviour
 
         if (activeTheme != null)
         {
-            spriteRenderer.sprite = activeTheme.GetSprite(this.Data.type, this.IsWhite);
+            this.spriteRenderer.sprite = activeTheme.GetSprite(this.Data.type, this.IsWhite);
         }
     }
 

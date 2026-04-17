@@ -9,6 +9,7 @@ public class InputHandler : MonoBehaviour
     [SerializeField] private InputAction pointerPositionAction;
 
     private bool isDragging;
+    private bool isRightClickConsumed;
 
     void Start()
     {
@@ -37,17 +38,17 @@ public class InputHandler : MonoBehaviour
 
     void OnDisable()
     {
-        // 1. 액션 비활성화
-        leftClickAction.Disable();
-        rightClickAction.Disable();
-        pointerPositionAction.Disable();
-
-        // 2. 버튼이 눌렸을 때 함수가 실행되지 않도록 이벤트 구독해제
+        // 1. 버튼이 눌렸을 때 함수가 실행되지 않도록 이벤트 구독해제
         leftClickAction.started -= OnLeftClickStarted;
         leftClickAction.canceled -= OnLeftClickCanceled;
 
         rightClickAction.started -= OnRightClickStarted;
         rightClickAction.canceled -= OnRightClickCanceled;
+
+        // 2. 액션 비활성화
+        leftClickAction.Disable();
+        rightClickAction.Disable();
+        pointerPositionAction.Disable();
     }
 
     // 잡고 있는 기물을 마우스 위치로 이동시키는 함수
@@ -65,7 +66,7 @@ public class InputHandler : MonoBehaviour
         }
     }
 
-    // 마우스 좌클릭이 시작될 때 호출되는 이벤트 함수
+    // 좌클릭 시작 시 호출되는 이벤트 함수
     private void OnLeftClickStarted(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
@@ -82,7 +83,7 @@ public class InputHandler : MonoBehaviour
         }
     }
 
-    // 마우스 좌클릭이 끝날 때 호출되는 이벤트 함수
+    // 좌클릭 취소 시 호출되는 이벤트 함수
     private void OnLeftClickCanceled(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
@@ -96,7 +97,7 @@ public class InputHandler : MonoBehaviour
         this.isDragging = false;
     }
 
-    // 마우스 우클릭이 시작될 때 호출되는 이벤트 함수
+    // 우클릭 시작 시 호출되는 이벤트 함수
     private void OnRightClickStarted(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
@@ -105,16 +106,25 @@ public class InputHandler : MonoBehaviour
 
         Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
 
-        BoardManager.Instance.OnRightClickStarted();
-        HighlightManager.Instance.OnRightClickStarted(screenPos);
+        this.isRightClickConsumed = BoardManager.Instance.OnRightClickStarted();
+        if (this.isRightClickConsumed == false) // 우클릭이 기물 취소에 이용되었을 경우, 하이라이트 표시 준비를 하지 않음
+        {
+            HighlightManager.Instance.OnRightClickStarted(screenPos);
+        }
     }
 
-    // 마우스 우클릭이 끝날 때 호출되는 이벤트 함수
+    // 우클릭 취소 시 호출되는 이벤트 함수
     private void OnRightClickCanceled(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
         if (GameManager.Instance.IsGameEnd == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
+
+        if (this.isRightClickConsumed == true) // 이번 우클릭이 기물 취소용이었을 경우, 하이라이트와 어노테이션에 사용하지 않음
+        {
+            this.isRightClickConsumed = false;
+            return;
+        }
 
         Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
 
