@@ -485,13 +485,15 @@ public class BoardManager : MonoBehaviour
     }
 
     // 우클릭 시작 시 실행되는 함수
-    public void OnRightClickStarted()
+    public bool OnRightClickStarted()
     {
         // 1. 예외 처리
-        if (this.inputState == InputState.None) return;
+        if (this.inputState == InputState.None) return false;
 
         // 2. 작업 취소
         CancelPieceMove(this.selectedPiece);
         ClearSelection();
+
+        return true;
     }
 }
