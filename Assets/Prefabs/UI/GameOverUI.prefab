@@ -460,7 +460,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "White \uC2B9\uB9AC !\n<size=50%>(\uCCB4\uD06C\uBA54\uC774\uD2B8)</size>"
+  m_text: "White \uC2B9\uB9AC\n<size=50%>(\uCCB4\uD06C\uBA54\uC774\uD2B8)</size>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 75fc9284d76007545a0328bc8d0e5756, type: 2}
   m_sharedMaterial: {fileID: 4702192567272987434, guid: 75fc9284d76007545a0328bc8d0e5756, type: 2}
@@ -497,7 +497,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 10
+  m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
