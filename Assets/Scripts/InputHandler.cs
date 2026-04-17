@@ -27,6 +27,7 @@ public class InputHandler : MonoBehaviour
         leftClickAction.canceled += OnLeftClickCanceled;
 
         rightClickAction.started += OnRightClickStarted;
+        rightClickAction.canceled += OnRightClickCanceled;
     }
 
     void Update()
@@ -43,9 +44,10 @@ public class InputHandler : MonoBehaviour
 
         // 2. 버튼이 눌렸을 때 함수가 실행되지 않도록 이벤트 구독해제
         leftClickAction.started -= OnLeftClickStarted;
-        leftClickAction.canceled += OnLeftClickCanceled;
+        leftClickAction.canceled -= OnLeftClickCanceled;
 
         rightClickAction.started -= OnRightClickStarted;
+        rightClickAction.canceled -= OnRightClickCanceled;
     }
 
     // 잡고 있는 기물을 마우스 위치로 이동시키는 함수
@@ -71,6 +73,8 @@ public class InputHandler : MonoBehaviour
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
         Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
+
+        HighlightManager.Instance.OnLeftClickStarted(screenPos);
 
         if (BoardManager.Instance.OnLeftClickStarted(screenPos) == true)
         {
@@ -99,6 +103,21 @@ public class InputHandler : MonoBehaviour
         if (GameManager.Instance.IsGameEnd == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
+        Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
+
         BoardManager.Instance.OnRightClickStarted();
+        HighlightManager.Instance.OnRightClickStarted(screenPos);
+    }
+
+    // 마우스 우클릭이 끝날 때 호출되는 이벤트 함수
+    private void OnRightClickCanceled(InputAction.CallbackContext context)
+    {
+        // 1. 예외 처리
+        if (GameManager.Instance.IsGameEnd == true) return;
+        if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
+
+        Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
+
+        HighlightManager.Instance.OnRightClickCanceled(screenPos);
     }
 }
