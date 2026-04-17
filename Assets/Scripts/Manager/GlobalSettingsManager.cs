@@ -1,12 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class GlobalSettingsManager : MonoBehaviour
 {
     public static GlobalSettingsManager Instance { get; private set; }
 
     [Header("비디오 설정")]
-    private readonly int[] widthList = {1920, 1600, 1280};
-    private readonly int[] heightList = { 1080, 900, 720};
+    public List<Resolution> AvilableResolutions { get; private set; }
 
     [Header("테마 설정")]
     [SerializeField] private BoardThemeData[] boardThemeData;
@@ -22,6 +22,9 @@ public class GlobalSettingsManager : MonoBehaviour
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
 
+            this.AvilableResolutions = new List<Resolution>();
+
+            InitResolutions();
             LoadAndApplyVideoSettings();
         }
         else
@@ -33,6 +36,34 @@ public class GlobalSettingsManager : MonoBehaviour
     void Start()
     {
         LoadAndApplyThemeSettings();
+    }
+
+    private void InitResolutions()
+    {
+        Resolution[] allResolutions = Screen.resolutions;
+        this.AvilableResolutions.Clear();
+
+        // 16 : 9 비율 계산
+        float targetRatio = 16f / 9f;
+
+        foreach (Resolution res in allResolutions)
+        {
+            if (res.width >= 1280) // 창 최소 크기
+            {
+                // 오차범위 0.05 이내 16:9 비율이 아닌 해상도도 포함
+                float currentRatio = (float)res.width / res.height;
+                if (Mathf.Abs(currentRatio - targetRatio) < 0.05f)
+                {
+                    if (this.AvilableResolutions.Exists(x => x.width == res.width && x.height == res.height) == false)
+                    {
+                        this.AvilableResolutions.Add(res);
+                    }
+                }
+            }
+        } // foreach 문 끝점
+
+        // 해상도 크기에 맞게 정렬
+        this.AvilableResolutions.Sort((a, b) => b.width.CompareTo(a.width));
     }
     
     // 기존에 설정한 환경설정을 불러오고 적용하는 함수
@@ -56,9 +87,12 @@ public class GlobalSettingsManager : MonoBehaviour
     // 해상도 조정하는 함수
     public void ApplyResolution(int index, bool isFullscreen)
     {
+        if (index < 0 || index >= this.AvilableResolutions.Count) return;
+
+        Resolution selectedRes = this.AvilableResolutions[index];
         FullScreenMode mode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
 
-        Screen.SetResolution(this.widthList[index], this.heightList[index], mode);
+        Screen.SetResolution(selectedRes.width, selectedRes.height, mode);
 
         PlayerPrefs.SetInt("ResIndex", index);
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
