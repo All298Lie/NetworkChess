@@ -15,17 +15,17 @@ public class Tile : MonoBehaviour
     {
         gameObject.name = $"Tile_{x}_{y}";
 
-        if (moveHighlight != null)
+        if (this.moveHighlight != null)
         {
-            moveHighlight.SetActive(false);
+            this.moveHighlight.SetActive(false);
         }
 
-        if (captureHighlight != null)
+        if (this.captureHighlight != null)
         {
-            captureHighlight.SetActive(false);
+            this.captureHighlight.SetActive(false);
         }
 
-        isShowLastMoveHighlight = false;
+        this.isShowLastMoveHighlight = false;
     }
 
     // 하이라이트 지정
@@ -62,9 +62,9 @@ public class Tile : MonoBehaviour
         this.lastMoveHighlight.SetActive(false);
 
         // 2. 하이라이트가 켜져있을 경우 끄고, 꺼져있을 경우 키기
-        selectHighlight.SetActive(selectHighlight.activeSelf ^ true);
+        this.selectHighlight.SetActive(selectHighlight.activeSelf ^ true);
 
-        if (this.isShowLastMoveHighlight == true && selectHighlight.activeSelf == false)
+        if (this.isShowLastMoveHighlight == true && this.selectHighlight.activeSelf == false)
         {
             this.lastMoveHighlight.SetActive(true);
         }
@@ -72,7 +72,7 @@ public class Tile : MonoBehaviour
 
     public void HideSelectHighlight()
     {
-        selectHighlight.SetActive(false);
+        this.selectHighlight.SetActive(false);
 
         if (this.isShowLastMoveHighlight == true)
         {

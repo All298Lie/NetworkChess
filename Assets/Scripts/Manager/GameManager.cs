@@ -39,9 +39,9 @@ public class GameManager : MonoBehaviour
 
     public void RegisterModeManager(GameModeBase modeManager)
     {
-        ActiveMode = modeManager;
+        this.ActiveMode = modeManager;
         Debug.Log($"현재 활성화된 체스 모드: {currentMode}");
 
-        ActiveMode.StartGame();
+        this.ActiveMode.StartGame();
     }
 }

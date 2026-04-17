@@ -29,7 +29,7 @@ public class GameOverUIController : MonoBehaviour
         }
         else
         {
-            this.resultText.text = $"{winnerName} 승리 !\n <size=50%>({reason})</size>";
+            this.resultText.text = $"{winnerName} 승리\n <size=50%>({reason})</size>";
         }
     }
 

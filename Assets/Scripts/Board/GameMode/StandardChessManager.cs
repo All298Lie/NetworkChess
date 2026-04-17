@@ -31,7 +31,7 @@ public class StandardChessManager : GameModeBase
     // 기물 이동 리퀘스트 관련 처리를 하는 함수
     public override async UniTask<bool> HandlePieceMoveRequest(Piece piece, Vector2Int targetPos)
     {
-        if (isProcessingMove == true) return false;
+        if (this.isProcessingMove == true) return false;
 
         // 잘못된 기물 이동 방식일 경우, 취소 후 리턴
         if (piece.IsWhite != this.IsWhiteTurn || this.LegalMovesCache.ContainsKey(piece) == false || this.LegalMovesCache[piece].Contains(targetPos) == false)
@@ -42,7 +42,7 @@ public class StandardChessManager : GameModeBase
         }
 
         // 정상적인 기물 이동 방식일 경우, 기물 이동 처리
-        isProcessingMove = true;
+        this.isProcessingMove = true;
         bool moveSuccess = await FinalizeMove(piece, targetPos);
 
         return moveSuccess;
@@ -165,7 +165,7 @@ public class StandardChessManager : GameModeBase
         if (needRollback == true)
         {
             BoardManager.Instance.CancelMoveOnBoard(piece, originalPos, targetPiece);
-            isProcessingMove = false;
+            this.isProcessingMove = false;
 
             return false;
         }
@@ -176,13 +176,13 @@ public class StandardChessManager : GameModeBase
 
         if (isCapture == true || isPawnMove == true) // 기물을 먹거나 폰을 움직였을 경우
         {
-            halfMoveClock = 0;
+            this.halfMoveClock = 0;
 
-            stateHistory.Clear();
+            this.stateHistory.Clear();
         }
         else
         {
-            halfMoveClock = halfMoveClock + 1;
+            this.halfMoveClock = this.halfMoveClock + 1;
         }
 
         // 7. 롤백 때 파괴되지 않도록 기물 지연 파괴 작업

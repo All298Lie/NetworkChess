@@ -21,7 +21,6 @@ public class BoardManager : MonoBehaviour
 
     public Piece[,] Board { get; private set; }
     private Tile[,] tiles;
-    private List<Vector2Int> highlightedTiles;
 
     public Vector2Int? EnPassant;
     private Vector2Int whiteKing;
@@ -31,7 +30,6 @@ public class BoardManager : MonoBehaviour
     private const string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
     [Header("Input 시스템")]
-    private readonly Vector3 boardOffset = new Vector3(-3.5f, -3.5f, 0.0f);
     private Vector2Int dragStartTile;
     private InputState inputState;
 
@@ -47,7 +45,6 @@ public class BoardManager : MonoBehaviour
 
     private readonly Vector2Int hotSpot = new Vector2Int(8, 8);
 
-    // 오브젝트가 생성된 즉시 호출되는 함수
     void Awake()
     {
         if (Instance == null) // 싱글톤 패턴 디자인
@@ -79,8 +76,6 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        highlightedTiles = new List<Vector2Int>();
-
         this.isSelected = false;
 
         GenerateTiles();
@@ -91,7 +86,7 @@ public class BoardManager : MonoBehaviour
     {
         if (GameManager.Instance == null || GameManager.Instance.ActiveMode == null) return;
 
-        // UpdateCursorState();
+        UpdateCursorState();
     }
 
     // FEN 기보법을 통해 표기된 문자열을 통해 보드판 세팅 
@@ -203,34 +198,35 @@ public class BoardManager : MonoBehaviour
     }
 
     // 마우스 커서 상태를 업데이트하는 함수
-    //private void UpdateCursorState()
-    //{
-    //    // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
-    //    if (this.inputState == InputState.Dragging)
-    //    {
-    //        Cursor.SetCursor(grabCursor, hotSpot, CursorMode.ForceSoftware);
+    private void UpdateCursorState()
+    {
+        // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
+        if (this.inputState == InputState.Dragging)
+        {
+            Cursor.SetCursor(grabCursor, hotSpot, CursorMode.ForceSoftware);
 
-    //        return;
-    //    }
+            return;
+        }
 
-    //    Vector2Int tilePos = GetTilePosFromMouse();
+        Vector2 screenPos = Mouse.current.position.ReadValue();
+        Vector2Int tilePos = GetTilePosFromMouse(screenPos);
 
-    //    // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
-    //    if (MoveValidator.IsOnBoard(tilePos) == true)
-    //    {
-    //        Piece hoveredPiece = Board[tilePos.x, tilePos.y];
+        // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
+        if (MoveValidator.IsOnBoard(tilePos) == true)
+        {
+            Piece hoveredPiece = Board[tilePos.x, tilePos.y];
 
-    //        if (hoveredPiece != null && hoveredPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn)
-    //        {
-    //            Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.ForceSoftware);
+            if (this.inputState == InputState.Selected || (hoveredPiece != null && hoveredPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn))
+            {
+                Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.ForceSoftware);
 
-    //            return;
-    //        }
-    //    }
+                return;
+            }
+        }
 
-    //    // 3. 평상 시 상태일 경우 (기본 커서)
-    //    Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.ForceSoftware);
-    //}
+        // 3. 평상 시 상태일 경우 (기본 커서)
+        Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.ForceSoftware);
+    }
 
     // 기물 이동을 시도하는 함수
     private async UniTaskVoid TryMovePiece(Piece piece, Vector2Int targetPos)
@@ -281,6 +277,7 @@ public class BoardManager : MonoBehaviour
         return this.mainCamera.ScreenToWorldPoint(mouseScreenPos);
     }
 
+    // 마우스 위치를 통해 타일 좌표를 얻는 함수
     public Vector2Int GetTilePosFromMouse(Vector2 screenPos)
     {
         Vector3 worldPos = GetMouseWorldPosition(screenPos);

@@ -13,7 +13,6 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private Button settingsPanelBtn;
     [SerializeField] private Button closeSettingsBtn;
 
-
     void Start()
     {
         this.settingsPanel.SetActive(false); // 시작시 설정창 닫기
