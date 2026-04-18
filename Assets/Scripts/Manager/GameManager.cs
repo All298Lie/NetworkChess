@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -43,5 +44,10 @@ public class GameManager : MonoBehaviour
         Debug.Log($"현재 활성화된 체스 모드: {currentMode}");
 
         this.ActiveMode.StartGame();
+    }
+
+    public void OnClickExitButton()
+    {
+        SceneManager.LoadScene("LobbyScene");
     }
 }
