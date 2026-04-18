@@ -200,6 +200,24 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
         Vector2Int originPos = piece.CurrentPosition;
         Piece targetPiece = board[target.x, target.y];
 
+        // 앙파상 특수 처리용 변수
+        bool isEnPassent = false;
+        Vector2Int enPassantCapturedPos = new Vector2Int(-1, -1);
+        Piece enPassantCapturedPiece = null;
+
+        // 폰이 대각선 이동할 때, 해당 위치에 기물이 없을 경우, 앙파상
+        if (piece.Data.type == PieceType.Pawn && originPos.x != target.x && targetPiece == null)
+        {
+            isEnPassent = true;
+
+            // 먹힌 폰의 실제 위치 및 기물 정보
+            enPassantCapturedPos = new Vector2Int(target.x, originPos.y);
+            enPassantCapturedPiece = board[enPassantCapturedPos.x, enPassantCapturedPos.y];
+
+            // 기물의 가상 앙파상 처리
+            board[enPassantCapturedPos.x, enPassantCapturedPos.y] = null;
+        }
+
         // 기물을 가상 이동
         board[originPos.x, originPos.y] = null;
         board[target.x, target.y] = piece;
@@ -221,6 +239,12 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
         // 확인이 끝난 후 기물 위치 원상 복귀(백트래킹)
         board[originPos.x, originPos.y] = piece;
         board[target.x, target.y] = targetPiece;
+
+        // 앙파상 상황이었을 경우, 확인이 끝난 후 기물 위치 원상 복귀(백트래킹)
+        if (isEnPassent == true)
+        {
+            board[enPassantCapturedPos.x, enPassantCapturedPos.y] = enPassantCapturedPiece;
+        }
 
         return isSafe;
     }
