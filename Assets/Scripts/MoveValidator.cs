@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public static class MoveValidator // 서버, 클라이언트에 모두 사용할 기물이 이동 가능한 좌표를 뱉는 함수
@@ -319,8 +320,8 @@ public static class MoveValidator // 서버, 클라이언트에 모두 사용할
         int finalKingX = isKingSide ? 6 : 2;
         int finalRookX = isKingSide ? 5 : 3;
 
-        int minEmptyX = Mathf.Min(kingX, rookX, finalKingX, finalRookX);
-        int maxEmptyX = Mathf.Max(kingX, rookX, finalKingX, finalRookX);
+        int minEmptyX = Math.Min(Math.Min(kingX, rookX), Math.Min(finalKingX, finalRookX));
+        int maxEmptyX = Math.Max(Math.Max(kingX, rookX), Math.Max(finalKingX, finalRookX));
 
         // 1. 캐슬링을 하려는 킹과 룩 사이에 기물이 존재하는지 확인
         for (int x = minEmptyX; x <= maxEmptyX; x++)

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -150,7 +151,7 @@ public class StandardChessManager : GameModeBase
         BoardManager.Instance.ExecuteMoveOnBoard(piece, targetPos);
 
         // 1. 캐슬링 처리
-        if (piece.Data.type == PieceType.King && Mathf.Abs(targetPos.x - originalPos.x) > 1)
+        if (piece.Data.type == PieceType.King && Math.Abs(targetPos.x - originalPos.x) > 1)
         {
             HandleCastling(piece, targetPos.x > originalPos.x);
         }
@@ -248,7 +249,7 @@ public class StandardChessManager : GameModeBase
                 return enemyPawn;
             }
         }
-        else if (Mathf.Abs(targetPos.y - originalPos.y) == 2) // 폰이 2칸 이동했을 경우, 건너 뛴 위치를 앙파상 위치로 설정
+        else if (Math.Abs(targetPos.y - originalPos.y) == 2) // 폰이 2칸 이동했을 경우, 건너 뛴 위치를 앙파상 위치로 설정
         {
             int direction = piece.IsWhite ? 1 : -1;
 
