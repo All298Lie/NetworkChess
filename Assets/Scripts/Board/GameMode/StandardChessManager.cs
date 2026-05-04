@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+using NetworkChess.Core;
+
 public class StandardChessManager : GameModeBase
 {
     private Dictionary<string, int> stateHistory;
@@ -13,7 +15,7 @@ public class StandardChessManager : GameModeBase
 
     void Start()
     {
-        this.LegalMovesCache = new Dictionary<Piece, List<Vector2Int>>();
+        this.LegalMovesCache = new Dictionary<CorePiece, List<BoardPos>>();
         this.stateHistory = new Dictionary<string, int>();
 
         this.isProcessingMove = false;
@@ -25,12 +27,12 @@ public class StandardChessManager : GameModeBase
     public override void StartGame()
     {
         this.IsWhiteTurn = true;
-        BoardManager.Instance.EnPassant = null;
+        this.CurrentEnPassantPos = null;
         CalculateLegalMovesForTurn();
     }
 
     // 기물 이동 리퀘스트 관련 처리를 하는 함수
-    public override async UniTask<bool> HandlePieceMoveRequest(Piece piece, Vector2Int targetPos)
+    public override async UniTask<bool> HandlePieceMoveRequest(CorePiece piece, BoardPos targetPos)
     {
         if (this.isProcessingMove == true) return false;
 
@@ -73,8 +75,8 @@ public class StandardChessManager : GameModeBase
         // 스테일메이트 또는 체크메이트 상황일 경우
         if (this.LegalMovesCache.Count == 0)
         {
-            Vector2Int myKingPos = BoardManager.Instance.GetKingPosition(this.IsWhiteTurn);
-            bool inCheck = MoveValidator.IsKingInCheck(BoardManager.Instance.Board, this.IsWhiteTurn, myKingPos);
+            BoardPos myKingPos = MoveValidator.FindKingPosition(board, this.IsWhiteTurn);
+            bool inCheck = MoveValidator.IsKingInCheck(BoardManager.Instance.Board, this.IsWhiteTurn, myKingPos, this.CurrentEnPassantPos);
 
             if (inCheck == true)
             {
@@ -114,10 +116,10 @@ public class StandardChessManager : GameModeBase
         {
             for (int y = 0; y < 8; y++)
             {
-                Piece piece = BoardManager.Instance.Board[x, y];
+                CorePiece piece = BoardManager.Instance.Board[x, y];
                 if (piece != null && piece.IsWhite == this.IsWhiteTurn)
                 {
-                    List<Vector2Int> moves = MoveValidator.GetLegalMoves(BoardManager.Instance.Board, piece);
+                    List<BoardPos> moves = MoveValidator.GetLegalMoves(BoardManager.Instance.Board, piece, this.CurrentEnPassantPos);
 
                     if (moves.Count > 0)
                     {
@@ -128,7 +130,7 @@ public class StandardChessManager : GameModeBase
         }
 
         // 현재까지의 게임 진행 상황을 FEN 형식으로 생성해 저장
-        this.currentTurnFEN = FENUtility.GeneratingStateString(BoardManager.Instance.Board, IsWhiteTurn);
+        this.currentTurnFEN = FENUtility.GeneratingStateString(BoardManager.Instance.Board, IsWhiteTurn, CurrentEnPassantPos);
 
         if (this.stateHistory.ContainsKey(this.currentTurnFEN) == true) // 이미 존재하는 FEN 형식일 경우
         {
@@ -143,10 +145,10 @@ public class StandardChessManager : GameModeBase
     }
 
     // 기물의 이동을 처리하는 함수
-    private async UniTask<bool> FinalizeMove(Piece piece, Vector2Int targetPos)
+    private async UniTask<bool> FinalizeMove(CorePiece piece, BoardPos targetPos)
     {
-        Piece targetPiece = BoardManager.Instance.Board[targetPos.x, targetPos.y];
-        Vector2Int originalPos = piece.CurrentPosition;
+        CorePiece targetPiece = BoardManager.Instance.Board[targetPos.x, targetPos.y];
+        BoardPos originalPos = piece.CurrentPosition;
 
         BoardManager.Instance.ExecuteMoveOnBoard(piece, targetPos);
 
@@ -157,7 +159,7 @@ public class StandardChessManager : GameModeBase
         }
 
         // 2. 앙파상 처리
-        Piece enPassantTarget = HandleEnPassant(piece, originalPos, targetPos);
+        CorePiece enPassantTarget = HandleEnPassant(piece, originalPos, targetPos);
 
         // 3. 승급 처리
         bool needRollback = await HandlePromotion(piece, targetPos);
@@ -208,7 +210,7 @@ public class StandardChessManager : GameModeBase
     }
 
     // 캐슬링 관련 처리를 하는 함수
-    private void HandleCastling(Piece king, bool isKingSide)
+    private void HandleCastling(CorePiece king, bool isKingSide)
     {
         int y = king.CurrentPosition.y;
 
@@ -216,21 +218,21 @@ public class StandardChessManager : GameModeBase
         int oldRookX = isKingSide ? 7 : 0;
         int newRookX = isKingSide ? 5 : 3;
 
-        Piece rook = BoardManager.Instance.Board[oldRookX, y];
+        CorePiece rook = BoardManager.Instance.Board[oldRookX, y];
 
         if (rook != null && rook.Data.type == PieceType.Rook)
         {
-            BoardManager.Instance.ExecuteMoveOnBoard(rook, new Vector2Int(newRookX, y));
+            BoardManager.Instance.ExecuteMoveOnBoard(rook, new BoardPos(newRookX, y));
             rook.HasMoved = true;
         }
     }
 
     // 앙파상 관련 처리를 하는 함수
-    private Piece HandleEnPassant(Piece piece, Vector2Int originalPos, Vector2Int targetPos)
+    private CorePiece HandleEnPassant(CorePiece piece, BoardPos originalPos, BoardPos targetPos)
     {
-        Vector2Int? previousEnPassantTarget = BoardManager.Instance.EnPassant;
+        BoardPos? previousEnPassantTarget = this.CurrentEnPassantPos;
 
-        BoardManager.Instance.EnPassant = null;
+        this.CurrentEnPassantPos = null;
 
         if (piece.Data.type != PieceType.Pawn) return null;
 
@@ -238,8 +240,8 @@ public class StandardChessManager : GameModeBase
         {
             int direction = piece.IsWhite ? 1 : -1;
 
-            Vector2Int enemyPawnPos = new Vector2Int(targetPos.x, targetPos.y - direction);
-            Piece enemyPawn = BoardManager.Instance.Board[enemyPawnPos.x, enemyPawnPos.y];
+            BoardPos enemyPawnPos = new BoardPos(targetPos.x, targetPos.y - direction);
+            CorePiece enemyPawn = BoardManager.Instance.Board[enemyPawnPos.x, enemyPawnPos.y];
 
             if (enemyPawn != null)
             {
@@ -253,14 +255,14 @@ public class StandardChessManager : GameModeBase
         {
             int direction = piece.IsWhite ? 1 : -1;
 
-            BoardManager.Instance.EnPassant = new Vector2Int(originalPos.x, originalPos.y + direction);
+            this.CurrentEnPassantPos = new BoardPos(originalPos.x, originalPos.y + direction);
         }
 
         return null;
     }
 
     // 프로모션 관련 처리를 하는 함수
-    private async UniTask<bool> HandlePromotion(Piece piece, Vector2Int targetPos)
+    private async UniTask<bool> HandlePromotion(CorePiece piece, BoardPos targetPos)
     {
         if (piece.Data.type != PieceType.Pawn) return false;
 
@@ -294,16 +296,16 @@ public class StandardChessManager : GameModeBase
             for (int y = 0; y < 8; y++)
             {
                 // 기물 체크
-                Piece p = BoardManager.Instance.Board[x, y];
+                CorePiece logicPiece = BoardManager.Instance.Board[x, y];
 
                 // 1. 킹이거나 기물이 존재하지 않을 경우, 다음 보드판 확인
-                if (p == null || p.Data.type == PieceType.King) continue;
+                if (logicPiece == null || logicPiece.Data.type == PieceType.King) continue;
 
                 // 2. 마이너 기물 외에 다른 기물이 존재할 경우, 기물 부족이 아니므로 false 리턴
-                if (p.Data.type == PieceType.Pawn || p.Data.type == PieceType.Rook || p.Data.type == PieceType.Queen) return false;
+                if (logicPiece.Data.type == PieceType.Pawn || logicPiece.Data.type == PieceType.Rook || logicPiece.Data.type == PieceType.Queen) return false;
 
                 // 3. 마이너 기물이 존재할 경우, 카운트 증가
-                if (p.Data.type == PieceType.Knight || p.Data.type == PieceType.Bishop)
+                if (logicPiece.Data.type == PieceType.Knight || logicPiece.Data.type == PieceType.Bishop)
                 {
                     minorPieceCount = minorPieceCount + 1;
                 }

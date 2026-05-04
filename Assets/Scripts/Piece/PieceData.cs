@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+using NetworkChess.Core;
+
 [CreateAssetMenu(fileName = "Piece", menuName = "Chess/Piece", order = 1)]
 public class PieceData : ScriptableObject
 {

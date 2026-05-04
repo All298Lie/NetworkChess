@@ -17,6 +17,9 @@ namespace NetworkChess.Core
         public static BoardPos operator +(BoardPos a, BoardPos b) => new BoardPos(a.x + b.x, a.y + b.y);
         public static BoardPos operator -(BoardPos a, BoardPos b) => new BoardPos(a.x - b.x, a.y - b.y);
 
+        public static BoardPos operator *(BoardPos a, int multiplier) => new BoardPos(a.x * multiplier, a.y * multiplier);
+        public static BoardPos operator *(int multiplier, BoardPos a) => new BoardPos(a.x * multiplier, a.y * multiplier);
+
         // 비교 연산
         public static bool operator ==(BoardPos a, BoardPos b) => (a.x == b.x) && (a.y == b.y);
         public static bool operator !=(BoardPos a, BoardPos b) => (a == b) == false;
@@ -28,5 +31,7 @@ namespace NetworkChess.Core
 
         // 디버깅 편의를 위한 ToString 재정의
         public override string ToString() => $"{x}, {y}";
+
+        public static BoardPos up => new BoardPos(0, 1);
     }
 }

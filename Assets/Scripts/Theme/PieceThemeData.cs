@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NetworkChess.Core;
+using UnityEngine;
 
 [System.Serializable]
 public struct PieceSpritesSet

@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using NetworkChess.Core;
+
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }

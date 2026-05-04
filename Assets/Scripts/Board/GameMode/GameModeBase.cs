@@ -1,10 +1,13 @@
 ﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class GameModeBase : MonoBehaviour
+public abstract class GameModeBase
 {
-    public Dictionary<Piece, List<Vector2Int>> LegalMovesCache { get; protected set; }
+    public virtual BoardPos? CurrentEnPassantPos { get; protected set; } = null;
+
+    public Dictionary<CorePiece, List<BoardPos>> LegalMovesCache { get; protected set; }
 
     public bool IsWhiteTurn { get; protected set; }
 
@@ -12,7 +15,7 @@ public abstract class GameModeBase : MonoBehaviour
     public virtual void StartGame() { }
 
     // 2. 보드 매니저에서 받은 기물 이동 리퀘스트 관련 처리를 하는 함수
-    public virtual async UniTask<bool> HandlePieceMoveRequest(Piece piece, Vector2Int targetPos)
+    public virtual async UniTask<bool> HandlePieceMoveRequest(CorePiece piece, BoardPos targetPos)
     {
         return await UniTask.FromResult(true);
     }

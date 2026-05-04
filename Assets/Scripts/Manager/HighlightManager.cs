@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using NetworkChess.Core;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -9,14 +10,14 @@ public class HighlightManager : MonoBehaviour
     [Header("프리팹")]
     [SerializeField] private GameObject arrowPrefab; 
 
-    private List<Vector2Int> highlightedTiles; // 이동  가능 영역
-    private List<Vector2Int> lastMoveTiles; // 최근 이동 흔적
-    private List<Vector2Int> selectHighlightTiles; // 선택 하이라이트
-    private Dictionary<(Vector2Int, Vector2Int), Arrow> activeArrows; // 화살표 어노테이션
+    private List<BoardPos> highlightedTiles; // 이동  가능 영역
+    private List<BoardPos> lastMoveTiles; // 최근 이동 흔적
+    private List<BoardPos> selectHighlightTiles; // 선택 하이라이트
+    private Dictionary<(BoardPos, BoardPos), Arrow> activeArrows; // 화살표 어노테이션
 
     private ObjectPool<Arrow> arrowPool;
     
-    private Vector2Int startPos;
+    private BoardPos startPos;
     
     void Awake()
     {
@@ -30,14 +31,14 @@ public class HighlightManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        this.highlightedTiles = new List<Vector2Int>();
-        this.lastMoveTiles = new List<Vector2Int>();
-        this.selectHighlightTiles = new List<Vector2Int>();
-        this.activeArrows = new Dictionary<(Vector2Int, Vector2Int), Arrow>();
+        this.highlightedTiles = new List<BoardPos>();
+        this.lastMoveTiles = new List<BoardPos>();
+        this.selectHighlightTiles = new List<BoardPos>();
+        this.activeArrows = new Dictionary<(BoardPos, BoardPos), Arrow>();
 
         this.arrowPool = new ObjectPool<Arrow>(OnCreateArrow, OnGetArrow, OnReleaseArrow);
 
-        this.startPos = new Vector2Int(-1, -1);
+        this.startPos = new BoardPos(-1, -1);
     }
 
     // 오브젝트 풀링 : 가져오기 함수
@@ -63,7 +64,7 @@ public class HighlightManager : MonoBehaviour
     }
 
     // 이동/공격 하이라이트를 상태에 맞게 켜주는 함수
-    private void SetMoveHighlight(Vector2Int tilePos, bool show, bool isCapture)
+    private void SetMoveHighlight(BoardPos tilePos, bool show, bool isCapture)
     {
         if (MoveValidator.IsOnBoard(tilePos) == false) return;
 
@@ -76,7 +77,7 @@ public class HighlightManager : MonoBehaviour
     }
 
     // 선택 하이라이트 토글 함수
-    private void ToggleSelectHighlight(Vector2Int tilePos)
+    private void ToggleSelectHighlight(BoardPos tilePos)
     {
         if (MoveValidator.IsOnBoard(tilePos) == false) return;
 
@@ -89,7 +90,7 @@ public class HighlightManager : MonoBehaviour
     }
 
     // 타일 하이라이트를 숨기는 함수
-    private void HideSelectHighlight(Vector2Int tilePos)
+    private void HideSelectHighlight(BoardPos tilePos)
     {
         if (MoveValidator.IsOnBoard(tilePos) == false) return;
 
@@ -105,7 +106,7 @@ public class HighlightManager : MonoBehaviour
     private void ClearHighlight()
     {
         // 1. 선택 하이라이트 제거
-        foreach (Vector2Int tilePos in this.selectHighlightTiles)
+        foreach (BoardPos tilePos in this.selectHighlightTiles)
         {
             HideSelectHighlight(tilePos);
         }
@@ -120,13 +121,15 @@ public class HighlightManager : MonoBehaviour
     }
 
     // 이동/공격 하이라이트를 켜주는 함수
-    public void ShowMoveHighlights(Piece piece, List<Vector2Int> legalMoves)
+    public void ShowMoveHighlights(CorePiece piece, List<BoardPos> legalMoves)
     {
-        foreach (Vector2Int pos in legalMoves)
+        BoardPos? enPassantPos = GameManager.Instance.ActiveMode.CurrentEnPassantPos;
+
+        foreach (BoardPos pos in legalMoves)
         {
             bool isCapture = (BoardManager.Instance.Board[pos.x, pos.y] != null);
 
-            if (BoardManager.Instance.EnPassant.HasValue && BoardManager.Instance.EnPassant.Value == pos && piece.Data.type == PieceType.Pawn)
+            if (enPassantPos.HasValue == true && enPassantPos.Value == pos && piece.Data.type == PieceType.Pawn)
             {
                 isCapture = true;
             }
@@ -140,7 +143,7 @@ public class HighlightManager : MonoBehaviour
     // 이동/공격 하이라이트를 꺼주는 함수
     public void HideMoveHighlights()
     {
-        foreach (Vector2Int pos in this.highlightedTiles)
+        foreach (BoardPos pos in this.highlightedTiles)
         {
             SetMoveHighlight(pos, false, false);
         }
@@ -149,10 +152,10 @@ public class HighlightManager : MonoBehaviour
     }
 
     // 최근 이동 위치를 나타내는 하이라이트를 업데이트 해주는 함수
-    public void UpdateLastMoveHighlight(Vector2Int fromPos, Vector2Int toPos)
+    public void UpdateLastMoveHighlight(BoardPos fromPos, BoardPos toPos)
     {
         // 1. 기존 흔적 지우기
-        foreach (Vector2Int pos in this.lastMoveTiles)
+        foreach (BoardPos pos in this.lastMoveTiles)
         {
             Tile tile = BoardManager.Instance.GetTile(pos);
 
@@ -182,7 +185,7 @@ public class HighlightManager : MonoBehaviour
     }
 
     // 어노테이션 화살표를 업데이트하는 함수
-    public void UpdateAnnotationArrow(Vector2Int startPos, Vector2Int endPos)
+    public void UpdateAnnotationArrow(BoardPos startPos, BoardPos endPos)
     {
         // 이미 동일한 시작점, 끝점에 화살표가 있을 경우, 화살표 삭제
         if (this.activeArrows.ContainsKey((startPos, endPos)) == true)
@@ -206,14 +209,14 @@ public class HighlightManager : MonoBehaviour
         {
             bool isFirstX = dx > dy;
 
-            Vector2Int middlePos;
+            BoardPos middlePos;
             if (isFirstX == true)
             {
-                middlePos = new Vector2Int(endPos.x, startPos.y);
+                middlePos = new BoardPos(endPos.x, startPos.y);
             }
             else
             {
-                middlePos = new Vector2Int(startPos.x, endPos.y);
+                middlePos = new BoardPos(startPos.x, endPos.y);
             }
 
             Vector3 middleWorldPos = BoardManager.Instance.GetWorldPosition(middlePos.x, middlePos.y);
@@ -230,7 +233,7 @@ public class HighlightManager : MonoBehaviour
     // 좌클릭 시작 시 작동하는 함수
     public void OnLeftClickStarted(Vector2 screenPos)
     {
-        Vector2Int tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
+        BoardPos tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
 
         if (MoveValidator.IsOnBoard(tilePos) == true)
         {
@@ -241,7 +244,7 @@ public class HighlightManager : MonoBehaviour
     // 우클릭 시작 시 작동하는 함수
     public void OnRightClickStarted(Vector2 screenPos)
     {
-        Vector2Int tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
+        BoardPos tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
 
         if (MoveValidator.IsOnBoard(tilePos) == true)
         {
@@ -252,7 +255,7 @@ public class HighlightManager : MonoBehaviour
     // 우클릭 취소 시 작동하는 함수
     public void OnRightClickCanceled(Vector2 screenPos)
     {
-        Vector2Int tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
+        BoardPos tilePos = BoardManager.Instance.GetTilePosFromMouse(screenPos);
 
         if (MoveValidator.IsOnBoard(tilePos) == true)
         {
