@@ -258,18 +258,40 @@ public class BoardManager : MonoBehaviour
 
         BoardPos originalPos = piece.CurrentPosition;
 
-        if (MoveValidator.IsOnBoard(targetPos) == true)
+        // 1. 보드 위인지 확인
+        if (MoveValidator.IsOnBoard(targetPos) == false)
         {
-            bool isMoveValid = await GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, targetPos);
+            CancelPieceMove(piece);
+            return;
+        }
 
-            if (isMoveValid == true)
+        // 2. 클라이언트 예측(프로모션 가능한지 확인)
+        PieceType? selectedPromotionType = null;
+
+        if (piece.Data.type == PieceType.Pawn)
+        {
+            int promotionY = piece.IsWhite ? 7 : 0;
+            if (targetPos.y == promotionY) // 폰의 위치가 프로모션 위치일 경우
             {
-                HighlightManager.Instance.UpdateLastMoveHighlight(originalPos, targetPos);
+                // 비동기 상태로 프로모션UI 팝업
+                PromotionUIController.Instance.IsWhite = piece.IsWhite;
+                selectedPromotionType = await PromotionUIController.Instance.SelectPieceAsync(targetPos, piece.IsWhite);
+
+                if (selectedPromotionType == null)
+                {
+                    CancelPieceMove(piece);
+                    return;
+                }
             }
-            else
-            {
-                CancelPieceMove(piece);
-            }
+        }
+
+        // 3. 유저 선택이 완료되었거나 일반 이동일 경우 서버로 요청 전송(예정)
+        bool isMoveValid = GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, targetPos, selectedPromotionType);
+
+        if (isMoveValid == true)
+        {
+            HighlightManager.Instance.UpdateLastMoveHighlight(originalPos, targetPos);
+            UpdatePieceVisualPosition(piece, targetPos);
         }
         else
         {
@@ -328,61 +350,12 @@ public class BoardManager : MonoBehaviour
         return new Vector3(this.a1Position.x + (x * this.tileSize), this.a1Position.y + (y * this.tileSize), 0.0f);
     }
 
-    // 보드에서 기물을 이동 처리하는 함수
-    public void ExecuteMoveOnBoard(CorePiece piece, BoardPos targetPos)
-    {
-        // 1. 기존 타일에 기물 비우기
-        BoardPos originPos = piece.CurrentPosition;
-
-        this.Board[originPos.x, originPos.y] = null;
-
-        // 2. 도착지에 적 기물이 있으면 파괴
-        CorePiece targetPiece = this.Board[targetPos.x, targetPos.y];
-        if (targetPiece != null && this.pieceViewMap.ContainsKey(targetPiece) == true)
-        {
-            this.pieceViewMap[targetPiece].gameObject.SetActive(false);
-        }
-
-        // 3. 배열 데이터 갱신
-        this.Board[targetPos.x, targetPos.y] = piece;
-
-        // 4. 기물의 실제 이동 처리
-        this.pieceViewMap[targetPiece]?.MoveTo(GetWorldPosition(targetPos.x, targetPos.y));
-        piece.CurrentPosition = targetPos;
-    }
-
-    // 기물 이동을 취소시키는 함수
-    public void CancelMoveOnBoard(CorePiece piece, BoardPos originalPos, CorePiece capturePiece)
-    {
-        // 1. 이동시킨 기물 복구
-        this.Board[piece.CurrentPosition.x, piece.CurrentPosition.y] = null;
-        this.Board[originalPos.x, originalPos.y] = piece;
-
-        // 2. 잡힌 기물 복구
-        if (capturePiece != null)
-        {
-            this.Board[piece.CurrentPosition.x, piece.CurrentPosition.y] = capturePiece;
-            this.pieceViewMap[capturePiece]?.gameObject.SetActive(true);
-        }
-
-        // 3. 물리적 위치 복구
-        this.pieceViewMap[piece]?.MoveTo(GetWorldPosition(originalPos.x, originalPos.y));
-        piece.CurrentPosition = originalPos;
-    }
-
     // 폰을 프로모션 처리하는 함수
-    public void PromotePawn(CorePiece pawn, PieceType type)
+    public void PromotePawnView(CorePiece pawn, PieceType type)
     {
         if (this.pieceDic.ContainsKey(type) == true)
         {
-            PieceData newPieceData = this.pieceDic[type];
-
-            // 1. CorePieceData만 변경
-            CorePieceData newCoreData = ConvertToCoreData(newPieceData);
-
-            pawn.UpdateData(newCoreData);
-
-            // 2. PieceView 갱신
+            // PieceView 갱신
             if (this.pieceViewMap.TryGetValue(pawn, out PieceView view) == true)
             {
                 view.Initialize(pawn);
@@ -515,6 +488,25 @@ public class BoardManager : MonoBehaviour
             Destroy(pieceView.gameObject);
 
             pieceViewMap.Remove(capturedPiece);
+        }
+    }
+
+    public Dictionary<PieceType, CorePieceData> GetCorePieceDataDic()
+    {
+        Dictionary<PieceType, CorePieceData> dic = new Dictionary<PieceType, CorePieceData>();
+        foreach (KeyValuePair<PieceType, PieceData> keyValuePair in this.pieceDic)
+        {
+            dic.Add(keyValuePair.Key, ConvertToCoreData(keyValuePair.Value));
+        }
+
+        return dic;
+    }
+
+    public void UpdatePieceVisualPosition(CorePiece piece, BoardPos newPos)
+    {
+        if (this.pieceViewMap.TryGetValue(piece, out PieceView view) == true)
+        {
+            view.MoveTo(GetWorldPosition(newPos.x, newPos.y));
         }
     }
 }
