@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -131,7 +132,7 @@ public class PromotionUIController : MonoBehaviour
     }
 
     // UI와 보드 동기화 작업을 하는 함수
-    private void SyncTransformWithBoard(Vector2Int targetPos, bool isTopRank)
+    private void SyncTransformWithBoard(BoardPos targetPos, bool isTopRank)
     {
         // 1. 버튼 정렬
         ReverseButtonsOrder(isTopRank);
@@ -229,7 +230,7 @@ public class PromotionUIController : MonoBehaviour
     }
 
     // 폰이 프로모션할 기물의 형태를 띄워주는 비동기 함수
-    public async UniTask<PieceType?> SelectPieceAsync(Vector2Int targetPos, bool isTopRank)
+    public async UniTask<PieceType?> SelectPieceAsync(BoardPos targetPos, bool isTopRank)
     {
         RefreshImage(); // 진영과 테마에 맞게 기물 스프라이트 갱신
 

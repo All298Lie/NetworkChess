@@ -1,16 +1,13 @@
 ﻿using UnityEngine;
 
-public class Piece : MonoBehaviour
+using NetworkChess.Core;
+
+public class PieceView : MonoBehaviour
 {
     [Header("기물 속성")]
     [SerializeField] private SpriteRenderer spriteRenderer;
 
-    public PieceData Data { get; private set; }
-
-    public Vector2Int CurrentPosition { get; private set; }
-
-    public bool IsWhite { get; private set; }
-    public bool HasMoved;
+    [HideInInspector] public CorePiece LogicPiece;
 
     // 객체가 활성화되면 작동하는 함수
     void OnEnable()
@@ -33,32 +30,27 @@ public class Piece : MonoBehaviour
     // 기물 Sprite를 새로고침 하는 함수
     private void RefreshSprite()
     {
-        if (this.Data == null || ThemeManager.Instance == null) return;
+        if (this.LogicPiece.Data == null || ThemeManager.Instance == null) return;
 
         PieceThemeData activeTheme = ThemeManager.Instance.CurrentPieceTheme;
 
         if (activeTheme != null)
         {
-            this.spriteRenderer.sprite = activeTheme.GetSprite(this.Data.type, this.IsWhite);
+            this.spriteRenderer.sprite = activeTheme.GetSprite(this.LogicPiece.Data.type, this.LogicPiece.IsWhite);
         }
     }
 
     // BoardManager가 기물을 스폰할 때 딱 한 번 호출하는 함수
-    public void Setup(PieceData data, bool isWhite, Vector2Int startPos)
+    public void Initialize(CorePiece logicPiece)
     {
-        this.Data = data;
-        this.IsWhite = isWhite;
-        this.CurrentPosition = startPos;
-        this.HasMoved = false;
+        this.LogicPiece = logicPiece;
 
         RefreshSprite(); // 생성 즉시 테마에 맞는 기물 Sprite 입히기
     }
 
     // 기물을 이동할 때 호출되는 함수
-    public void MoveTo(Vector2Int newArrayPos, Vector3 newWorldPos)
+    public void MoveTo(Vector3 newWorldPos)
     {
-        this.CurrentPosition = newArrayPos;
-
         transform.position = newWorldPos;
     }
 

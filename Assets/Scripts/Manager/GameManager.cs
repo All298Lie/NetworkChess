@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
+
+using NetworkChess.Core;
 
 public class GameManager : MonoBehaviour
 {
@@ -36,14 +39,66 @@ public class GameManager : MonoBehaviour
         gameOverUI.name = "GameOverUI";
 
         this.GameOverUI = gameOverUI.GetComponent<GameOverUIController>();
+
+        InitializeGameMode();
     }
 
-    public void RegisterModeManager(GameModeBase modeManager)
+    void OnDestroy()
     {
-        this.ActiveMode = modeManager;
-        Debug.Log($"현재 활성화된 체스 모드: {currentMode}");
+        if (this.ActiveMode != null)
+        {
+            this.ActiveMode.OnGameOverEvent -= HandleGameOver;
+            this.ActiveMode.OnPieceCapturedEvent -= HandlePieceCaptured;
+            this.ActiveMode.OnPawnPromotedEvent -= HandlePawnPromoted;
+            this.ActiveMode.OnPieceMovedEvent -= HandlePieceMoved;
+        }
+    }
 
-        this.ActiveMode.StartGame();
+    private void InitializeGameMode()
+    {
+        if (this.currentMode == GameMode.Standard)
+        {
+            // 1. 순수 C# 코어 매니저 생성
+            StandardChessMode standardMode = new StandardChessMode();
+            this.ActiveMode = standardMode;
+
+            // 2. 이벤트 구독
+            this.ActiveMode.OnGameOverEvent += HandleGameOver;
+            this.ActiveMode.OnPieceCapturedEvent += HandlePieceCaptured;
+            this.ActiveMode.OnPawnPromotedEvent += HandlePawnPromoted;
+            this.ActiveMode.OnPieceMovedEvent += HandlePieceMoved;
+
+            // 3. 보드 데이터 및 규칙 주입
+            CorePiece[, ] coreBoard = BoardManager.Instance.Board;
+            Dictionary<PieceType, CorePieceData> dataDic = BoardManager.Instance.GetCorePieceDataDic();
+
+            standardMode.Initialize(coreBoard, dataDic);
+            Debug.Log($"현재 활성화된 체스 모드: {currentMode}");
+
+            // 4. 게임 시작
+            this.ActiveMode.StartGame();
+        }
+    }
+
+    private void HandleGameOver(string winnerName, string reason)
+    {
+        this.IsGameEnd = true;
+        this.GameOverUI.ShowGameOver(winnerName, reason);
+    }
+
+    private void HandlePieceCaptured(CorePiece capturedPiece)
+    {
+        BoardManager.Instance.DestroyPiece(capturedPiece);
+    }
+
+    private void HandlePawnPromoted(CorePiece pawn, PieceType newType)
+    {
+        BoardManager.Instance.PromotePawnView(pawn, newType);
+    }
+
+    private void HandlePieceMoved(CorePiece piece, BoardPos newPos)
+    {
+        BoardManager.Instance.UpdatePieceVisualPosition(piece, newPos);
     }
 
     public void OnClickExitButton()
