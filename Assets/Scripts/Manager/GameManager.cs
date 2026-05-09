@@ -28,7 +28,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("게임 매니저가 이미 존재합니다.");
+            CLog.LogWarning("게임 매니저가 이미 존재합니다.");
             Destroy(gameObject);
         }
     }
@@ -73,7 +73,7 @@ public class GameManager : MonoBehaviour
             Dictionary<PieceType, CorePieceData> dataDic = BoardManager.Instance.GetCorePieceDataDic();
 
             standardMode.Initialize(coreBoard, dataDic);
-            Debug.Log($"현재 활성화된 체스 모드: {currentMode}");
+            CLog.Log($"현재 활성화된 체스 모드: {currentMode}");
 
             // 4. 게임 시작
             this.ActiveMode.StartGame();

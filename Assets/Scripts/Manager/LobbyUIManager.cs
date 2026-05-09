@@ -1,61 +1,116 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class LobbyUIManager : MonoBehaviour
 {
-    [Header("메인 로비 UI")]
-    [SerializeField] private Button gameStartBtn;
-    [SerializeField] private Button settingsBtn;
-    [SerializeField] private Button exitBtn;
+    [Header("버튼 UI")]
+    [SerializeField] private Button gameStartBtn; // 게임시작
+    [SerializeField] private Button spectateBtn; // 관전하기
+    [SerializeField] private Button replayBtn; // 기보 복기
+    [SerializeField] private Button settingsBtn; // 환경설정(아이콘 형태)
+    [SerializeField] private Button disconnectBtn; // 접속종료
 
-    [Header("패널")]
-    [SerializeField] private GameObject settingsPanel;
-    [SerializeField] private Button settingsPanelBtn;
-    [SerializeField] private Button closeSettingsBtn;
+    [Header("환경설정 UI")]
+    [SerializeField] private GameObject optionUIPrefab;
+    private PopUpUI optionUI;
 
+    [Header("유저 닉네임 UI")]
+    [SerializeField] private GameObject playerUI;
+    [SerializeField] private TMP_Text nicknameText;
+
+    #region Start 함수
     void Start()
     {
-        this.settingsPanel.SetActive(false); // 시작시 설정창 닫기
+        // 환경설정 UI 초기화
+        InitializeOptionUI();
 
         // 로비 버튼에 이벤트 연결
         this.gameStartBtn.onClick.AddListener(OnStartGame);
         this.settingsBtn.onClick.AddListener(OnSettings);
-        this.exitBtn.onClick.AddListener(OnExitGame);
+        this.disconnectBtn.onClick.AddListener(OnDisConnectServer);
 
-        // 환경설정 패널에 이벤트 연결
-        this.settingsPanelBtn.onClick.AddListener(OnCloseSettings);
-        this.closeSettingsBtn.onClick.AddListener(OnCloseSettings);
+        // 플레이어 UI 초기화
+        InitializePlayerUI();
     }
+    #endregion
 
-    // 게임시작 버튼을 눌렀을 때 작동하는 함수
+    #region + 초기화 함수
+
+    #region OptionUI 초기화 함수
+    private void InitializeOptionUI()
+    {
+        // 1. 프리팹을 통한 생성
+        GameObject optionUI = Instantiate(optionUIPrefab, transform);
+        optionUI.name = "OptionUI";
+
+        // 2. 환경설정 UI 변수에 담기
+        this.optionUI = optionUI.GetComponent<PopUpUI>();
+    }
+    #endregion
+
+    #region PlayerUI 초기화 함수
+    private void InitializePlayerUI()
+    {
+        if (NetworkManager.Instance != null) // 네트워크 연결이 되어있을 경우, 닉네임 표기
+        {
+            this.nicknameText.text = NetworkManager.Instance.MyNickname;
+        }
+        else // 연결 안 되어있을 경우, UI 닫기
+        {
+            playerUI.SetActive(false);
+        }
+    }
+    #endregion
+
+    #endregion - 초기화 함수
+
+    #region + 버튼 함수
+
+    #region 게임시작 버튼을 눌렀을 때 작동하는 함수
     private void OnStartGame()
     {
-        Debug.Log("게임 씬으로 이동합니다.");
+        CLog.Log("[버튼 클릭] 게임 시작");
+
+        // 방 생성 참가 UI 추가 필요
+
         SceneManager.LoadScene("GameScene");
     }
+    #endregion
 
-    // 환경설정 버튼을 눌렀을 때 작동하는 함수
+    #region 환경설정 버튼을 눌렀을 때 작동하는 함수
     private void OnSettings()
     {
-        Debug.Log("환경설정 패널을 활성화합니다.");
-        this.settingsPanel.SetActive(true);
+        CLog.Log("[버튼 클릭] 환경설정");
+        this.optionUI.OpenPopUpUI();
     }
+    #endregion
 
-    // 환경설정 닫기 버튼을 눌렀을 때 작동하는 함수
-    private void OnCloseSettings()
+    #region 기보 복기 버튼을 눌렀을 때 작동하는 함수
+    private void OnReplay()
     {
-        Debug.Log("환경설정 패널을 닫습니다.");
-        this.settingsPanel.SetActive(false);
-    }
+        CLog.Log("[버튼 클릭] 기보 복기");
 
-    // 게임종료 버튼을 눌렀을 때 작동하는 함수
-    private void OnExitGame()
-    {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+        // TODO : 기보 복기 구현
     }
+    #endregion
+
+    #region 접속종료 버튼을 눌렀을 때 작동하는 함수
+    private void OnDisConnectServer()
+    {
+        CLog.Log("[버튼 클릭] 접속 종료");
+
+        // 1. 로그인을 관리하고 있던 NetworkManager 삭제
+        if (NetworkManager.Instance != null)
+        {
+            Destroy(NetworkManager.Instance.gameObject);
+        }
+
+        // 2. 타이틀 씬으로 이동
+        SceneManager.LoadScene("TitleScene");
+    }
+    #endregion
+
+    #endregion - 버튼 함수
 }

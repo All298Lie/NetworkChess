@@ -51,8 +51,6 @@ public class NetworkManager : MonoBehaviour
 
     #endregion - 유니티 함수
 
-    #region + private 접근제한자 함수
-
     #region 정확한 바이트 수신 함수
     private async UniTask<int> ReceiveExactAsync(byte[] buffer, int size)
     {
@@ -118,7 +116,7 @@ public class NetworkManager : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[네트워크 수신 종료] {ex.Message}");
+                CLog.LogWarning($"[네트워크] 수신 종료 : {ex.Message}");
                 break;
             }
         } // while 문
@@ -134,10 +132,12 @@ public class NetworkManager : MonoBehaviour
             {
                 clientSocket.Shutdown(SocketShutdown.Both);
                 clientSocket.Close();
+
+                CLog.Log("[네트워크] 로그아웃");
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[네트워크] 소켓 종료 중 에러 : {ex.Message}");
+                CLog.LogWarning($"[네트워크] <color=red>소켓 종료 중 에러</color> : {ex.Message}");
             }
         }
     }
@@ -150,7 +150,7 @@ public class NetworkManager : MonoBehaviour
     {
         if (res.IsSuccess == true)
         {
-            Debug.Log($"<color=green>[로그인 성공]</color> {res.Message}");
+            CLog.Log($"[네트워크] <color=green>로그인 성공</color> : {res.Message}");
 
             // 1. 닉네임 저장
             this.MyNickname = res.Nickname;
@@ -160,7 +160,7 @@ public class NetworkManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"<color=red>[로그인 실패]</color> {res.Message}");
+            CLog.LogWarning($"[네트워크] <color=red>로그인 실패</color> : {res.Message}");
 
             // 1. 실패 메세지를 이벤트를 통해 전송
             OnLoginFailed?.Invoke(res.Message);
@@ -169,10 +169,6 @@ public class NetworkManager : MonoBehaviour
     #endregion
 
     #endregion -- 패킷 처리 핸들러
-
-    #endregion - private 접근제한자 함수
-
-    #region + public 접근제한자 함수
 
     #region 비동기 서버 연결 함수
     public async UniTask ConnectToServerAsync(string ip, int port)
@@ -184,14 +180,14 @@ public class NetworkManager : MonoBehaviour
 
             // 2. 서버로 연결
             await clientSocket.ConnectAsync(ip, port).AsUniTask();
-            Debug.Log($"[네트워크] 서버({ip}:{port}) 연결 성공!");
+            CLog.Log($"[네트워크] 서버({ip}:{port}) 연결 성공!");
 
             // 3. 패킷을 전송 받을 수 있도록 설정
             ReceiveLoopAsync().Forget();
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[네트워크 에러] 서버 연결 실패 : {ex.Message}");
+            CLog.LogError($"[네트워크] <color=red>서버 연결 실패 에러</color> : {ex.Message}");
         }
     }
     #endregion
@@ -201,7 +197,7 @@ public class NetworkManager : MonoBehaviour
     {
         if (clientSocket == null || clientSocket.Connected == false)
         {
-            Debug.LogWarning("[네트워크] 서버와 연결되어있지 않아 패킷을 보낼 수 없습니다.");
+            CLog.LogWarning("[네트워크] 서버와 연결되어있지 않아 패킷을 보낼 수 없습니다.");
             return;
         }
 
@@ -212,14 +208,12 @@ public class NetworkManager : MonoBehaviour
 
             // 2. 서버로 전송
             await clientSocket.SendAsync(new ArraySegment<byte>(sendData), SocketFlags.None).AsUniTask();
-            Debug.Log($"[네트워크] 패킷 전송 완료 : {packet.GetType().Name}");
+            CLog.Log($"[네트워크] 패킷 전송 완료 : {packet.GetType().Name}");
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[네트워크 에러] 패킷 전송 실패 : {ex.Message}");
+            CLog.LogError($"[네트워크] <color=red>패킷 전송 실패 에러</color> : {ex.Message}");
         }
     }
     #endregion
-
-    #endregion - public 접근제한자 함수
 }

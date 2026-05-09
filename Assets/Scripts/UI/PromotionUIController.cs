@@ -46,7 +46,7 @@ public class PromotionUIController : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("이미 프로모션 UI가 존재합니다.");
+            CLog.LogWarning("이미 프로모션 UI가 존재합니다.");
             Destroy(gameObject);
         }
 

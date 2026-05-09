@@ -52,7 +52,7 @@ public class BoardManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("보드 매니저가 이미 존재합니다.");
+            CLog.LogWarning("보드 매니저가 이미 존재합니다.");
             Destroy(gameObject);
         }
 

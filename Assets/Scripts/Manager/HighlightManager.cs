@@ -27,7 +27,7 @@ public class HighlightManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("이미 하이라이트 매니저가 존재합니다.");
+            CLog.LogWarning("이미 하이라이트 매니저가 존재합니다.");
             Destroy(gameObject);
         }
 
