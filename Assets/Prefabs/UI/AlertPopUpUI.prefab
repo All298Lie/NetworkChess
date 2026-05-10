@@ -693,7 +693,7 @@ GameObject:
   - component: {fileID: 184844733021791717}
   - component: {fileID: 3945652311526033817}
   m_Layer: 5
-  m_Name: LoginFailUI
+  m_Name: AlertPopUpUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -731,7 +731,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f16dc9642cf1c564c92c3a1940407905, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoginFailUI
-  popupUI: {fileID: 7236897732845377812}
+  popupUI: {fileID: 2087208497178741581}
   messageText: {fileID: 4756925242895561006}
 --- !u!114 &3945652311526033817
 MonoBehaviour:
@@ -745,7 +745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44732df2f819fe64b8a45df52d25b75d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PopUpUI
-  popUpUI: {fileID: 7236897732845377812}
+  popUpUI: {fileID: 2087208497178741581}
   background: {fileID: 7827144487396582795}
   closeButton: {fileID: 73171377607502262}
 --- !u!1 &8126181803681504282

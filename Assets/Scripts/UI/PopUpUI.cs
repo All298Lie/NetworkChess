@@ -29,7 +29,7 @@ public class PopUpUI : MonoBehaviour
     #endregion
 
     #region 닫기 버튼을 눌렀을 때 팝업UI를 닫는 함수
-    private void ClosePopUpUI()
+    public void ClosePopUpUI()
     {
         CLog.Log("[버튼 클릭] 팝업 닫기");
         this.popUpUI.SetActive(false);

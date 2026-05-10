@@ -525,6 +525,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5545295228374264806}
   - component: {fileID: 5126166347888303883}
+  - component: {fileID: 4061829669953017186}
   m_Layer: 5
   m_Name: GameStartUI
   m_TagString: Untagged
@@ -567,6 +568,21 @@ MonoBehaviour:
   popUpUI: {fileID: 7105780548141354845}
   background: {fileID: 9187923708858991565}
   closeButton: {fileID: 8587910885117591154}
+--- !u!114 &4061829669953017186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2946838342762895043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f103fa6fdae3337409f3316e9503b3e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameStartUI
+  popUpUI: {fileID: 7105780548141354845}
+  createRoomBtn: {fileID: 2621889684650286787}
+  joinRoomBtn: {fileID: 4756230239053540409}
 --- !u!1 &3050284506820765892
 GameObject:
   m_ObjectHideFlags: 0

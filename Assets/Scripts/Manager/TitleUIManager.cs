@@ -11,27 +11,50 @@ public class TitleUIManager: MonoBehaviour
     [SerializeField] private Button connectBtn;
     [SerializeField] private Button exitBtn;
 
-    [SerializeField] private GameObject loginFailUIPrefab;
+    [Header("알람 UI")]
+    [SerializeField] private GameObject alertPopUpUIPrefab;
+    private AlertPopUpUI alert;
+
+    #region + 유니티 함수
 
     #region Start 함수
     void Start()
     {
-        // 1. 로그인 실패 UI 초기화
-        InitializeLoginFailUI();
+        // 1. 알람 UI 초기화
+        InitializeAlertPopUpUI();
 
         // 2. 버튼 연결
-        connectBtn.onClick.AddListener(OnSendLoginRequest);
-        exitBtn.onClick.AddListener(OnExitGame);
+        this.connectBtn.onClick.AddListener(OnSendLoginRequest);
+        this.exitBtn.onClick.AddListener(OnExitGame);
     }
     #endregion
 
-    #region 로그인 실패 UI 초기화 함수
-    private void InitializeLoginFailUI()
+    #region OnEnable 함수
+    void OnEnable()
     {
-        GameObject loginFailUI = Instantiate(loginFailUIPrefab, transform);
-        loginFailUI.name = "LoginFailUI";
+        NetworkManager.OnLoginFailed += HandleLoginFailed;
     }
     #endregion
+
+    #region OnDisable 함수
+    void OnDisable()
+    {
+        NetworkManager.OnLoginFailed -= HandleLoginFailed;
+    }
+    #endregion
+
+    #endregion
+
+    #region 알람 UI 초기화 함수
+    private void InitializeAlertPopUpUI()
+    {
+        GameObject alertPopUpUI = Instantiate(this.alertPopUpUIPrefab, transform);
+        alertPopUpUI.name = "AlertPopUpUI";
+
+        this.alert = alertPopUpUI.GetComponent<AlertPopUpUI>();
+    }
+    #endregion
+
 
     #region + 버튼 함수
 
@@ -41,7 +64,7 @@ public class TitleUIManager: MonoBehaviour
         CLog.Log("[버튼 클릭] 서버 접속(시도)");
 
         // 1. 닉네임 문자열 받아오기
-        string inputNickname = input.text;
+        string inputNickname = input.text.Trim();
 
         // 2. 패킷으로 저장
         C2S_LoginReq req = new C2S_LoginReq();
@@ -66,4 +89,11 @@ public class TitleUIManager: MonoBehaviour
     #endregion
 
     #endregion - 버튼 함수
+
+    #region 로그인 실패 핸들
+    private void HandleLoginFailed(string errorMessage)
+    {
+        this.alert.ShowPopup(errorMessage);
+    }
+    #endregion
 }

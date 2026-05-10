@@ -15,7 +15,15 @@ public class NetworkManager : MonoBehaviour
     public string MyNickname { get; private set; }
     public string nicknameReq = string.Empty;
 
+    public string CurrentRoomId { get; private set; } = string.Empty;
+
+    // 로그인 관련 이벤트
     public static event Action<string> OnLoginFailed;
+
+    // 방 생성/참가, 관전 관련 이벤트
+    public static event Action<string> OnRoomJoinFailed;
+    public static event Action<string, bool> OnRoomCreateSuccess;
+    public static event Action<string, bool> OnRoomJoinSuccess;
 
     #region + 유니티 함수
 
@@ -112,6 +120,11 @@ public class NetworkManager : MonoBehaviour
                         S2C_LoginRes loginRes = JsonConvert.DeserializeObject<S2C_LoginRes>(jsonPayload);
                         HandleLoginRes(loginRes);
                         break;
+
+                    case PacketType.S2C_RoomJoinRes:
+                        S2C_RoomJoinRes roomJoinRes = JsonConvert.DeserializeObject<S2C_RoomJoinRes>(jsonPayload);
+                        HandleRoomJoinRes(roomJoinRes);
+                        break;
                 }
             }
             catch (Exception ex)
@@ -164,6 +177,36 @@ public class NetworkManager : MonoBehaviour
 
             // 1. 실패 메세지를 이벤트를 통해 전송
             OnLoginFailed?.Invoke(res.Message);
+        }
+    }
+    #endregion
+
+    #region 2. 방 생성/참가 결과
+    private void HandleRoomJoinRes(S2C_RoomJoinRes res)
+    {
+        if (res.IsSuccess == true)
+        {
+            CLog.Log($"[네트워크] <color=green>방 입장 성공</color> : {res.Message}");
+
+            // 1. 네트워크 매니저가 자신의 상태를 먼저 갱신
+            this.CurrentRoomId = res.RoomId;
+
+            // 2. 방 생성인지, 참가인지 구분
+            if (res.RoomId == this.MyNickname)
+            {
+                CLog.Log("[방 생성] 생성 완료. 대기 모드로 전환");
+                OnRoomCreateSuccess?.Invoke(res.RoomId, res.IsWhite);
+            }
+            else
+            {
+                CLog.Log($"[방 참여] '{res.RoomId}'님 방 참가 완료.");
+                OnRoomJoinSuccess?.Invoke(res.RoomId, res.IsWhite);
+            }
+        }
+        else
+        {
+            CLog.LogWarning($"[네트워크] <color=red>방 입장 실패</color> : {res.Message}");
+            OnRoomJoinFailed?.Invoke(res.Message);
         }
     }
     #endregion
