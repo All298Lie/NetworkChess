@@ -7,7 +7,7 @@ public abstract class RoomPopUpBase : MonoBehaviour
     [Header("뒤로가기 UI")]
     [SerializeField] protected Button backButton;
 
-    public void InitializeBase(Action onBackClick)
+    protected void InitializeBase(Action onBackClick)
     {
         if (this.backButton != null)
         {

@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks.Triggers;
+﻿using NetworkChess.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -29,6 +29,10 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private GameObject joinRoomUIPrefab;
     private PopUpUI joinRoomUI;
 
+    [Header("게임 관전 UI")]
+    [SerializeField] private GameObject spectateRoomUIPrefab;
+    private PopUpUI spectateRoomUI;
+
     [Header("유저 닉네임 UI")]
     [SerializeField] private GameObject playerUI;
     [SerializeField] private TMP_Text nicknameText;
@@ -37,6 +41,16 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private GameObject alertPopUpUIPrefab;
     private PopUpUI alertPopUpUI;
     private AlertPopUpUI alert;
+
+    [Header("로딩 UI")]
+    [SerializeField] private GameObject loadingPopUpUIPrefab;
+    private PopUpUI loadingUI;
+    private LoadingUI loading;
+
+    [Header("매칭 UI")]
+    [SerializeField] private GameObject matchRoomUIPrefab;
+    private PopUpUI matchRoomUI;
+    private AlertPopUpUI match;
 
     #region + 유니티 함수
 
@@ -48,11 +62,13 @@ public class LobbyUIManager : MonoBehaviour
 
         // 로비 버튼에 이벤트 연결
         this.gameStartBtn.onClick.AddListener(OnStartGame);
+        this.spectateBtn.onClick.AddListener(OnSpectateGame);
         this.settingsBtn.onClick.AddListener(OnSettings);
         this.disconnectBtn.onClick.AddListener(OnDisConnectServer);
 
         // 알람 UI 초기화
         InitializeAlertPopUpUI();
+        InitializeMatchRoomUI();
 
         // 플레이어 UI 초기화
         InitializePlayerUI();
@@ -62,26 +78,40 @@ public class LobbyUIManager : MonoBehaviour
         InitializeCreateRoomUI();
         InitializeJoinRoomUI();
 
-        // 알람 UI가 화면 최상단에 위치해야하므로 위치 조정
+        InitializeSpectateRoomUI();
+
+        // 로딩 UI 초기화
+        InitializeLoadingPopUpUI();
+
+        // 알람 UI와 매치 성공 UI가 화면 최상단에 위치해야하므로 위치 조정
         this.alertPopUpUI.transform.SetAsLastSibling();
+        this.matchRoomUI.transform.SetAsLastSibling();
     }
     #endregion
 
     #region OnEnable 함수
     void OnEnable()
     {
-        NetworkManager.OnRoomJoinFailed += HandleRoomJoinFailed;
+        NetworkManager.OnRoomFailed += HandleRoomJoinFailed;
         NetworkManager.OnRoomCreateSuccess += HandleRoomCreateSuccess;
         NetworkManager.OnRoomJoinSuccess += HandleRoomJoinSuccess;
+
+        NetworkManager.OnRoomLeave += HandleRoomLeave;
+
+        NetworkManager.OnMatchStarted += HandleRoomMatch;
     }
     #endregion
 
     #region OnDisable 함수
     void OnDisable()
     {
-        NetworkManager.OnRoomJoinFailed -= HandleRoomJoinFailed;
+        NetworkManager.OnRoomFailed -= HandleRoomJoinFailed;
         NetworkManager.OnRoomCreateSuccess -= HandleRoomCreateSuccess;
         NetworkManager.OnRoomJoinSuccess -= HandleRoomJoinSuccess;
+
+        NetworkManager.OnRoomLeave -= HandleRoomLeave;
+
+        NetworkManager.OnMatchStarted -= HandleRoomMatch;
     }
     #endregion
 
@@ -144,7 +174,7 @@ public class LobbyUIManager : MonoBehaviour
 
         // 3. 방 생성 UI 초기화
         CreateRoomUI ui = createRoomUI.GetComponent<CreateRoomUI>();
-        ui.InitializeBase(this.OpenGameStartUI);
+        ui.Initialize(this.OpenGameStartUI);
     }
     #endregion
 
@@ -164,6 +194,22 @@ public class LobbyUIManager : MonoBehaviour
     }
     #endregion
 
+    #region SpectateRoomUI 초기화 함수
+    private void InitializeSpectateRoomUI()
+    {
+        // 1. 프리팹을 통한 생성
+        GameObject spectateRoomUI = Instantiate(this.spectateRoomUIPrefab, transform);
+        spectateRoomUI.name = "SpectateRoomUI";
+
+        // 2. 게임 관전 UI 변수에 담기
+        this.spectateRoomUI = spectateRoomUI.GetComponent<PopUpUI>();
+
+        // 3. 게임 관전 UI 초기화
+        SpectateRoomUI ui = spectateRoomUI.GetComponent<SpectateRoomUI>();
+        ui.Initialize(this.alert);
+    }
+    #endregion
+
     #region AlertPopUpUI 초기화 함수
     private void InitializeAlertPopUpUI()
     {
@@ -172,8 +218,34 @@ public class LobbyUIManager : MonoBehaviour
         alertPopUpUI.name = "AlertPopUpUI";
 
         // 2. 알림 팝업 UI 변수에 담기
-        this.alertPopUpUI = alertPopUpUI .GetComponent<PopUpUI>();
+        this.alertPopUpUI = alertPopUpUI.GetComponent<PopUpUI>();
         this.alert = alertPopUpUI.GetComponent<AlertPopUpUI>();
+    }
+    #endregion
+
+    #region LoadingPopUpUI 초기화 함수
+    private void InitializeLoadingPopUpUI()
+    {
+        // 1. 프리팹을 통한 생성
+        GameObject loadingPopUpUI = Instantiate(this.loadingPopUpUIPrefab, transform);
+        loadingPopUpUI.name = "LoadingPopUpUI";
+
+        // 2. 로딩 팝업 UI 변수에 담기
+        this.loadingUI = loadingPopUpUI.GetComponent<PopUpUI>();
+        this.loading = loadingPopUpUI.GetComponent<LoadingUI>();
+    }
+    #endregion
+
+    #region MatchRoomUI 초기화 함수
+    private void InitializeMatchRoomUI()
+    {
+        // 1. 프리팹을 통한 생성
+        GameObject matchRoomUI = Instantiate(this.matchRoomUIPrefab, transform);
+        matchRoomUI.name = "MatchRoomUI";
+
+        // 2. 매치 성공 UI 변수에 담기
+        this.matchRoomUI = matchRoomUI.GetComponent<PopUpUI>();
+        this.match = matchRoomUI.GetComponent<AlertPopUpUI>();
     }
     #endregion
 
@@ -188,6 +260,14 @@ public class LobbyUIManager : MonoBehaviour
         this.gameStartUI.OpenPopUpUI();
 
         // SceneManager.LoadScene("GameScene");
+    }
+    #endregion
+
+    #region 게임관전 버튼을 눌렀을 때 작동하는 함수
+    private void OnSpectateGame()
+    {
+        CLog.Log("[버튼 클릭] 게임 관전");
+        this.spectateRoomUI.OpenPopUpUI();
     }
     #endregion
 
@@ -265,22 +345,53 @@ public class LobbyUIManager : MonoBehaviour
     {
         if (alert != null)
         {
-            alert.ShowPopup(errorMessage);
+            alert.ShowPopup("방 참가", errorMessage);
         }
     }
     #endregion
 
     #region 방 참가 성공 핸들러
-    private void HandleRoomJoinSuccess(string roomId, bool isWhite)
+    private void HandleRoomJoinSuccess()
     {
+        // 1. 팝업 UI 닫기
+        joinRoomUI.ClosePopUpUI();
+
+        // 2. 로딩 UI 띄우기(취소 기능 X)
+        loading.ShowWaiting("방에 입장했습니다. 게임 시작을 준비합니다...");
+    }
+    #endregion
+
+    #region 방 생성 성공 핸들러
+    private void HandleRoomCreateSuccess()
+    {
+        // 1. 팝업 UI 닫기
+        createRoomUI.ClosePopUpUI();
+
+        // 2. 로딩 UI 띄우기(취소 기능 O)
+        loading.ShowWaiting("상대방을 기다리는 중입니다...", true);
+    }
+    #endregion
+
+    #region 방 매칭 완료 핸들러
+    private void HandleRoomMatch(bool isWhite, GameMode gameMode, string startingFEN)
+    {
+        // 1. 로딩 UI 닫기
+        loadingUI.ClosePopUpUI();
+
+        // 2. 매칭 성공 알람 출력
+        string teamText = isWhite ? "백(White)" : "흑(Black)";
+        match.ShowPopup("매치 성공", $"당신은 {teamText} 진영입니다.\n곧 게임이 시작됩니다.");
+
+        // 3. 인게임 데이터 준비
 
     }
     #endregion
 
-    #region 방 참가 실패 핸들러
-    private void HandleRoomCreateSuccess(string roomId, bool isWhite)
+    #region 방 나가기 핸들러
+    private void HandleRoomLeave()
     {
-
+        // 1. 로딩 UI 닫기
+        loadingUI.ClosePopUpUI();
     }
     #endregion
 

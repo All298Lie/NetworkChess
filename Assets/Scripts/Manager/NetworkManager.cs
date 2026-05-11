@@ -17,13 +17,22 @@ public class NetworkManager : MonoBehaviour
 
     public string CurrentRoomId { get; private set; } = string.Empty;
 
-    // 로그인 관련 이벤트
+    // 로그인 이벤트
     public static event Action<string> OnLoginFailed;
 
     // 방 생성/참가, 관전 관련 이벤트
-    public static event Action<string> OnRoomJoinFailed;
-    public static event Action<string, bool> OnRoomCreateSuccess;
-    public static event Action<string, bool> OnRoomJoinSuccess;
+    public static event Action<string> OnRoomFailed;
+    public static event Action OnRoomCreateSuccess;
+    public static event Action OnRoomJoinSuccess;
+
+    // 방 나가기 이벤트
+    public static event Action OnRoomLeave;
+
+    // 방 관전 이벤트
+    public static event Action OnRoomSpectateSuccess;
+
+    // 매칭 완료 이벤트
+    public static event Action<bool, GameMode, string> OnMatchStarted;
 
     #region + 유니티 함수
 
@@ -121,11 +130,28 @@ public class NetworkManager : MonoBehaviour
                         HandleLoginRes(loginRes);
                         break;
 
+                    case PacketType.S2C_RoomCreateRes:
+                        S2C_RoomCreateRes createRes = JsonConvert.DeserializeObject<S2C_RoomCreateRes>(jsonPayload);
+                        HandleRoomCreateRes(createRes);
+                        break;
+
                     case PacketType.S2C_RoomJoinRes:
                         S2C_RoomJoinRes roomJoinRes = JsonConvert.DeserializeObject<S2C_RoomJoinRes>(jsonPayload);
                         HandleRoomJoinRes(roomJoinRes);
                         break;
+
+                    case PacketType.S2C_RoomLeaveRes:
+                        S2C_RoomLeaveRes roomLeaveRes = JsonConvert.DeserializeObject<S2C_RoomLeaveRes>(jsonPayload);
+                        HandleRoomLeaveRes(roomLeaveRes);
+                        break;
+
+                    case PacketType.S2C_RoomMatchNoti:
+                        S2C_RoomMatchNoti matchNoti = JsonConvert.DeserializeObject<S2C_RoomMatchNoti>(jsonPayload);
+                        HandleRoomMatchNoti(matchNoti);
+                        break;
                 }
+
+                // await UniTask.SwitchToThreadPool(); // 소켓 통신은 백그라운드 스레드에서, 유니티 UI 작업은 메인스레드에서
             }
             catch (Exception ex)
             {
@@ -181,7 +207,28 @@ public class NetworkManager : MonoBehaviour
     }
     #endregion
 
-    #region 2. 방 생성/참가 결과
+    #region 2. 방 생성 결과
+    private void HandleRoomCreateRes(S2C_RoomCreateRes res)
+    {
+        if (res.IsSuccess == true)
+        {
+            CLog.Log($"[네트워크] <color=green>방 생성 성공</color> : {res.Message}");
+
+            // 1. 네트워크 매니저가 자신의 상태를 먼저 갱신
+            this.CurrentRoomId = this.MyNickname;
+
+            // 2. 이벤트 발생
+            CLog.Log("[방 생성] 생성 완료. 대기 모드로 전환");
+            OnRoomCreateSuccess?.Invoke();
+        }
+        else
+        {
+            OnRoomFailed?.Invoke(res.Message);
+        }
+    }
+    #endregion
+
+    #region 3. 방 참가 결과
     private void HandleRoomJoinRes(S2C_RoomJoinRes res)
     {
         if (res.IsSuccess == true)
@@ -191,23 +238,52 @@ public class NetworkManager : MonoBehaviour
             // 1. 네트워크 매니저가 자신의 상태를 먼저 갱신
             this.CurrentRoomId = res.RoomId;
 
-            // 2. 방 생성인지, 참가인지 구분
-            if (res.RoomId == this.MyNickname)
+            // 2. 이벤트 발생
+            if (res.IsSpectator == false)
             {
-                CLog.Log("[방 생성] 생성 완료. 대기 모드로 전환");
-                OnRoomCreateSuccess?.Invoke(res.RoomId, res.IsWhite);
+                CLog.Log($"[방 참여] '{res.RoomId}'님 방 참가 완료.");
+                OnRoomJoinSuccess?.Invoke();
             }
             else
             {
-                CLog.Log($"[방 참여] '{res.RoomId}'님 방 참가 완료.");
-                OnRoomJoinSuccess?.Invoke(res.RoomId, res.IsWhite);
+                CLog.Log($"[방 관전] '{res.RoomId}'님 방 관전 완료.");
+                OnRoomSpectateSuccess?.Invoke();
             }
         }
         else
         {
             CLog.LogWarning($"[네트워크] <color=red>방 입장 실패</color> : {res.Message}");
-            OnRoomJoinFailed?.Invoke(res.Message);
+            OnRoomFailed?.Invoke(res.Message);
         }
+    }
+    #endregion
+
+    #region 4. 방 나가기 결과
+    private void HandleRoomLeaveRes(S2C_RoomLeaveRes res)
+    {
+        if (res.IsSuccess == true)
+        {
+            CLog.Log($"[네트워크] <color=green>방 나가기 성공</color> : {res.Message}");
+
+            OnRoomLeave?.Invoke();
+        }
+        else
+        {
+            CLog.LogWarning($"[네트워크] <color=red>방 나가기 실패</color> : {res.Message}");
+        }
+    }
+    #endregion
+
+    #region 5. 방 매칭 완료 통보
+    private void HandleRoomMatchNoti(S2C_RoomMatchNoti noti)
+    {
+        CLog.Log($"[매칭] {noti.WhitePlayerNickname}(백) VS {noti.BlackPlayerNickname}(흑)");
+
+        // 1. 내 진영 확인
+        bool isWhite = (noti.WhitePlayerNickname == this.MyNickname);
+
+        // 2. 이벤트 발생
+        OnMatchStarted?.Invoke(isWhite, noti.GameMode, noti.StartingFEN);
     }
     #endregion
 

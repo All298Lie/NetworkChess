@@ -1165,7 +1165,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 350, y: 150}
+  m_SizeDelta: {x: 380, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1305587588
 MonoBehaviour:
@@ -1412,9 +1412,12 @@ MonoBehaviour:
   gameStartUIPrefab: {fileID: 2946838342762895043, guid: bd4ed14609ea5d94d953a8cd68fa1752, type: 3}
   createRoomUIPrefab: {fileID: 4743614648276898684, guid: c2fa3d619792b4c49954f6763fc9aef9, type: 3}
   joinRoomUIPrefab: {fileID: 5231506757659521362, guid: 2eecf08ae819dcd4094b0d76a8165300, type: 3}
+  spectateRoomUIPrefab: {fileID: 55160783348414939, guid: 0a074710816d227438d5d0bccf09ffb5, type: 3}
   playerUI: {fileID: 1710458739}
   nicknameText: {fileID: 121297088}
   alertPopUpUIPrefab: {fileID: 7512621959670772634, guid: a4119f7070546c240a1a32c590dffe16, type: 3}
+  loadingPopUpUIPrefab: {fileID: 4476429958589498771, guid: 81025cc849a43d14f8ac0785eb0af6f0, type: 3}
+  matchRoomUIPrefab: {fileID: 3538767460376608686, guid: 052c8a0f59c4a914f9e150d2e142bea5, type: 3}
 --- !u!1 &1466654408
 GameObject:
   m_ObjectHideFlags: 0
@@ -1805,7 +1808,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAD00\uC804\uD558\uAE30"
+  m_text: "\uAC8C\uC784 \uAD00\uC804"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1d4470778eedf8e4abf1b21970183bf4, type: 2}
   m_sharedMaterial: {fileID: 8781624150481243719, guid: 1d4470778eedf8e4abf1b21970183bf4, type: 2}

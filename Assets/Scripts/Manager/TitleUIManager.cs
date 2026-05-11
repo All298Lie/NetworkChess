@@ -93,7 +93,7 @@ public class TitleUIManager: MonoBehaviour
     #region 로그인 실패 핸들
     private void HandleLoginFailed(string errorMessage)
     {
-        this.alert.ShowPopup(errorMessage);
+        this.alert.ShowPopup("로그인 실패", errorMessage);
     }
     #endregion
 }

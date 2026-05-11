@@ -5,39 +5,37 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class JoinRoomUI : RoomPopUpBase
+public class SpectateRoomUI : MonoBehaviour
 {
-    [Header("게임 참가 UI")]
+    [Header("게임 관전 UI")]
     [SerializeField] private GameObject popUpUI;
     [SerializeField] private TMP_InputField input;
-    [SerializeField] private Button joinRoomBtn;
+    [SerializeField] private Button spectateRoomBtn;
 
     private AlertPopUpUI alertPopUpUI;
 
     void Start()
     {
-        this.joinRoomBtn.onClick.AddListener(OnJoinRoom);
+        this.spectateRoomBtn.onClick.AddListener(OnSpectateRoom);
 
         this.popUpUI.SetActive(false);
     }
 
-    public void Initialize(AlertPopUpUI alert, Action onBackButtonClick)
+    public void Initialize(AlertPopUpUI alert)
     {
-        base.InitializeBase(onBackButtonClick);
-
         this.alertPopUpUI = alert;
     }
 
-    private void OnJoinRoom()
+    private void OnSpectateRoom()
     {
         // 1. 입력된 텍스트 가져오기
         string targetName = this.input.text.Trim();
 
         if (string.IsNullOrEmpty(targetName) == true)
         {
-            CLog.LogWarning("[방 참가] 참가할 방장 닉네임을 입력해야 합니다.");
+            CLog.LogWarning("[방 관전] 참가할 방의 대전자 닉네임을 입력해야 합니다.");
 
-            this.alertPopUpUI.ShowPopup("방 참가", "참가할 방의 유저 닉네임을 입력해야 합니다.");
+            this.alertPopUpUI.ShowPopup("게임 관전", "참가할 방의 게임 중인 유저 닉네임을 입력해야 합니다.");
 
             return;
         }
@@ -47,7 +45,7 @@ public class JoinRoomUI : RoomPopUpBase
 
         C2S_RoomJoinReq req = new C2S_RoomJoinReq();
         req.TargetNickname = targetName;
-        req.IsSpectator = false;
+        req.IsSpectator = true;
 
         if (NetworkManager.Instance != null)
         {

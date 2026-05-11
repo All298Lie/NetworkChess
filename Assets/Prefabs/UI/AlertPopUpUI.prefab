@@ -714,10 +714,10 @@ RectTransform:
   - {fileID: 275680616399010089}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &184844733021791717
 MonoBehaviour:
@@ -732,6 +732,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoginFailUI
   popupUI: {fileID: 2087208497178741581}
+  titleText: {fileID: 2604153109941517091}
   messageText: {fileID: 4756925242895561006}
 --- !u!114 &3945652311526033817
 MonoBehaviour:
