@@ -373,17 +373,14 @@ public class LobbyUIManager : MonoBehaviour
     #endregion
 
     #region 방 매칭 완료 핸들러
-    private void HandleRoomMatch(bool isWhite, GameMode gameMode, string startingFEN)
+    private void HandleRoomMatch(bool isWhite)
     {
         // 1. 로딩 UI 닫기
         loadingUI.ClosePopUpUI();
 
-        // 2. 매칭 성공 알람 출력
+        // 3. 매칭 성공 알람 출력
         string teamText = isWhite ? "백(White)" : "흑(Black)";
         match.ShowPopup("매치 성공", $"당신은 {teamText} 진영입니다.\n곧 게임이 시작됩니다.");
-
-        // 3. 인게임 데이터 준비
-
     }
     #endregion
 

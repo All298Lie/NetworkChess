@@ -32,7 +32,7 @@ public class NetworkManager : MonoBehaviour
     public static event Action OnRoomSpectateSuccess;
 
     // 매칭 완료 이벤트
-    public static event Action<bool, GameMode, string> OnMatchStarted;
+    public static event Action<bool> OnMatchStarted;
 
     #region + 유니티 함수
 
@@ -116,11 +116,10 @@ public class NetworkManager : MonoBehaviour
                 string jsonPayload = Encoding.UTF8.GetString(payloadBuffer);
 
                 // 4. 부모 클래스 형태로 타입 확인
-                BasePacket? basePacket = JsonConvert.DeserializeObject<BasePacket>(jsonPayload);
+                BasePacket basePacket = JsonConvert.DeserializeObject<BasePacket>(jsonPayload);
                 if (basePacket == null) continue;
 
                 await UniTask.SwitchToMainThread(); // 소켓 통신은 백그라운드 스레드에서, 유니티 UI 작업은 메인스레드에서
-
 
                 // 5. 패킷 라우터
                 switch (basePacket.Type)
@@ -147,7 +146,7 @@ public class NetworkManager : MonoBehaviour
 
                     case PacketType.S2C_RoomMatchNoti:
                         S2C_RoomMatchNoti matchNoti = JsonConvert.DeserializeObject<S2C_RoomMatchNoti>(jsonPayload);
-                        HandleRoomMatchNoti(matchNoti);
+                        HandleRoomMatchNoti(matchNoti).Forget();
                         break;
                 }
 
@@ -182,7 +181,7 @@ public class NetworkManager : MonoBehaviour
     }
     #endregion
 
-    #region ++ 패킷 처리 핸들러
+    #region + 패킷 처리 핸들러
 
     #region 1. 로그인 결과
     private void HandleLoginRes(S2C_LoginRes res)
@@ -275,19 +274,32 @@ public class NetworkManager : MonoBehaviour
     #endregion
 
     #region 5. 방 매칭 완료 통보
-    private void HandleRoomMatchNoti(S2C_RoomMatchNoti noti)
+    private async UniTaskVoid HandleRoomMatchNoti(S2C_RoomMatchNoti noti)
     {
         CLog.Log($"[매칭] {noti.WhitePlayerNickname}(백) VS {noti.BlackPlayerNickname}(흑)");
 
         // 1. 내 진영 확인
         bool isWhite = (noti.WhitePlayerNickname == this.MyNickname);
+        string opponentNickname = (isWhite == true) ? noti.BlackPlayerNickname : noti.WhitePlayerNickname;
 
-        // 2. 이벤트 발생
-        OnMatchStarted?.Invoke(isWhite, noti.GameMode, noti.StartingFEN);
+        // 2. 인게임 데이터 준비
+        GameData.IsWhite = isWhite;
+        GameData.CurrentMode = noti.GameMode;
+        GameData.StartingFEN = (string.IsNullOrEmpty(noti.StartingFEN) == true) ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR" : noti.StartingFEN;
+        GameData.OpponentNickname = opponentNickname;
+
+        // 3. 이벤트 발생
+        OnMatchStarted?.Invoke(isWhite);
+
+        // 4. 플레이어가 로비에서 UI를 확인할 시간을 부여
+        await UniTask.Delay(2 * 1000); // 2초
+
+        // 5. 인게임 씬으로 이동
+        SceneManager.LoadScene("GameScene");
     }
     #endregion
 
-    #endregion -- 패킷 처리 핸들러
+    #endregion - 패킷 처리 핸들러
 
     #region 비동기 서버 연결 함수
     public async UniTask ConnectToServerAsync(string ip, int port)

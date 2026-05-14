@@ -1024,7 +1024,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   canvas: {fileID: 989493748}
-  currentMode: 0
   gameOverUIPrefab: {fileID: 4433659120488585683, guid: bc7efc8b36e2c154dbcf0b783bba61d7, type: 3}
 --- !u!4 &1344243723
 Transform:

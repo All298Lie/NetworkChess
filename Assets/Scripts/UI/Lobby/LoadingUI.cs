@@ -46,6 +46,7 @@ public class LoadingUI : MonoBehaviour
 
     #endregion - 유니티 함수
 
+    #region 메세지 설정 후 UI를 팝업시켜주는 함수
     public void ShowWaiting(string message, bool canCancel = false)
     {
         // 1. 버튼 상태 변경
@@ -70,6 +71,7 @@ public class LoadingUI : MonoBehaviour
         // 3. UI 팝업
         this.popUpUI.SetActive(true);
     }
+    #endregion
 
     #region 비동기 타이틀 로딩 연출 함수
     private async UniTaskVoid AnimateTitleTextAsync(CancellationToken token)

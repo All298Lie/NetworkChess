@@ -9,14 +9,18 @@ public class GameStartUI : MonoBehaviour
     [SerializeField] private Button createRoomBtn;
     [SerializeField] private Button joinRoomBtn;
 
+    #region Start 함수
     void Start()
     {
         this.popUpUI.SetActive(false);
     }
+    #endregion
 
+    #region 초기화
     public void Initialize(Action onCreateRoomClick, Action onJoinRoomClick)
     {
         this.createRoomBtn.onClick.AddListener(() => onCreateRoomClick?.Invoke());
         this.joinRoomBtn.onClick.AddListener(() => onJoinRoomClick?.Invoke());
     }
+    #endregion
 }

@@ -25,19 +25,25 @@ public class CreateRoomUI : RoomPopUpBase
     [SerializeField] private List<GameModeOption> modeOptions;
     [SerializeField] private GameMode currentSelectedMode;
 
+    #region Start 함수
     void Start()
     {
         createRoomBtn.onClick.AddListener(OnCreateRoom);
 
         popUpUI.SetActive(false);
     }
+    #endregion
 
+    #region + 초기화 함수
+
+    #region 초기화 함수
     public void Initialize(Action onBackButtonClick)
     {
         base.InitializeBase(onBackButtonClick);
 
         SetupDropdown();
     }
+    #endregion
 
     #region 드롭다운 초기화 및 이벤트 연결 함수
     private void SetupDropdown()
@@ -64,6 +70,8 @@ public class CreateRoomUI : RoomPopUpBase
         this.dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
     }
     #endregion
+
+    #endregion - 초기화 함수
 
     #region 드롭다운 값이 바뀔 때 실행되는 함수
     private void OnDropdownValueChanged(int index)

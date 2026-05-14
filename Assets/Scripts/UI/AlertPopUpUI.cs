@@ -8,7 +8,7 @@ public class AlertPopUpUI : MonoBehaviour
     [SerializeField] private TMP_Text messageText;
 
 
-    #region 로그인 실패 UI 출력
+    #region 알람 UI를 팝업시켜주는 함수
     public void ShowPopup(string title, string errorMessage)
     {
         // 1. 로그인 실패 사유 출력

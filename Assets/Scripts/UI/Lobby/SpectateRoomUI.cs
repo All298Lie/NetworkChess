@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using NetworkChess.Core;
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,18 +13,23 @@ public class SpectateRoomUI : MonoBehaviour
 
     private AlertPopUpUI alertPopUpUI;
 
+    #region Start 함수
     void Start()
     {
         this.spectateRoomBtn.onClick.AddListener(OnSpectateRoom);
 
         this.popUpUI.SetActive(false);
     }
+    #endregion
 
+    #region 초기화 함수
     public void Initialize(AlertPopUpUI alert)
     {
         this.alertPopUpUI = alert;
     }
+    #endregion
 
+    #region 버튼 클릭 시 작동되는 함수
     private void OnSpectateRoom()
     {
         // 1. 입력된 텍스트 가져오기
@@ -52,4 +56,5 @@ public class SpectateRoomUI : MonoBehaviour
             NetworkManager.Instance.SendPacket(req).Forget();
         }
     }
+    #endregion
 }

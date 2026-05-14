@@ -14,20 +14,25 @@ public class JoinRoomUI : RoomPopUpBase
 
     private AlertPopUpUI alertPopUpUI;
 
+    #region Start 함수
     void Start()
     {
         this.joinRoomBtn.onClick.AddListener(OnJoinRoom);
 
         this.popUpUI.SetActive(false);
     }
+    #endregion
 
+    #region 초기화 함수
     public void Initialize(AlertPopUpUI alert, Action onBackButtonClick)
     {
         base.InitializeBase(onBackButtonClick);
 
         this.alertPopUpUI = alert;
     }
+    #endregion
 
+    #region 버튼 클릭 시 작동되는 함수
     private void OnJoinRoom()
     {
         // 1. 입력된 텍스트 가져오기
@@ -54,4 +59,5 @@ public class JoinRoomUI : RoomPopUpBase
             NetworkManager.Instance.SendPacket(req).Forget();
         }
     }
+    #endregion
 }
