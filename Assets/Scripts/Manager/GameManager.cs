@@ -62,28 +62,38 @@ public class GameManager : MonoBehaviour
     #region 게임모드 관련 초기화 함수
     private void InitializeGameMode()
     {
-        if (GameData.CurrentMode == GameMode.Standard)
+        Dictionary<PieceType, CorePieceData> dataDic = BoardManager.Instance.GetCorePieceDataDic();
+
+        // 1. 게임모드에 따른 설정
+        switch (GameData.CurrentMode)
         {
-            // 1. 순수 C# 코어 매니저 생성
-            StandardChessMode standardMode = new StandardChessMode();
-            this.ActiveMode = standardMode;
+            case GameMode.Standard:
+                // 순수 C# 코어 매니저 생성
+                StandardChessMode standardMode = new StandardChessMode(dataDic);
+                this.ActiveMode = standardMode;
+                break;
 
-            // 2. 이벤트 구독
-            this.ActiveMode.OnGameOverEvent += HandleGameOver;
-            this.ActiveMode.OnPieceCapturedEvent += HandlePieceCaptured;
-            this.ActiveMode.OnPawnPromotedEvent += HandlePawnPromoted;
-            this.ActiveMode.OnPieceMovedEvent += HandlePieceMoved;
-
-            // 3. 보드 데이터 및 규칙 주입
-            CorePiece[, ] coreBoard = BoardManager.Instance.Board;
-            Dictionary<PieceType, CorePieceData> dataDic = BoardManager.Instance.GetCorePieceDataDic();
-
-            standardMode.Initialize(coreBoard, dataDic);
-            CLog.Log($"현재 활성화된 체스 모드: {GameData.CurrentMode}");
-
-            // 4. 게임 시작
-            this.ActiveMode.StartGame();
+            default:
+                CLog.LogWarning("현재 추가되지 않은 게임모드로 설정되었습니다.");
+                break;
         }
+
+        // 2. 이벤트 구독
+        this.ActiveMode.OnGameOverEvent += HandleGameOver;
+        this.ActiveMode.OnPieceCapturedEvent += HandlePieceCaptured;
+        this.ActiveMode.OnPawnPromotedEvent += HandlePawnPromoted;
+        this.ActiveMode.OnPieceMovedEvent += HandlePieceMoved;
+
+        // 3. 코어 보드 세팅
+        this.ActiveMode.InitializeBoard(GameData.StartingFEN);
+
+        // 4. 뷰어 세팅
+        BoardManager.Instance.SetupBoard(this.ActiveMode);
+
+        CLog.Log($"현재 활성화된 체스 모드: {GameData.CurrentMode}");
+
+        // 5. 게임 시작
+        this.ActiveMode.StartGame();
     }
     #endregion
 

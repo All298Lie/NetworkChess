@@ -127,7 +127,7 @@ public class HighlightManager : MonoBehaviour
 
         foreach (BoardPos pos in legalMoves)
         {
-            bool isCapture = (BoardManager.Instance.Board[pos.x, pos.y] != null);
+            bool isCapture = (GameManager.Instance.ActiveMode.Board[pos.x, pos.y] != null);
 
             if (enPassantPos.HasValue == true && enPassantPos.Value == pos && piece.Data.type == PieceType.Pawn)
             {

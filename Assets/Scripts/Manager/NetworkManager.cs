@@ -2,6 +2,7 @@
 using NetworkChess.Core;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
@@ -11,6 +12,8 @@ public class NetworkManager : MonoBehaviour
 {
     public static NetworkManager Instance { get; private set; }
     public Socket clientSocket;
+
+    private readonly ConcurrentQueue<Action> workQueue = new ConcurrentQueue<Action>();
 
     public string MyNickname { get; private set; }
     public string nicknameReq = string.Empty;
@@ -56,6 +59,16 @@ public class NetworkManager : MonoBehaviour
     {
         // 서버 연결
         ConnectAndInitializeAsync().Forget();
+    }
+    #endregion
+
+    #region Update 함수
+    void Update()
+    {
+        while (this.workQueue.TryDequeue(out Action work))
+        {
+            work?.Invoke();
+        }
     }
     #endregion
 
@@ -119,38 +132,39 @@ public class NetworkManager : MonoBehaviour
                 BasePacket basePacket = JsonConvert.DeserializeObject<BasePacket>(jsonPayload);
                 if (basePacket == null) continue;
 
-                await UniTask.SwitchToMainThread(); // 소켓 통신은 백그라운드 스레드에서, 유니티 UI 작업은 메인스레드에서
-
                 // 5. 패킷 라우터
                 switch (basePacket.Type)
                 {
                     case PacketType.S2C_LoginRes:
                         S2C_LoginRes loginRes = JsonConvert.DeserializeObject<S2C_LoginRes>(jsonPayload);
-                        HandleLoginRes(loginRes);
+                        this.workQueue.Enqueue(() => { HandleLoginRes(loginRes); });
                         break;
 
                     case PacketType.S2C_RoomCreateRes:
                         S2C_RoomCreateRes createRes = JsonConvert.DeserializeObject<S2C_RoomCreateRes>(jsonPayload);
-                        HandleRoomCreateRes(createRes);
+                        this.workQueue.Enqueue(() => { HandleRoomCreateRes(createRes); });
                         break;
 
                     case PacketType.S2C_RoomJoinRes:
                         S2C_RoomJoinRes roomJoinRes = JsonConvert.DeserializeObject<S2C_RoomJoinRes>(jsonPayload);
-                        HandleRoomJoinRes(roomJoinRes);
+                        this.workQueue.Enqueue(() => { HandleRoomJoinRes(roomJoinRes); });
                         break;
 
                     case PacketType.S2C_RoomLeaveRes:
                         S2C_RoomLeaveRes roomLeaveRes = JsonConvert.DeserializeObject<S2C_RoomLeaveRes>(jsonPayload);
-                        HandleRoomLeaveRes(roomLeaveRes);
+                        this.workQueue.Enqueue(() => { HandleRoomLeaveRes(roomLeaveRes); });
                         break;
 
                     case PacketType.S2C_RoomMatchNoti:
                         S2C_RoomMatchNoti matchNoti = JsonConvert.DeserializeObject<S2C_RoomMatchNoti>(jsonPayload);
-                        HandleRoomMatchNoti(matchNoti).Forget();
+                        this.workQueue.Enqueue(() => { HandleRoomMatchNoti(matchNoti).Forget(); });
+                        break;
+
+                    case PacketType.S2C_GameStateNoti:
+                        S2C_GameStateNoti stateNoti = JsonConvert.DeserializeObject<S2C_GameStateNoti>(jsonPayload);
+                        this.workQueue.Enqueue(() => { HandleGameStateNoti(stateNoti); });
                         break;
                 }
-
-                // await UniTask.SwitchToThreadPool(); // 소켓 통신은 백그라운드 스레드에서, 유니티 UI 작업은 메인스레드에서
             }
             catch (Exception ex)
             {
@@ -296,6 +310,13 @@ public class NetworkManager : MonoBehaviour
 
         // 5. 인게임 씬으로 이동
         SceneManager.LoadScene("GameScene");
+    }
+    #endregion
+
+    #region 6. 게임 상태 통보
+    private void HandleGameStateNoti(S2C_GameStateNoti noti)
+    {
+
     }
     #endregion
 

@@ -21,7 +21,6 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private Vector2 a1Position;
     [SerializeField] private float tileSize;
 
-    public CorePiece[,] Board { get; private set; }
     private Tile[,] tiles;
     private Dictionary<CorePiece, PieceView> pieceViewMap;
 
@@ -60,7 +59,6 @@ public class BoardManager : MonoBehaviour
 
         this.inputState = InputState.None;
 
-        this.Board = new CorePiece[8, 8];
         this.tiles = new Tile[8, 8];
         this.pieceViewMap = new Dictionary<CorePiece, PieceView>();
 
@@ -77,7 +75,6 @@ public class BoardManager : MonoBehaviour
         this.isSelected = false;
 
         GenerateTiles();
-        InitializeBoard(GameData.StartingFEN);
     }
     #endregion
 
@@ -91,69 +88,6 @@ public class BoardManager : MonoBehaviour
     #endregion
 
     #endregion - 유니티 함수
-
-    #region + FEN 관련 함수
-
-    #region FEN 기보법을 통해 표기된 문자열을 통해 보드판 세팅 
-    private void InitializeBoard(string fen)
-    {
-        int x = 0;
-        int y = 7;
-
-        GameObject piecesObject = new GameObject("Pieces");
-
-        // FEN 기보법 확인
-        foreach (char c in fen)
-        {
-            if (c == '/') // '/'의 경우, 다음 줄로 넘김 표시
-            {
-                x = 0;
-                y = y - 1;
-            }
-            else if (char.IsDigit(c)) // 숫자일 경우 해당 칸만큼 빈 공간 표시
-            {
-                x = x + (c - '0');
-            }
-            else // 영문자일 경우 해당 기물 표시
-            {
-                bool isWhite = char.IsUpper(c); // 대문자일 경우 백 진영
-                PieceType type = GetPieceTypeFromChar(c);
-
-                SpawnPiece(piecesObject.transform, type, isWhite, x, y);
-                x = x + 1;
-            }
-        }
-    }
-    #endregion
-
-    #region 기물에 맞는 열거형을 반환하는 함수
-    private PieceType GetPieceTypeFromChar(char c)
-    {
-        switch (char.ToLower(c))
-        {
-            case 'n':
-                return PieceType.Knight;
-
-            case 'b':
-                return PieceType.Bishop;
-
-            case 'r':
-                return PieceType.Rook;
-
-            case 'q':
-                return PieceType.Queen;
-
-            case 'k':
-                return PieceType.King;
-
-            case 'p':
-            default:
-                return PieceType.Pawn;
-        }
-    }
-    #endregion
-
-    #endregion - FEN 관련 함수
 
     #region + 초기화 함수
 
@@ -179,38 +113,6 @@ public class BoardManager : MonoBehaviour
         }
 
         return new CorePieceData(data.type, moveOffsets, attackOffsets, slideDirections);
-    }
-    #endregion
-
-    #region 기물을 보드판에 배치하는 함수
-    private void SpawnPiece(Transform parent, PieceType type, bool isWhite, int x, int y)
-    {
-        if (this.pieceDic.ContainsKey(type) == false) return;
-
-        PieceData data = this.pieceDic[type];
-        BoardPos boardPos = new BoardPos(x, y);
-
-        // 1. 생성 및 보드판 등록
-        CorePieceData coreData = ConvertToCoreData(data);
-        CorePiece logicPiece = new CorePiece(coreData)
-        {
-            IsWhite = isWhite,
-            CurrentPosition = boardPos,
-            HasMoved = false
-        };
-        this.Board[x, y] = logicPiece;
-
-        // 2. 유니티 오브젝트 생성
-        Vector3 worldPos = GetWorldPosition(x, y);
-
-        GameObject pieceObject = Instantiate(piecePrefab, worldPos, Quaternion.identity, parent);
-        pieceObject.name = $"{(isWhite ? "White" : "Black")}_{data.name}";
-        
-        PieceView newPieceView = pieceObject.GetComponent<PieceView>();
-
-        // 3. 오브젝트에 CorePiece 등록 및 기물 맵핑
-        newPieceView.Initialize(logicPiece);
-        this.pieceViewMap.Add(logicPiece, newPieceView);
     }
     #endregion
 
@@ -313,6 +215,56 @@ public class BoardManager : MonoBehaviour
 
     #region + 뷰어 관련 함수
 
+    #region 게임 시작 시 GameManager에서 호출해 줄 초기화 함수
+    public void SetupBoard(GameModeBase currentMode)
+    {
+        GenerateVisualBoard(currentMode);
+    }
+    #endregion
+
+    #region 코어의 논리 보드를 기반으로 유니티 프리팹 껍데기를 씌우는 함수
+    private void GenerateVisualBoard(GameModeBase currentMode)
+    {
+        GameObject piecesObject = new GameObject("Pieces");
+        CorePiece[,] coreBoard = currentMode.Board;
+
+        for (int x = 0; x < 8; x++)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                CorePiece logicPiece = coreBoard[x, y];
+
+                if (logicPiece != null)
+                {
+                    SpawnPieceVisual(piecesObject.transform, logicPiece, x, y);
+                }
+            }
+        }
+    }
+    #endregion
+
+    #region 기물을 보드에 생성하는 뷰어 함수
+    private void SpawnPieceVisual(Transform parent, CorePiece logicPiece, int x, int y)
+    {
+        PieceType type = logicPiece.Data.type;
+        if (this.pieceDic.TryGetValue(type, out PieceData data) == true)
+        {
+            Vector3 worldPos = GetWorldPosition(x, y);
+
+            // 1. 유니티 오브젝트 생성
+            GameObject pieceObject = Instantiate(piecePrefab, worldPos, Quaternion.identity, parent);
+            pieceObject.name = $"{(logicPiece.IsWhite ? "White" : "Black")}_{ data.name}";
+
+
+            // 2. 오브젝트에 CorePiece 등록 및 기물 맵핑
+            PieceView newPieceView = pieceObject.GetComponent<PieceView>();
+
+            newPieceView.Initialize(logicPiece);
+            this.pieceViewMap.Add(logicPiece, newPieceView);
+        }
+    }
+    #endregion
+
     #region 기물 이동 가능 타일 표현 및 선택 판정 기물을 초기화하는 함수
     private void ClearSelection()
     {
@@ -369,6 +321,15 @@ public class BoardManager : MonoBehaviour
         {
             HighlightManager.Instance.UpdateLastMoveHighlight(originalPos, targetPos);
             UpdatePieceVisualPosition(piece, targetPos);
+
+            // 서버로 이동 요청 패킷 발송
+            C2S_GameMoveReq moveReq = new C2S_GameMoveReq();
+
+            moveReq.StartPos = originalPos;
+            moveReq.EndPos = targetPos;
+            moveReq.PromotionType = selectedPromotionType;
+
+            NetworkManager.Instance.SendPacket(moveReq).Forget();
         }
         else
         {
@@ -447,7 +408,7 @@ public class BoardManager : MonoBehaviour
         // 2. 마우스 위에 있는 타일이 보드 위인지 확인
         if (MoveValidator.IsOnBoard(tilePos) == true)
         {
-            CorePiece clickedPiece = this.Board[tilePos.x, tilePos.y];
+            CorePiece clickedPiece = GameManager.Instance.ActiveMode.Board[tilePos.x, tilePos.y];
 
             bool isMyPiece = (clickedPiece != null && clickedPiece.IsWhite == GameData.IsWhite); // 내 기물인지 확인
 
@@ -561,7 +522,7 @@ public class BoardManager : MonoBehaviour
         // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
         if (MoveValidator.IsOnBoard(tilePos) == true)
         {
-            CorePiece hoveredPiece = Board[tilePos.x, tilePos.y];
+            CorePiece hoveredPiece = GameManager.Instance.ActiveMode.Board[tilePos.x, tilePos.y];
 
             bool isMyPiece = (hoveredPiece != null && hoveredPiece.IsWhite == GameData.IsWhite); // 내 기물인지 확인
 
