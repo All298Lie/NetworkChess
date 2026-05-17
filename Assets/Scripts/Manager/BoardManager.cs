@@ -151,6 +151,20 @@ public class BoardManager : MonoBehaviour
     }
     #endregion
 
+    #region 비정상 상태 복구를 위한 하드 리셋 함수
+    public void HardResetBoard(GameModeBase activeMode)
+    {
+        foreach (PieceView view in this.pieceViewMap.Values)
+        {
+            if (view != null) Destroy(view.gameObject);
+        }
+
+        this.pieceViewMap.Clear();
+
+        SetupBoard(activeMode);
+    }
+    #endregion
+
     #endregion - 초기화 함수
 
     #region + 계산 관련 함수
@@ -319,7 +333,6 @@ public class BoardManager : MonoBehaviour
 
         if (isMoveValid == true)
         {
-            HighlightManager.Instance.UpdateLastMoveHighlight(originalPos, targetPos);
             UpdatePieceVisualPosition(piece, targetPos);
 
             // 서버로 이동 요청 패킷 발송
@@ -362,13 +375,11 @@ public class BoardManager : MonoBehaviour
     #endregion
 
     #region 기물 파괴 처리 시 뷰어에서도 없어지도록 하는 함수
-    public void DestroyPiece(CorePiece capturedPiece)
+    public void DeactivatePiece(CorePiece capturedPiece)
     {
         if (this.pieceViewMap.TryGetValue(capturedPiece, out PieceView pieceView) == true)
         {
-            Destroy(pieceView.gameObject);
-
-            pieceViewMap.Remove(capturedPiece);
+            pieceView.gameObject.SetActive(false);
         }
     }
     #endregion
@@ -379,6 +390,38 @@ public class BoardManager : MonoBehaviour
         if (this.pieceViewMap.TryGetValue(piece, out PieceView view) == true)
         {
             view.MoveTo(GetWorldPosition(newPos.x, newPos.y));
+        }
+    }
+    #endregion
+
+    #region 로직 보드에 맞게 비주얼 보드 동기화 작업을 진행하는 함수
+    public void SyncVisualsWithCore(GameModeBase activeMode)
+    {
+        // 1. 기존에 화면에 있는 모든 기물들의 매핑을 확인
+        foreach (KeyValuePair<CorePiece, PieceView> pair in this.pieceViewMap)
+        {
+            CorePiece logicPiece = pair.Key;
+            PieceView view = pair.Value;
+
+            // 2. 논리 보드에서 이 기물이 파괴된 상태일 경우
+            bool isAlive = false;
+            BoardPos pos = logicPiece.CurrentPosition;
+
+            if (MoveValidator.IsOnBoard(pos) == true && activeMode.Board[pos.x, pos.y] == logicPiece)
+            {
+                isAlive = true;
+            }
+
+            // 3. 살아있는 기물이면 키고 죽었을 경우 끄기
+            if (isAlive == true)
+            {
+                view.gameObject.SetActive(true);
+                view.MoveTo(GetWorldPosition(pos.x, pos.y));
+            }
+            else
+            {
+                view.gameObject.SetActive(false);
+            }
         }
     }
     #endregion

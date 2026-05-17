@@ -15,13 +15,18 @@ public class TitleUIManager: MonoBehaviour
     [SerializeField] private GameObject alertPopUpUIPrefab;
     private AlertPopUpUI alert;
 
+    [Header("연결 UI")]
+    [SerializeField] private GameObject connectPopUpUIPrefab;
+    private ConnectUI connectUI;
+
     #region + 유니티 함수
 
     #region Start 함수
     void Start()
     {
-        // 1. 알람 UI 초기화
+        // 1. UI 초기화
         InitializeAlertPopUpUI();
+        InitializeConnectPopUpUI();
 
         // 2. 버튼 연결
         this.connectBtn.onClick.AddListener(OnSendLoginRequest);
@@ -45,6 +50,8 @@ public class TitleUIManager: MonoBehaviour
 
     #endregion
 
+    #region + 초기화 관련 함수
+
     #region 알람 UI 초기화 함수
     private void InitializeAlertPopUpUI()
     {
@@ -55,6 +62,17 @@ public class TitleUIManager: MonoBehaviour
     }
     #endregion
 
+    #region 연결 UI 초기화 함수
+    private void InitializeConnectPopUpUI()
+    {
+        GameObject connectPopUpUI = Instantiate(this.connectPopUpUIPrefab, transform);
+        connectPopUpUI.name = "ConnectPopUpUI";
+
+        this.connectUI = connectPopUpUI.GetComponent<ConnectUI>();
+    }
+    #endregion
+
+    #endregion - 초기화 관련 함수
 
     #region + 버튼 함수
 

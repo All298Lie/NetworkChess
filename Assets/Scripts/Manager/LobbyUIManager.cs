@@ -1,5 +1,4 @@
-﻿using NetworkChess.Core;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;

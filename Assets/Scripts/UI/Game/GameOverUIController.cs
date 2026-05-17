@@ -1,6 +1,7 @@
-﻿using TMPro;
+﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
+using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameOverUIController : MonoBehaviour
@@ -36,6 +37,9 @@ public class GameOverUIController : MonoBehaviour
     // 로비로 이동 버튼을 누를 때 작동하는 함수
     private void OnReturnToLobby()
     {
-        SceneManager.LoadScene("LobbyScene");
+        this.returnLobbyBtn.onClick.RemoveAllListeners();
+
+        C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
+        NetworkManager.Instance.SendPacket(req).Forget();
     }
 }

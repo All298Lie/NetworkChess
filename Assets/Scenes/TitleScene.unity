@@ -1342,6 +1342,7 @@ MonoBehaviour:
   connectBtn: {fileID: 428458984}
   exitBtn: {fileID: 2111354902}
   alertPopUpUIPrefab: {fileID: 7512621959670772634, guid: a4119f7070546c240a1a32c590dffe16, type: 3}
+  connectPopUpUIPrefab: {fileID: 1756461984785137564, guid: 09b5de71fe5ca8646a4e40b768f25de5, type: 3}
 --- !u!1 &1396104215
 GameObject:
   m_ObjectHideFlags: 0

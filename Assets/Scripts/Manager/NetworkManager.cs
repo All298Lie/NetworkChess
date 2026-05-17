@@ -37,6 +37,9 @@ public class NetworkManager : MonoBehaviour
     // 매칭 완료 이벤트
     public static event Action<bool> OnMatchStarted;
 
+    // 게임 종료 이벤트
+    public static event Action<string, string> OnGameOver;
+
     #region + 유니티 함수
 
     #region Awake 함수
@@ -54,14 +57,6 @@ public class NetworkManager : MonoBehaviour
     }
     #endregion
 
-    #region Start 함수
-    void Start()
-    {
-        // 서버 연결
-        ConnectAndInitializeAsync().Forget();
-    }
-    #endregion
-
     #region Update 함수
     void Update()
     {
@@ -75,7 +70,14 @@ public class NetworkManager : MonoBehaviour
     #region OnDestroy 함수
     void OnDestroy()
     {
-        CloseSocket();
+        Disconnect();
+    }
+    #endregion
+
+    #region OnApplicationQuit 함수
+    void OnApplicationQuit()
+    {
+        Disconnect();
     }
     #endregion
 
@@ -99,9 +101,11 @@ public class NetworkManager : MonoBehaviour
     #endregion
 
     #region 비동기서버 연결 함수
-    private async UniTaskVoid ConnectAndInitializeAsync()
+    public async UniTask<bool> ConnectAsync()
     {
-        await ConnectToServerAsync("127.0.0.1", 7777);
+        bool isSuccess = await ConnectToServerAsync("127.0.0.1", 7777);
+
+        return isSuccess;
     }
     #endregion
 
@@ -160,38 +164,75 @@ public class NetworkManager : MonoBehaviour
                         this.workQueue.Enqueue(() => { HandleRoomMatchNoti(matchNoti).Forget(); });
                         break;
 
+                    case PacketType.S2C_GameMoveRes:
+                        S2C_GameMoveRes moveRes = JsonConvert.DeserializeObject<S2C_GameMoveRes>(jsonPayload);
+                        this.workQueue.Enqueue(() => { HandleGameMoveRes(moveRes); });
+                        break;
+
                     case PacketType.S2C_GameStateNoti:
                         S2C_GameStateNoti stateNoti = JsonConvert.DeserializeObject<S2C_GameStateNoti>(jsonPayload);
                         this.workQueue.Enqueue(() => { HandleGameStateNoti(stateNoti); });
                         break;
+
+                    case PacketType.S2C_GameOverNoti:
+                        S2C_GameOverNoti gameOverNoti = JsonConvert.DeserializeObject<S2C_GameOverNoti>(jsonPayload);
+                        this.workQueue.Enqueue(() => { HandleGameOverNoti(gameOverNoti); });
+                        break;
+
+                    default:
+                        CLog.LogError($"<color=red>[네트워크]</color> 에러 : 등록되지 않은 패킷이 요청되어 무시되었습니다. {basePacket.Type}");
+                        break;
                 }
+            }
+            catch (SocketException ex)
+            {
+                CLog.LogError($"<color=red>[네트워크]</color> 서버와의 연결이 끊어졌습니다 : {ex.Message}");
+                Disconnect();
+                break;
             }
             catch (Exception ex)
             {
-                CLog.LogWarning($"[네트워크] 수신 종료 : {ex.Message}");
+                CLog.LogError($"<color=red>[네트워크]</color> 수신 에러 : {ex.Message}");
+                Disconnect();
                 break;
             }
         } // while 문
     }
     #endregion
 
-    #region 소켓을 닫아주는 함수
-    private void CloseSocket()
+    #region 연결 종료 처리하는 함수
+    private void Disconnect()
     {
-        if (clientSocket != null && clientSocket.Connected == true)
+        if (this.clientSocket != null)
         {
             try
             {
-                clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
+                this.clientSocket.Shutdown(SocketShutdown.Both);
+                this.clientSocket.Close();
 
                 CLog.Log("[네트워크] 로그아웃");
             }
-            catch (Exception ex)
+            catch
             {
-                CLog.LogWarning($"[네트워크] <color=red>소켓 종료 중 에러</color> : {ex.Message}");
+                // 이미 끊긴 경우 무시
+            }
+            finally
+            {
+                this.clientSocket = null;
             }
         }
+
+        this.workQueue.Enqueue(() =>
+        {
+            GameData.Clear();
+
+            if (SceneManager.GetActiveScene().name != "TitleScene")
+            {
+                CLog.LogWarning("<color=red>[네트워크]</color> 서버와의 연결이 끊어졌습니다. 타이틀로 돌아갑니다.");
+
+                SceneManager.LoadScene("TitleScene");
+            }
+        });
     }
     #endregion
 
@@ -260,6 +301,7 @@ public class NetworkManager : MonoBehaviour
             else
             {
                 CLog.Log($"[방 관전] '{res.RoomId}'님 방 관전 완료.");
+                GameData.IsSpectator = true;
                 OnRoomSpectateSuccess?.Invoke();
             }
         }
@@ -276,13 +318,15 @@ public class NetworkManager : MonoBehaviour
     {
         if (res.IsSuccess == true)
         {
-            CLog.Log($"[네트워크] <color=green>방 나가기 성공</color> : {res.Message}");
+            CLog.Log($"<color=green>[네트워크]</color> 방 나가기 성공 : {res.Message}");
+
+            GameData.Clear();
 
             OnRoomLeave?.Invoke();
         }
         else
         {
-            CLog.LogWarning($"[네트워크] <color=red>방 나가기 실패</color> : {res.Message}");
+            CLog.LogWarning($"<color=red>[네트워크]</color> 방 나가기 실패 : {res.Message}");
         }
     }
     #endregion
@@ -306,40 +350,92 @@ public class NetworkManager : MonoBehaviour
         OnMatchStarted?.Invoke(isWhite);
 
         // 4. 플레이어가 로비에서 UI를 확인할 시간을 부여
-        await UniTask.Delay(2 * 1000); // 2초
+        await UniTask.Delay(2 * 1_000); // 2초
 
         // 5. 인게임 씬으로 이동
         SceneManager.LoadScene("GameScene");
     }
     #endregion
 
-    #region 6. 게임 상태 통보
+    #region 6. 기물 이동 결과 통보
+    private void HandleGameMoveRes(S2C_GameMoveRes res)
+    {
+        if (res.IsSuccess == true) return;
+
+        CLog.LogWarning("[서버 이동 거부] 보드판을 강제 동기화합니다.");
+
+        GameManager.Instance.ActiveMode.InitializeBoard(res.RollbackFEN);
+        BoardManager.Instance.HardResetBoard(GameManager.Instance.ActiveMode);
+    }
+    #endregion
+
+    #region 7. 게임 상태 통보
     private void HandleGameStateNoti(S2C_GameStateNoti noti)
     {
+        bool didIMove = (GameData.IsWhite != noti.IsWhiteTurn) && (GameData.IsSpectator == false);
 
+        if (didIMove == false)
+        {
+            CorePiece movedPiece = GameManager.Instance.ActiveMode.Board[noti.StartPos.x, noti.StartPos.y];
+
+            if (movedPiece != null)
+            {
+                GameManager.Instance.ActiveMode.HandlePieceMoveRequest(movedPiece, noti.EndPos, noti.PromotionType);
+            }
+        }
+
+        GameManager.Instance.ActiveMode.IsWhiteTurn = noti.IsWhiteTurn;
+        BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
+
+        HighlightManager.Instance.UpdateLastMoveHighlight(noti.StartPos, noti.EndPos);
+
+        CLog.Log($"[기물 이동] {noti.StartPos} -> {noti.EndPos} / 다음 턴 : {(noti.IsWhiteTurn == true ? "백" : "흑")}");
+    }
+    #endregion
+
+    #region 8. 게임오버 통보
+    private void HandleGameOverNoti(S2C_GameOverNoti noti)
+    {
+        OnGameOver?.Invoke(noti.Winner, noti.Reason);
     }
     #endregion
 
     #endregion - 패킷 처리 핸들러
 
     #region 비동기 서버 연결 함수
-    public async UniTask ConnectToServerAsync(string ip, int port)
+    private async UniTask<bool> ConnectToServerAsync(string ip, int port)
     {
         try
         {
-            // 1. 소켓 생성
-            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            // 1. 이미 연결이 되어있는지 확인
+            if (this.clientSocket != null && this.clientSocket.Connected == true) return true;
 
-            // 2. 서버로 연결
-            await clientSocket.ConnectAsync(ip, port).AsUniTask();
-            CLog.Log($"[네트워크] 서버({ip}:{port}) 연결 성공!");
+            // 2. 소켓 생성
+            this.clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            // 3. 패킷을 전송 받을 수 있도록 설정
+            // 3. 서버로 연결
+            await this.clientSocket.ConnectAsync(ip, port).AsUniTask().Timeout(TimeSpan.FromSeconds(3));
+
+            CLog.Log($"<color=green>[네트워크]</color> 서버({ip}:{port}) 연결 성공!");
+
+            // 4. 패킷을 전송 받을 수 있도록 설정
             ReceiveLoopAsync().Forget();
+
+            return true;
         }
-        catch (Exception ex)
+        catch (TimeoutException) // 시간초과 될 경우
         {
-            CLog.LogError($"[네트워크] <color=red>서버 연결 실패 에러</color> : {ex.Message}");
+            CLog.LogWarning($"<color=red>[네트워크]</color> 서버 연결 시간 초과(3초). 서버가 닫혀있을 수 있습니다.");
+
+            this.clientSocket?.Close();
+            return false;
+        }
+        catch (Exception ex) // 그 외의 오류 발생 시
+        {
+            CLog.LogError($"<color=red>[네트워크]</color> 서버 연결 실패 에러 : {ex.Message}");
+
+            this.clientSocket?.Close();
+            return false;
         }
     }
     #endregion

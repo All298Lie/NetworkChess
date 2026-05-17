@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
     public GameOverUIController GameOverUI { get; private set; }
     public GameModeBase ActiveMode { get; private set; }
 
-    public bool IsGameEnd { get; private set; }
+    public bool IsGameOver { get; private set; }
 
     #region Awake 함수
     void Awake()
@@ -51,10 +51,15 @@ public class GameManager : MonoBehaviour
     {
         if (this.ActiveMode != null)
         {
-            this.ActiveMode.OnGameOverEvent -= HandleGameOver;
             this.ActiveMode.OnPieceCapturedEvent -= HandlePieceCaptured;
             this.ActiveMode.OnPawnPromotedEvent -= HandlePawnPromoted;
             this.ActiveMode.OnPieceMovedEvent -= HandlePieceMoved;
+        }
+
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.OnGameOver -= HandleGameOver;
+            NetworkManager.OnRoomLeave -= OnRoomLeaveSuccess;
         }
     }
     #endregion
@@ -79,10 +84,14 @@ public class GameManager : MonoBehaviour
         }
 
         // 2. 이벤트 구독
-        this.ActiveMode.OnGameOverEvent += HandleGameOver;
         this.ActiveMode.OnPieceCapturedEvent += HandlePieceCaptured;
         this.ActiveMode.OnPawnPromotedEvent += HandlePawnPromoted;
         this.ActiveMode.OnPieceMovedEvent += HandlePieceMoved;
+
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.OnGameOver += HandleGameOver;
+        }
 
         // 3. 코어 보드 세팅
         this.ActiveMode.InitializeBoard(GameData.StartingFEN);
@@ -102,7 +111,7 @@ public class GameManager : MonoBehaviour
     #region 게임 종료 시 호출되는 함수
     private void HandleGameOver(string winnerName, string reason)
     {
-        this.IsGameEnd = true;
+        this.IsGameOver = true;
         this.GameOverUI.ShowGameOver(winnerName, reason);
     }
     #endregion
@@ -110,7 +119,7 @@ public class GameManager : MonoBehaviour
     #region 기물을 잡을 시 호출되는 함수
     private void HandlePieceCaptured(CorePiece capturedPiece)
     {
-        BoardManager.Instance.DestroyPiece(capturedPiece);
+        BoardManager.Instance.DeactivatePiece(capturedPiece);
     }
     #endregion
 
@@ -125,6 +134,13 @@ public class GameManager : MonoBehaviour
     private void HandlePieceMoved(CorePiece piece, BoardPos newPos)
     {
         BoardManager.Instance.UpdatePieceVisualPosition(piece, newPos);
+    }
+    #endregion
+
+    #region 게임 나가기 성공 시 호출되는 함수
+    private void OnRoomLeaveSuccess()
+    {
+        SceneManager.LoadScene("LobbyScene");
     }
     #endregion
 

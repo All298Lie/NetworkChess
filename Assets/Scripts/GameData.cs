@@ -2,6 +2,7 @@
 
 public static class GameData
 {
+    public static bool IsSpectator { get; set; } = false;
     public static bool IsWhite { get; set; }
     public static GameMode CurrentMode { get; set; }
     public static string StartingFEN { get; set; } = string.Empty;
@@ -10,7 +11,9 @@ public static class GameData
     #region 설정 초기화 함수
     public static void Clear()
     {
+        IsSpectator = false;
         IsWhite = false;
+        CurrentMode = GameMode.Standard;
         StartingFEN = string.Empty;
         OpponentNickname = string.Empty;
     }

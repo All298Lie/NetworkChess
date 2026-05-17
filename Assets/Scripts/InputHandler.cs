@@ -55,7 +55,7 @@ public class InputHandler : MonoBehaviour
     private void DragPiece()
     {
         // 1. 예외 처리
-        if (GameManager.Instance.IsGameEnd == true) return;
+        if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
         // 2. 기물을 잡고 있는 상태일 경우, 프레임마다 마우스 위치에 따라 기물 위치 이동
@@ -70,7 +70,7 @@ public class InputHandler : MonoBehaviour
     private void OnLeftClickStarted(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
-        if (GameManager.Instance.IsGameEnd == true) return;
+        if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
         Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
@@ -87,7 +87,7 @@ public class InputHandler : MonoBehaviour
     private void OnLeftClickCanceled(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
-        if (GameManager.Instance.IsGameEnd == true) return;
+        if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
         Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
@@ -101,7 +101,7 @@ public class InputHandler : MonoBehaviour
     private void OnRightClickStarted(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
-        if (GameManager.Instance.IsGameEnd == true) return;
+        if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
         Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
@@ -117,7 +117,7 @@ public class InputHandler : MonoBehaviour
     private void OnRightClickCanceled(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
-        if (GameManager.Instance.IsGameEnd == true) return;
+        if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
         if (this.isRightClickConsumed == true) // 이번 우클릭이 기물 취소용이었을 경우, 하이라이트와 어노테이션에 사용하지 않음
