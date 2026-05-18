@@ -38,7 +38,7 @@ public class NetworkManager : MonoBehaviour
     public static event Action<bool> OnMatchStarted;
 
     // 게임 종료 이벤트
-    public static event Action<string, string> OnGameOver;
+    public static event Action<string, string, string> OnGameOver;
 
     #region + 유니티 함수
 
@@ -103,7 +103,7 @@ public class NetworkManager : MonoBehaviour
     #region 비동기서버 연결 함수
     public async UniTask<bool> ConnectAsync()
     {
-        bool isSuccess = await ConnectToServerAsync("127.0.0.1", 7777);
+        bool isSuccess = await ConnectToServerAsync("chess.all298lie.dev", 7777);
 
         return isSuccess;
     }
@@ -396,7 +396,9 @@ public class NetworkManager : MonoBehaviour
     #region 8. 게임오버 통보
     private void HandleGameOverNoti(S2C_GameOverNoti noti)
     {
-        OnGameOver?.Invoke(noti.Winner, noti.Reason);
+        LocalCacheManager.Instance.SaveToRecentHistory(noti);
+
+        OnGameOver?.Invoke(noti.Winner, noti.Reason, noti.ReplayCode);
     }
     #endregion
 
@@ -443,7 +445,7 @@ public class NetworkManager : MonoBehaviour
     #region 패킷 송신 함수
     public async UniTask SendPacket<T>(T packet)
     {
-        if (clientSocket == null || clientSocket.Connected == false)
+        if (this.clientSocket == null || this.clientSocket.Connected == false)
         {
             CLog.LogWarning("[네트워크] 서버와 연결되어있지 않아 패킷을 보낼 수 없습니다.");
             return;
@@ -455,7 +457,7 @@ public class NetworkManager : MonoBehaviour
             byte[] sendData = PacketHelper.SerializeAndFrame(packet);
 
             // 2. 서버로 전송
-            await clientSocket.SendAsync(new ArraySegment<byte>(sendData), SocketFlags.None).AsUniTask();
+            await this.clientSocket.SendAsync(new ArraySegment<byte>(sendData), SocketFlags.None).AsUniTask();
             CLog.Log($"[네트워크] 패킷 전송 완료 : {packet.GetType().Name}");
         }
         catch (Exception ex)

@@ -1346,6 +1346,7 @@ GameObject:
   - component: {fileID: 2080805949090432921}
   - component: {fileID: 3966904328076707346}
   - component: {fileID: 2057942790951642839}
+  - component: {fileID: 8471186580624148831}
   m_Layer: 5
   m_Name: SpectateRoomBtn
   m_TagString: Untagged
@@ -1455,6 +1456,25 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8471186580624148831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8768166215822341484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
+  button: {fileID: 2057942790951642839}
+  btnTxt: {fileID: 665915191463828811}
+  normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
+  hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
+  pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
+  disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
+  selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
 --- !u!1 &9149709900121084447
 GameObject:
   m_ObjectHideFlags: 0

@@ -113,6 +113,7 @@ GameObject:
   - component: {fileID: 8900634711366364703}
   - component: {fileID: 887413398861003167}
   - component: {fileID: 584745618743527424}
+  - component: {fileID: 6231827493190508903}
   m_Layer: 5
   m_Name: JoinRoomBtn
   m_TagString: Untagged
@@ -222,6 +223,25 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6231827493190508903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842746257409978834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
+  button: {fileID: 584745618743527424}
+  btnTxt: {fileID: 6442976427957171096}
+  normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
+  hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
+  pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
+  disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
+  selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
 --- !u!1 &3407791475251268272
 GameObject:
   m_ObjectHideFlags: 0

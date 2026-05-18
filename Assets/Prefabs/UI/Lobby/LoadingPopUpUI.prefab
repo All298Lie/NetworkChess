@@ -139,10 +139,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed59ff6ab51a3db4d918ab52f2df3aec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoadingUI
+  title: {fileID: 8876071631101789911}
   background: {fileID: 8261831184310301414}
   cancelBtn: {fileID: 3466599766551128233}
-  cancelButton: {fileID: 8016831641965408264}
-  title: {fileID: 8876071631101789911}
   message: {fileID: 9025366395073989809}
   popUpUI: {fileID: 2496461527446739830}
 --- !u!1 &6215236485616590906
@@ -817,6 +816,7 @@ GameObject:
   - component: {fileID: 3718667520639520739}
   - component: {fileID: 4382196779753056587}
   - component: {fileID: 3466599766551128233}
+  - component: {fileID: 1098314311110400485}
   m_Layer: 5
   m_Name: CancelButton
   m_TagString: Untagged
@@ -926,3 +926,22 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1098314311110400485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8016831641965408264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
+  button: {fileID: 3466599766551128233}
+  btnTxt: {fileID: 3502942019339230687}
+  normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
+  hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
+  pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
+  disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
+  selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}

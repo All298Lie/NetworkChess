@@ -8,33 +8,57 @@ public class GameOverUIController : MonoBehaviour
 {
     [Header("게임종료 UI")]
     [SerializeField] private GameObject popUpContainer;
-    [SerializeField] private TextMeshProUGUI resultText;
-    [SerializeField] private Button returnLobbyBtn;
 
-    void Awake()
+    [Header("내용")]
+    [SerializeField] private TMP_Text resultTxt;
+    [SerializeField] private TMP_Text reasonTxt;
+    [SerializeField] private TMP_Text replayCodeTxt;
+
+    [Header("버튼")]
+    [SerializeField] private Button returnLobbyBtn;
+    [SerializeField] private Button replayBtn;
+
+    #region Start 함수
+    void Start()
     {
         gameObject.SetActive(false);
 
-        // 로비로 이동하기 버튼 클릭시 OnReturnToLobby() 함수 호출
         this.returnLobbyBtn.onClick.AddListener(OnReturnToLobby);
+        this.replayBtn.onClick.AddListener(OnReplayClick);
     }
+    #endregion
 
-    // 게임 종료 시 작동되는 함수
-    public void ShowGameOver(string winnerName, string reason)
+    #region 게임 종료 시 작동되는 함수
+    public void ShowGameOver(string winner, string reason, string replayCode)
     {
+        // 1. UI 팝업
         gameObject.SetActive(true);
 
-        if (winnerName == "$Draw")
+        // 2. 결과 표시
+        if (winner == "$Draw")
         {
-            this.resultText.text = $"무승부\n <size=50%>({reason})</size>";
+            this.resultTxt.text = "무승부";
+        }
+        else if (winner == NetworkManager.Instance.MyNickname)
+        {
+            this.resultTxt.text = "승리";
         }
         else
         {
-            this.resultText.text = $"{winnerName} 승리\n <size=50%>({reason})</size>";
+            this.resultTxt.text = "패배";
         }
-    }
 
-    // 로비로 이동 버튼을 누를 때 작동하는 함수
+        // 3. 이유 표시
+        this.reasonTxt.text = reason;
+
+        // 4. 공유 코드 표시
+        this.replayCodeTxt.text = $"공유 코드 : {replayCode}";
+    }
+    #endregion
+
+    #region + 버튼 클릭 관련 함수
+
+    #region 로비로 이동 버튼을 누를 때 작동하는 함수
     private void OnReturnToLobby()
     {
         this.returnLobbyBtn.onClick.RemoveAllListeners();
@@ -42,4 +66,14 @@ public class GameOverUIController : MonoBehaviour
         C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
         NetworkManager.Instance.SendPacket(req).Forget();
     }
+    #endregion
+
+    #region 게임 리뷰 버튼을 누를 때 작동하는 함수
+    private void OnReplayClick()
+    {
+
+    }
+    #endregion
+
+    #endregion - 버튼 클릭 관련 함수
 }

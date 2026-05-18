@@ -377,6 +377,7 @@ GameObject:
   - component: {fileID: 2793046046128220145}
   - component: {fileID: 255026279457245316}
   - component: {fileID: 8802271429689975840}
+  - component: {fileID: 4442781770656391241}
   m_Layer: 5
   m_Name: ExitButton
   m_TagString: Untagged
@@ -486,6 +487,25 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4442781770656391241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4678082333767337834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
+  button: {fileID: 8802271429689975840}
+  btnTxt: {fileID: 1129881012400317051}
+  normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
+  hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
+  pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
+  disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
+  selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
 --- !u!1 &4948362674574547419
 GameObject:
   m_ObjectHideFlags: 0
@@ -1002,6 +1022,7 @@ GameObject:
   - component: {fileID: 8793443897587409915}
   - component: {fileID: 521853056413118728}
   - component: {fileID: 4212988405216411628}
+  - component: {fileID: 6439182710408010544}
   m_Layer: 5
   m_Name: RetryButton
   m_TagString: Untagged
@@ -1111,6 +1132,25 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6439182710408010544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9067282954937307866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
+  button: {fileID: 4212988405216411628}
+  btnTxt: {fileID: 2283109309503360619}
+  normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
+  hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
+  pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
+  disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
+  selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
 --- !u!1 &9179165922185703632
 GameObject:
   m_ObjectHideFlags: 0

@@ -109,10 +109,10 @@ public class GameManager : MonoBehaviour
     #region + 이벤트 호출 함수
 
     #region 게임 종료 시 호출되는 함수
-    private void HandleGameOver(string winnerName, string reason)
+    private void HandleGameOver(string winnerName, string reason, string replayCode)
     {
         this.IsGameOver = true;
-        this.GameOverUI.ShowGameOver(winnerName, reason);
+        this.GameOverUI.ShowGameOver(winnerName, reason, replayCode);
     }
     #endregion
 
