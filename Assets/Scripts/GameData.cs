@@ -3,6 +3,10 @@
 public static class GameData
 {
     public static bool IsSpectator { get; set; } = false;
+    public static bool IsReplay { get; set; } = false;
+
+    public static string ReplayCode { get; set; } = string.Empty;
+
     public static bool IsWhite { get; set; }
     public static GameMode CurrentMode { get; set; }
     public static string StartingFEN { get; set; } = string.Empty;
@@ -12,6 +16,10 @@ public static class GameData
     public static void Clear()
     {
         IsSpectator = false;
+        IsReplay = false;
+
+        ReplayCode = string.Empty;
+
         IsWhite = false;
         CurrentMode = GameMode.Standard;
         StartingFEN = string.Empty;

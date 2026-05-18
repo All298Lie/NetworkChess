@@ -396,7 +396,7 @@ public class NetworkManager : MonoBehaviour
     #region 8. 게임오버 통보
     private void HandleGameOverNoti(S2C_GameOverNoti noti)
     {
-        LocalCacheManager.Instance.SaveToRecentHistory(noti);
+        LocalCacheManager.Instance.SaveToRecentHistory(noti, this.MyNickname);
 
         OnGameOver?.Invoke(noti.Winner, noti.Reason, noti.ReplayCode);
     }

@@ -55,6 +55,7 @@ public class InputHandler : MonoBehaviour
     private void DragPiece()
     {
         // 1. 예외 처리
+        if (GameData.IsReplay == true || GameData.IsSpectator == true) return;
         if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
@@ -70,6 +71,7 @@ public class InputHandler : MonoBehaviour
     private void OnLeftClickStarted(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
+        if (GameData.IsReplay == true || GameData.IsSpectator == true) return;
         if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
@@ -87,6 +89,7 @@ public class InputHandler : MonoBehaviour
     private void OnLeftClickCanceled(InputAction.CallbackContext context)
     {
         // 1. 예외 처리
+        if (GameData.IsReplay == true || GameData.IsSpectator == true) return;
         if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 

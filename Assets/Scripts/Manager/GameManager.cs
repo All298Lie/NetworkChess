@@ -88,7 +88,7 @@ public class GameManager : MonoBehaviour
         this.ActiveMode.OnPawnPromotedEvent += HandlePawnPromoted;
         this.ActiveMode.OnPieceMovedEvent += HandlePieceMoved;
 
-        if (NetworkManager.Instance != null)
+        if (NetworkManager.Instance != null && GameData.IsReplay == false)
         {
             NetworkManager.OnGameOver += HandleGameOver;
         }
@@ -101,10 +101,22 @@ public class GameManager : MonoBehaviour
 
         CLog.Log($"현재 활성화된 체스 모드: {GameData.CurrentMode}");
 
-        // 5. 게임 시작
-        this.ActiveMode.StartGame();
+        // 5. 상태에 따른 분기 처리
+        if (GameData.IsReplay == true)
+        {
+            SetupReplayMode();
+        }
+        else
+        {
+            this.ActiveMode.StartGame();
+        }
     }
     #endregion
+
+    private void SetupReplayMode()
+    {
+        CLog.Log("[게임 리뷰] 리플레이 환경 구성 완료");
+    }
 
     #region + 이벤트 호출 함수
 

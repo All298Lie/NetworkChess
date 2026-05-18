@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     [Header("버튼")]
-    [SerializeField] private Button button;
-    [SerializeField] private TMP_Text btnTxt;
+    public Button button { get; private set; }
+    public TMP_Text btnTxt { get; private set; }
 
     [Header("색코드")]
     [SerializeField] private Color normalColor = new Color32(226, 232, 240, 255);
@@ -18,6 +18,12 @@ public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private bool isSelected = false;
     private bool isEntered = false;
+
+    void Awake()
+    {
+        this.button = GetComponent<Button>();
+        this.btnTxt = transform.GetChild(0).GetComponent<TMP_Text>();
+    }
 
     #region + 마우스 이벤트 자동 핸들러
 
@@ -81,6 +87,22 @@ public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExit
         {
             this.btnTxt.color = this.normalColor;
         }
+    }
+    #endregion
+
+    #region 선택 상태를 켜고 끄는 함수
+    public void SetSelected(bool selected)
+    {
+        this.isSelected = selected;
+        UpdateTextColor();
+    }
+    #endregion
+
+    #region 버튼 활성화/비활성화를 제어하는 함수
+    public void SetInteractable(bool interactable)
+    {
+        this.button.interactable = interactable;
+        UpdateTextColor();
     }
     #endregion
 }
