@@ -91,13 +91,9 @@ public class GameManager : MonoBehaviour
         if (NetworkManager.Instance != null && GameData.IsReplay == false)
         {
             NetworkManager.OnGameOver += HandleGameOver;
+            NetworkManager.OnRoomLeave += OnRoomLeaveSuccess;
         }
 
-        // 3. 코어 보드 세팅
-        this.ActiveMode.InitializeBoard(GameData.StartingFEN);
-
-        // 4. 뷰어 세팅
-        BoardManager.Instance.SetupBoard(this.ActiveMode);
 
         CLog.Log($"현재 활성화된 체스 모드: {GameData.CurrentMode}");
 
@@ -108,8 +104,11 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            this.ActiveMode.StartGame();
+            this.ActiveMode.StartGame("w", "b", GameData.StartingFEN);
         }
+
+        // 4. 뷰어 세팅
+        BoardManager.Instance.SetupBoard(this.ActiveMode);
     }
     #endregion
 
@@ -125,6 +124,8 @@ public class GameManager : MonoBehaviour
     {
         this.IsGameOver = true;
         this.GameOverUI.ShowGameOver(winnerName, reason, replayCode);
+
+        CLog.Log("게임 종료 이벤트 감지");
     }
     #endregion
 

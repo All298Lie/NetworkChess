@@ -88,7 +88,6 @@ public class ButtonSpriteEffect : MonoBehaviour, IPointerEnterHandler, IPointerE
             this.RectTrans.anchoredPosition = this.originPos;
         }
 
-            this.RectTrans.anchoredPosition = this.originPos + new Vector2(0, this.hoverMoveY);
         if (this.BtnImage != null) this.BtnImage.color = this.originColor;
     }
     #endregion

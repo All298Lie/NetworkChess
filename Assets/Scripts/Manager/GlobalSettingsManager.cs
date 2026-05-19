@@ -43,12 +43,19 @@ public class GlobalSettingsManager : MonoBehaviour
         Resolution[] allResolutions = Screen.resolutions;
         this.AvilableResolutions.Clear();
 
+        int currentMonitorWidth = Screen.currentResolution.width;
+        int currentMonitorHeight = Screen.currentResolution.height;
+        bool isVerticalMonitor = currentMonitorWidth < currentMonitorHeight;
+
         // 16 : 9 비율 계산
         float targetRatio = 16f / 9f;
+        int minWidth = isVerticalMonitor ? 800 : 1200;
 
         foreach (Resolution res in allResolutions)
         {
-            if (res.width >= 1280) // 창 최소 크기
+            if (res.width > currentMonitorWidth) continue;
+
+            if (res.width >= minWidth) // 창 최소 크기
             {
                 // 오차범위 0.05 이내 16:9 비율이 아닌 해상도도 포함
                 float currentRatio = (float)res.width / res.height;
@@ -61,6 +68,18 @@ public class GlobalSettingsManager : MonoBehaviour
                 }
             }
         } // foreach 문 끝점
+
+        if (this.AvilableResolutions.Count == 0)
+        {
+            Resolution fallbackRes = new Resolution();
+
+            fallbackRes.width = Mathf.Max(800, currentMonitorWidth - 100);
+            fallbackRes.height = Mathf.RoundToInt(fallbackRes.width / targetRatio);
+
+            this.AvilableResolutions.Add(fallbackRes);
+
+            CLog.Log($"[비디오 설정] 지원하는 16:9 해상도가 없어 {fallbackRes.width}x{fallbackRes.height} 강제 추가");
+        }
 
         // 해상도 크기에 맞게 정렬
         this.AvilableResolutions.Sort((a, b) => b.width.CompareTo(a.width));
@@ -87,10 +106,19 @@ public class GlobalSettingsManager : MonoBehaviour
     // 해상도 조정하는 함수
     public void ApplyResolution(int index, bool isFullscreen)
     {
-        if (index < 0 || index >= this.AvilableResolutions.Count) return;
+        if (index < 0 || index >= this.AvilableResolutions.Count)
+        {
+            index = 0;
+        }
+
+        bool isVerticalMonitor = Screen.currentResolution.width < Screen.currentResolution.height;
+        if (isVerticalMonitor == true)
+        {
+            isFullscreen = false;
+        }
 
         Resolution selectedRes = this.AvilableResolutions[index];
-        FullScreenMode mode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+        FullScreenMode mode = isFullscreen == true ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
 
         Screen.SetResolution(selectedRes.width, selectedRes.height, mode);
 

@@ -19,7 +19,7 @@ public class GameOverUIController : MonoBehaviour
     [SerializeField] private Button replayBtn;
 
     #region Start 함수
-    void Start()
+    void Awake()
     {
         gameObject.SetActive(false);
 

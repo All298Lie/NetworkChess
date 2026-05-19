@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using NetworkChess.Core;
 using TMPro;
 using UnityEngine;
@@ -6,6 +7,8 @@ using UnityEngine.UI;
 
 public class HistoryItemUI : MonoBehaviour
 {
+    private ReplayUI replayUIManager;
+
     [Header("색상")]
     [SerializeField] private Color drawColor = new Color32(226, 232, 240, 255);
     [SerializeField] private Color winColor = new Color32(45, 212, 191, 255);
@@ -33,15 +36,15 @@ public class HistoryItemUI : MonoBehaviour
 
     private string currentReplayCode;
     private LocalHistoryData data;
-    private bool isFavoriteLocate;
 
     #region 초기화 함수
-    public void Setup(LocalHistoryData data, bool isFavoriteLocate)
+    public void Setup(LocalHistoryData data, ReplayUI manager)
     {
+        this.replayUIManager = manager;
+
         S2C_GameOverNoti matchData = data.MatchData;
 
         this.currentReplayCode = matchData.ReplayCode;
-        this.isFavoriteLocate = isFavoriteLocate;
         this.data = data;
 
         // 1. 승패 텍스트 및 색상 설정
@@ -134,25 +137,33 @@ public class HistoryItemUI : MonoBehaviour
         // 1. 현재 즐겨찾기 여부에 따라 즐겨찾기 처리
         if (this.isFavorite == true)
         {
-            this.isFavorite = false;
 
             LocalCacheManager.Instance.RemoveFavorite(this.currentReplayCode);
         }
         else
         {
-            this.isFavorite = true;
-
             LocalCacheManager.Instance.AddFavorite(this.data);
         }
+
+        this.isFavorite = (this.isFavorite == false);
 
         // 2. 아이콘 업데이트
         UpdateFavoriteIcon();
 
-        // 3. 현재 즐겨찾기 탭일 경우, UI 파괴
-        if (this.isFavoriteLocate == true)
+        if (this.replayUIManager != null)
         {
-            Destroy(gameObject);
+            this.replayUIManager.OnItemFavoriteToggled(this.data, this.isFavorite);
         }
     }
     #endregion
+
+    #region 아이템 아이콘을 갱신하게 해주는 함수
+    public void ForceUpdateFavoriteState(bool isFavorite)
+    {
+        this.isFavorite = isFavorite;
+        UpdateFavoriteIcon();
+    }
+    #endregion
+
+    public string GetPlayCode() => this.currentReplayCode;
 }

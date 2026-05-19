@@ -28,7 +28,7 @@ public class LocalCacheManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(transform.root.gameObject);
 
             this.recentHistoryFilePath = Path.Combine(Application.persistentDataPath, "RecentHistory.json");
             this.favoriteHistoryFilePath = Path.Combine(Application.persistentDataPath, "FavoriteHistory.json");
@@ -109,7 +109,7 @@ public class LocalCacheManager : MonoBehaviour
         }
 
         // 2. 파일이 있으면 읽어서 리스트로 역직렬화
-        string json = File.ReadAllText(recentHistoryFilePath);
+        string json = File.ReadAllText(this.favoriteHistoryFilePath);
         List<LocalHistoryData> favoriteList = JsonConvert.DeserializeObject<List<LocalHistoryData>>(json);
 
         return favoriteList ?? new List<LocalHistoryData>();

@@ -32,6 +32,10 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private GameObject spectateRoomUIPrefab;
     private PopUpUI spectateRoomUI;
 
+    [Header("게임 리뷰 UI")]
+    [SerializeField] private GameObject replayUIPrefab;
+    private PopUpUI replayUI;
+
     [Header("유저 닉네임 UI")]
     [SerializeField] private GameObject playerUI;
     [SerializeField] private TMP_Text nicknameText;
@@ -64,6 +68,7 @@ public class LobbyUIManager : MonoBehaviour
         this.spectateBtn.onClick.AddListener(OnSpectateGame);
         this.settingsBtn.onClick.AddListener(OnSettings);
         this.disconnectBtn.onClick.AddListener(OnDisConnectServer);
+        this.replayBtn.onClick.AddListener(OnReplay);
 
         // 알람 UI 초기화
         InitializeAlertPopUpUI();
@@ -78,6 +83,8 @@ public class LobbyUIManager : MonoBehaviour
         InitializeJoinRoomUI();
 
         InitializeSpectateRoomUI();
+
+        InitializeReplayUI();
 
         // 로딩 UI 초기화
         InitializeLoadingPopUpUI();
@@ -248,6 +255,18 @@ public class LobbyUIManager : MonoBehaviour
     }
     #endregion
 
+    #region ReplayUI 초기화 함수
+    private void InitializeReplayUI()
+    {
+        // 1. 프리팹을 통한 생성
+        GameObject replayUI = Instantiate(this.replayUIPrefab, transform);
+        replayUI.name = "ReplayUI";
+
+        // 2. 리플레이 UI 변수에 담기
+        this.replayUI = replayUI.GetComponent<PopUpUI>();
+    }
+    #endregion
+
     #endregion - 초기화 함수
 
     #region + 버튼 함수
@@ -283,7 +302,7 @@ public class LobbyUIManager : MonoBehaviour
     {
         CLog.Log("[버튼 클릭] 기보 복기");
 
-        // TODO : 기보 복기 구현
+        this.replayUI.OpenPopUpUI();
     }
     #endregion
 

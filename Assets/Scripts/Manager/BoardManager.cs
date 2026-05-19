@@ -154,6 +154,8 @@ public class BoardManager : MonoBehaviour
     #region 비정상 상태 복구를 위한 하드 리셋 함수
     public void HardResetBoard(GameModeBase activeMode)
     {
+        ClearSelection();
+
         foreach (PieceView view in this.pieceViewMap.Values)
         {
             if (view != null) Destroy(view.gameObject);

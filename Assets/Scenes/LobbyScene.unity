@@ -1465,6 +1465,7 @@ MonoBehaviour:
   createRoomUIPrefab: {fileID: 4743614648276898684, guid: c2fa3d619792b4c49954f6763fc9aef9, type: 3}
   joinRoomUIPrefab: {fileID: 5231506757659521362, guid: 2eecf08ae819dcd4094b0d76a8165300, type: 3}
   spectateRoomUIPrefab: {fileID: 55160783348414939, guid: 0a074710816d227438d5d0bccf09ffb5, type: 3}
+  replayUIPrefab: {fileID: 2347097084281455195, guid: ab527e55192e7c348b4ff0e29c9cd586, type: 3}
   playerUI: {fileID: 1710458739}
   nicknameText: {fileID: 121297088}
   alertPopUpUIPrefab: {fileID: 7512621959670772634, guid: a4119f7070546c240a1a32c590dffe16, type: 3}
@@ -1821,6 +1822,50 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!1 &1495971040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1495971041}
+  - component: {fileID: 1495971042}
+  m_Layer: 0
+  m_Name: LocalCacheManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1495971041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1495971040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1555965610}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1495971042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1495971040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be1634c179a522449f649b98b68d66a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalCacheManager
 --- !u!1 &1516304704
 GameObject:
   m_ObjectHideFlags: 0
@@ -1989,6 +2034,7 @@ Transform:
   m_Children:
   - {fileID: 2081061333}
   - {fileID: 1072257811}
+  - {fileID: 1495971041}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1556594621
@@ -2114,7 +2160,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAE30\uBCF4 \uBCF5\uAE30"
+  m_text: "\uAC8C\uC784 \uB9AC\uBDF0"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1d4470778eedf8e4abf1b21970183bf4, type: 2}
   m_sharedMaterial: {fileID: 8781624150481243719, guid: 1d4470778eedf8e4abf1b21970183bf4, type: 2}
