@@ -14,9 +14,9 @@ public enum ReplayTab
 public class ReplayUI : PopUpUI
 {
     [Header("상단 탭 버튼")]
-    [SerializeField] private ButtonTextColor recentTabBtn;
-    [SerializeField] private ButtonTextColor favoriteTabBtn;
-    [SerializeField] private ButtonTextColor searchTabBtn;
+    [SerializeField] private ButtonTextEffect recentTabBtn;
+    [SerializeField] private ButtonTextEffect favoriteTabBtn;
+    [SerializeField] private ButtonTextEffect searchTabBtn;
 
     [Header("Recent 탭")]
     [SerializeField] private GameObject recentUI;
@@ -42,12 +42,13 @@ public class ReplayUI : PopUpUI
     void Start()
     {
         // 1. 파일 불러오기
-        this.cachedRecentList = new List<LocalHistoryData>();
+        this.cachedRecentList = LocalCacheManager.Instance.LoadRecentHistory();
+        this.cachedFavoriteList = LocalCacheManager.Instance.LoadFavoriteHistory();
 
         // 2. 버튼 연결
-        this.recentTabBtn.button.onClick.AddListener(() => SetTab(ReplayTab.Recent));
-        this.favoriteTabBtn.button.onClick.AddListener(() => SetTab(ReplayTab.Favorite));
-        this.searchTabBtn.button.onClick.AddListener(() => SetTab(ReplayTab.Search));
+        this.recentTabBtn.Button.onClick.AddListener(() => SetTab(ReplayTab.Recent));
+        this.favoriteTabBtn.Button.onClick.AddListener(() => SetTab(ReplayTab.Favorite));
+        this.searchTabBtn.Button.onClick.AddListener(() => SetTab(ReplayTab.Search));
 
         SetTab(ReplayTab.Recent);
     }

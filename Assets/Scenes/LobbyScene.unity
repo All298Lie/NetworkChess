@@ -390,8 +390,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 428458984}
-  btnTxt: {fileID: 2013526073}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
@@ -803,6 +801,7 @@ GameObject:
   - component: {fileID: 708089177}
   - component: {fileID: 708089176}
   - component: {fileID: 708089175}
+  - component: {fileID: 708089178}
   m_Layer: 5
   m_Name: OptionButton
   m_TagString: Untagged
@@ -821,7 +820,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 937383758}
   m_Father: {fileID: 753411181}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -911,6 +911,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 708089173}
   m_CullTransparentMesh: 1
+--- !u!114 &708089178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708089173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43e11d574910412489b5a3ce3960b4e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSpriteEffect
+  hoverMoveY: 4
+  pressMoveY: -2
+  pressedColor: {r: 0.5803922, g: 0.6392157, b: 0.72156864, a: 1}
 --- !u!1 &753411180
 GameObject:
   m_ObjectHideFlags: 0
@@ -939,7 +954,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 937383758}
   - {fileID: 708089174}
   m_Father: {fileID: 1395957136}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -978,7 +992,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 753411181}
+  m_Father: {fileID: 708089174}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1282,8 +1296,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 1305587588}
-  btnTxt: {fileID: 1516304706}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
@@ -1804,8 +1816,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 1477914512}
-  btnTxt: {fileID: 1705642424}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
@@ -2572,8 +2582,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 2111354902}
-  btnTxt: {fileID: 1476465656}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}

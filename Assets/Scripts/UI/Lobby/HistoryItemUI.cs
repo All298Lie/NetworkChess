@@ -11,27 +11,38 @@ public class HistoryItemUI : MonoBehaviour
     [SerializeField] private Color winColor = new Color32(45, 212, 191, 255);
     [SerializeField] private Color loseColor = new Color32(251, 113, 133, 255);
 
+    [Header("아이콘")]
+    [SerializeField] private Image favoriteImage;
+    [SerializeField] private Sprite favoriteSprite;
+    [SerializeField] private Sprite removeSprite;
+    private bool isFavorite;
+
     [Header("Top")]
     [SerializeField] private TMP_Text result;
-    [SerializeField] private TMP_Text versus;
+    [SerializeField] private TMP_Text reason;
+    [SerializeField] private Button favoriteBtn;
 
     [Header("Middle")]
-    [SerializeField] private TMP_Text reason;
+    [SerializeField] private TMP_Text versus;
     [SerializeField] private TMP_Text playTime;
-    
+
     [Header("Bottom")]
     [SerializeField] private TMP_Text replayCode;
     [SerializeField] private Button copyBtn;
     [SerializeField] private Button replayBtn;
 
     private string currentReplayCode;
+    private LocalHistoryData data;
+    private bool isFavoriteLocate;
 
     #region 초기화 함수
-    public void Setup(LocalHistoryData data)
+    public void Setup(LocalHistoryData data, bool isFavoriteLocate)
     {
         S2C_GameOverNoti matchData = data.MatchData;
 
         this.currentReplayCode = matchData.ReplayCode;
+        this.isFavoriteLocate = isFavoriteLocate;
+        this.data = data;
 
         // 1. 승패 텍스트 및 색상 설정
         if (matchData.Winner == "$Draw")
@@ -44,24 +55,51 @@ public class HistoryItemUI : MonoBehaviour
             this.result.text = "승리";
             this.result.color = this.winColor;
         }
-        else
+        else if (matchData.BlackNickname == data.MyNickname || matchData.WhiteNickname == data.MyNickname)
         {
             this.result.text = "패배";
             this.result.color = this.loseColor;
         }
+        else
+        {
+            this.result.text = "-";
+            this.result.color = this.drawColor;
+        }
 
         // 2. 그 외 텍스트 데이터 설정
-        this.versus.text = $"{matchData.WhiteNickname}{(matchData.WhiteNickname==data.MyNickname ? "(나)" : "")} vs {matchData.BlackNickname}{(matchData.BlackNickname == data.MyNickname ? "(나)" : "")}";
+        this.versus.text = $"{matchData.WhiteNickname}{(matchData.WhiteNickname == data.MyNickname ? "(나)" : "")} vs {matchData.BlackNickname}{(matchData.BlackNickname == data.MyNickname ? "(나)" : "")}";
         this.reason.text = matchData.Reason;
         this.playTime.text = matchData.PlayTime.ToLocalTime().ToString("yyyy-MM-dd");
         this.replayCode.text = $"[공유코드 {matchData.ReplayCode}]";
 
-        // 3. 버튼 이벤트 연결
+        // 3. 해당 코드의 즐겨찾기 여부 확인
+        this.isFavorite = LocalCacheManager.Instance.IsFavorite(this.currentReplayCode);
+
+        UpdateFavoriteIcon();
+
+        // 4. 버튼 이벤트 연결
         this.copyBtn.onClick.RemoveAllListeners();
         this.copyBtn.onClick.AddListener(OnCopy);
 
         this.replayBtn.onClick.RemoveAllListeners();
         this.replayBtn.onClick.AddListener(OnReplay);
+
+        this.favoriteBtn.onClick.RemoveAllListeners();
+        this.favoriteBtn.onClick.AddListener(OnFavoriteToggle);
+    }
+    #endregion
+
+    #region 즐겨찾기 아이콘 업데이트 함수
+    private void UpdateFavoriteIcon()
+    {
+        if (this.isFavorite == true)
+        {
+            this.favoriteImage.sprite = this.removeSprite;
+        }
+        else
+        {
+            this.favoriteImage.sprite = this.favoriteSprite;
+        }
     }
     #endregion
 
@@ -87,6 +125,34 @@ public class HistoryItemUI : MonoBehaviour
         req.ReplayCode = this.currentReplayCode;
 
         NetworkManager.Instance.SendPacket(req).Forget();
+    }
+    #endregion
+
+    #region 즐겨찾기 버튼 클릭 시 작동하는 함수
+    private void OnFavoriteToggle()
+    {
+        // 1. 현재 즐겨찾기 여부에 따라 즐겨찾기 처리
+        if (this.isFavorite == true)
+        {
+            this.isFavorite = false;
+
+            LocalCacheManager.Instance.RemoveFavorite(this.currentReplayCode);
+        }
+        else
+        {
+            this.isFavorite = true;
+
+            LocalCacheManager.Instance.AddFavorite(this.data);
+        }
+
+        // 2. 아이콘 업데이트
+        UpdateFavoriteIcon();
+
+        // 3. 현재 즐겨찾기 탭일 경우, UI 파괴
+        if (this.isFavoriteLocate == true)
+        {
+            Destroy(gameObject);
+        }
     }
     #endregion
 }

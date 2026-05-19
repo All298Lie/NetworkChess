@@ -240,7 +240,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConnectUI
   title: {fileID: 4090103510306010384}
-  retryBtn: {fileID: 4212988405216411628}
+  retryBtn: {fileID: 6439182710408010544}
   retryBtnTxt: {fileID: 2283109309503360619}
   exitBtn: {fileID: 8802271429689975840}
   message: {fileID: 1995713511634294176}
@@ -499,8 +499,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 8802271429689975840}
-  btnTxt: {fileID: 1129881012400317051}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
@@ -1144,8 +1142,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 4212988405216411628}
-  btnTxt: {fileID: 2283109309503360619}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}

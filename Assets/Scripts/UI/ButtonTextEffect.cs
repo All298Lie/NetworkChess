@@ -3,11 +3,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+public class ButtonTextEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     [Header("버튼")]
-    public Button button { get; private set; }
-    public TMP_Text btnTxt { get; private set; }
+    public Button Button { get; private set; }
+    public TMP_Text BtnTxt { get; private set; }
 
     [Header("색코드")]
     [SerializeField] private Color normalColor = new Color32(226, 232, 240, 255);
@@ -21,8 +21,8 @@ public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     void Awake()
     {
-        this.button = GetComponent<Button>();
-        this.btnTxt = transform.GetChild(0).GetComponent<TMP_Text>();
+        this.Button = GetComponent<Button>();
+        this.BtnTxt = transform.GetChild(0).GetComponent<TMP_Text>();
     }
 
     #region + 마우스 이벤트 자동 핸들러
@@ -30,18 +30,18 @@ public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExit
     #region 마우스가 들어왔을 때 작동하는 이벤트
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (this.button.interactable == false || this.isSelected == true) return;
+        if (this.Button.interactable == false || this.isSelected == true) return;
 
         this.isEntered = true;
 
-        this.btnTxt.color = this.hoverColor;
+        this.BtnTxt.color = this.hoverColor;
     }
     #endregion
 
     #region 마우스가 나갔을 때 작동하는 이벤트
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (this.button.interactable == false) return;
+        if (this.Button.interactable == false) return;
 
         this.isEntered = false;
 
@@ -52,20 +52,20 @@ public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExit
     #region 마우스로 클릭했을 때 작동하는 이벤트
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (this.button.interactable == false) return;
+        if (this.Button.interactable == false) return;
 
-        this.btnTxt.color = this.pressedColor;
+        this.BtnTxt.color = this.pressedColor;
     }
     #endregion
 
     #region 마우스로 클릭을 뗐을 때 작동하는 이벤트
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (this.button.interactable == false) return;
+        if (this.Button.interactable == false) return;
 
         if (this.isSelected == false && this.isEntered == true)
         {
-            this.btnTxt.color = this.hoverColor;
+            this.BtnTxt.color = this.hoverColor;
         }
     }
     #endregion
@@ -75,17 +75,17 @@ public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExit
     #region 현재 상태에 맞게 색상을 업데이트 해주는 함수
     private void UpdateTextColor()
     {
-        if (this.button.interactable == false)
+        if (this.Button.interactable == false)
         {
-            this.btnTxt.color = this.disabledColor;
+            this.BtnTxt.color = this.disabledColor;
         }
         else if (this.isSelected == true)
         {
-             this.btnTxt.color = this.selectedColor;
+             this.BtnTxt.color = this.selectedColor;
         }
         else
         {
-            this.btnTxt.color = this.normalColor;
+            this.BtnTxt.color = this.normalColor;
         }
     }
     #endregion
@@ -101,7 +101,7 @@ public class ButtonTextColor : MonoBehaviour, IPointerEnterHandler, IPointerExit
     #region 버튼 활성화/비활성화를 제어하는 함수
     public void SetInteractable(bool interactable)
     {
-        this.button.interactable = interactable;
+        this.Button.interactable = interactable;
         UpdateTextColor();
     }
     #endregion

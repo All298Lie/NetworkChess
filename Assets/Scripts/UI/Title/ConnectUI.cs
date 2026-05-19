@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class ConnectUI : AnimateLoadUI
 {
     [Header("버튼")]
-    [SerializeField] private Button retryBtn;
+    [SerializeField] private ButtonTextEffect retryBtn;
     [SerializeField] private TMP_Text retryBtnTxt;
     [SerializeField] private Button exitBtn;
 
@@ -42,7 +42,7 @@ public class ConnectUI : AnimateLoadUI
     void Start()
     {
         // 1. 버튼 연결
-        this.retryBtn.onClick.AddListener(OnRetryButtonClick);
+        this.retryBtn.Button.onClick.AddListener(OnRetryButtonClick);
         this.exitBtn.onClick.AddListener(OnExitButtonClick);
 
         // 2. 연결 시도
@@ -63,7 +63,7 @@ public class ConnectUI : AnimateLoadUI
 
         // 팝업 활성화
         this.popUpUI.SetActive(true);
-        SetActiveRetryButton(false);
+        this.retryBtn.SetInteractable(false);
         this.message.text = "서버와 연결 중입니다...";
         ExecuteAnimateTitleText();
 
@@ -89,7 +89,7 @@ public class ConnectUI : AnimateLoadUI
     private async UniTaskVoid ConnectWithRetryAsync()
     {
         // 1. 재시도 버튼 비활성화
-        SetActiveRetryButton(false);
+        this.retryBtn.SetInteractable(true);
 
         // 2. 연결 재시도
         for (int tryCount = 1; tryCount <= MAX_RETRY_COUNT; tryCount++)
@@ -118,26 +118,7 @@ public class ConnectUI : AnimateLoadUI
         this.message.text = "서버와 연결할 수 없습니다.\n인터넷 상태를 확인해 주세요.";
 
         // 4. 재시도 버튼 활성화
-        SetActiveRetryButton(true);
-    }
-    #endregion
-
-    #region 재시작 버튼 활성화 상태 설정
-    private void SetActiveRetryButton(bool isActive)
-    {
-        // 버튼 설정
-        retryBtn.interactable = isActive;
-
-        if (isActive == true)
-        {
-            // 활성화 색상으로 변경
-            retryBtnTxt.color = new Color(226f / 255f, 232f / 255f, 240f / 255f); // HEX #E2E8F0
-        }
-        else
-        {
-            // 비활성화 색상으로 변경
-            retryBtnTxt.color = new Color(71f / 255f, 85f / 255f, 105f / 255f); // HEX #475569
-        }
+        this.retryBtn.SetInteractable(true);
     }
     #endregion
 
@@ -164,7 +145,6 @@ public class ConnectUI : AnimateLoadUI
 #else
         Application.Quit();
 #endif
-
     }
     #endregion
 }
