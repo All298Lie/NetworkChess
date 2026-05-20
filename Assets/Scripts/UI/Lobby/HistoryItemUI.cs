@@ -117,12 +117,7 @@ public class HistoryItemUI : MonoBehaviour
     #region 게임 리뷰 버튼 클릭 시 작동하는 함수
     private void OnReplay()
     {
-        // 1. GameData에 리플레이 모드임을 명시
-        GameData.Clear();
-        GameData.IsReplay = true;
-        GameData.ReplayCode = this.currentReplayCode;
-
-        // 2. 서버에 FEN 기보 요청 패킷 발송
+        // 1. 서버에 FEN 기보 요청 패킷 발송
         C2S_ReplayReq req = new C2S_ReplayReq();
 
         req.ReplayCode = this.currentReplayCode;

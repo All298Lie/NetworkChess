@@ -1,4 +1,6 @@
 ﻿using NetworkChess.Core;
+using NUnit.Framework;
+using System.Collections.Generic;
 
 public static class GameData
 {
@@ -6,6 +8,8 @@ public static class GameData
     public static bool IsReplay { get; set; } = false;
 
     public static string ReplayCode { get; set; } = string.Empty;
+
+    public static List<string> FENHistory { get; set; } = new List<string>();
 
     public static bool IsWhite { get; set; }
     public static GameMode CurrentMode { get; set; }
@@ -19,6 +23,8 @@ public static class GameData
         IsReplay = false;
 
         ReplayCode = string.Empty;
+
+        FENHistory = new List<string>();
 
         IsWhite = false;
         CurrentMode = GameMode.Standard;

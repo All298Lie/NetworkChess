@@ -56,6 +56,11 @@ public class GameOverUIController : MonoBehaviour
     }
     #endregion
 
+    public void CloseGameOverUI()
+    {
+        gameObject.SetActive(false);
+    }
+
     #region + 버튼 클릭 관련 함수
 
     #region 로비로 이동 버튼을 누를 때 작동하는 함수

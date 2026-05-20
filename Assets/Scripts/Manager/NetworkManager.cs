@@ -40,6 +40,8 @@ public class NetworkManager : MonoBehaviour
     // 게임 종료 이벤트
     public static event Action<string, string, string> OnGameOver;
 
+    public static event Action<S2C_ReplayRes> OnReplayReceived;
+
     #region + 유니티 함수
 
     #region Awake 함수
@@ -141,42 +143,47 @@ public class NetworkManager : MonoBehaviour
                 {
                     case PacketType.S2C_LoginRes:
                         S2C_LoginRes loginRes = JsonConvert.DeserializeObject<S2C_LoginRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleLoginRes(loginRes); });
+                        this.workQueue.Enqueue(() => HandleLoginRes(loginRes));
                         break;
 
                     case PacketType.S2C_RoomCreateRes:
                         S2C_RoomCreateRes createRes = JsonConvert.DeserializeObject<S2C_RoomCreateRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleRoomCreateRes(createRes); });
+                        this.workQueue.Enqueue(() => HandleRoomCreateRes(createRes));
                         break;
 
                     case PacketType.S2C_RoomJoinRes:
                         S2C_RoomJoinRes roomJoinRes = JsonConvert.DeserializeObject<S2C_RoomJoinRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleRoomJoinRes(roomJoinRes); });
+                        this.workQueue.Enqueue(() => HandleRoomJoinRes(roomJoinRes));
                         break;
 
                     case PacketType.S2C_RoomLeaveRes:
                         S2C_RoomLeaveRes roomLeaveRes = JsonConvert.DeserializeObject<S2C_RoomLeaveRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleRoomLeaveRes(roomLeaveRes); });
+                        this.workQueue.Enqueue(() => HandleRoomLeaveRes(roomLeaveRes));
                         break;
 
                     case PacketType.S2C_RoomMatchNoti:
                         S2C_RoomMatchNoti matchNoti = JsonConvert.DeserializeObject<S2C_RoomMatchNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleRoomMatchNoti(matchNoti).Forget(); });
+                        this.workQueue.Enqueue(() => HandleRoomMatchNoti(matchNoti).Forget());
                         break;
 
                     case PacketType.S2C_GameMoveRes:
                         S2C_GameMoveRes moveRes = JsonConvert.DeserializeObject<S2C_GameMoveRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleGameMoveRes(moveRes); });
+                        this.workQueue.Enqueue(() => HandleGameMoveRes(moveRes));
                         break;
 
                     case PacketType.S2C_GameStateNoti:
                         S2C_GameStateNoti stateNoti = JsonConvert.DeserializeObject<S2C_GameStateNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleGameStateNoti(stateNoti); });
+                        this.workQueue.Enqueue(() => HandleGameStateNoti(stateNoti));
                         break;
 
                     case PacketType.S2C_GameOverNoti:
                         S2C_GameOverNoti gameOverNoti = JsonConvert.DeserializeObject<S2C_GameOverNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => { HandleGameOverNoti(gameOverNoti); });
+                        this.workQueue.Enqueue(() => HandleGameOverNoti(gameOverNoti));
+                        break;
+
+                    case PacketType.S2C_ReplayRes:
+                        S2C_ReplayRes res = JsonConvert.DeserializeObject<S2C_ReplayRes>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleReplayRes(res));
                         break;
 
                     default:
@@ -399,6 +406,13 @@ public class NetworkManager : MonoBehaviour
         OnGameOver?.Invoke(noti.Winner, noti.Reason, noti.ReplayCode);
 
         LocalCacheManager.Instance.SaveToRecentHistory(noti, this.MyNickname);
+    }
+    #endregion
+
+    #region 9. 리플레이 결과
+    private void HandleReplayRes(S2C_ReplayRes res)
+    {
+        OnReplayReceived?.Invoke(res);
     }
     #endregion
 

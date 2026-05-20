@@ -8,6 +8,9 @@ public class PromotionUIController : MonoBehaviour
 {
     public static PromotionUIController Instance { get; private set; }
 
+    [Header("프로모션 UI")]
+    [SerializeField] private GameObject popUpUI;
+
     [Header("UI 오브젝트")]
     [SerializeField] private GameObject promotionPanel; // 취소 버튼 판정용 패널
     [SerializeField] private GameObject promotionSelects; // 프로모션 기물 선택 버튼 부모 오브젝트
@@ -61,8 +64,7 @@ public class PromotionUIController : MonoBehaviour
 
         BindButtonEvents();
 
-        this.promotionPanel.SetActive(false);
-        this.promotionSelects.SetActive(false);
+        this.popUpUI.SetActive(false);
     }
 
     void OnEnable()
@@ -235,8 +237,7 @@ public class PromotionUIController : MonoBehaviour
         RefreshImage(); // 진영과 테마에 맞게 기물 스프라이트 갱신
 
         // 버튼 활성화
-        this.promotionPanel.SetActive(true);
-        this.promotionSelects.SetActive(true);
+        this.popUpUI.SetActive(true);
 
         CacheTileSize();
 
@@ -252,8 +253,7 @@ public class PromotionUIController : MonoBehaviour
         PieceType? selectedType = await this.promotionTcs.Task;
 
         // 버튼 비활성화
-        this.promotionPanel.SetActive(false);
-        this.promotionSelects.SetActive(false);
+        this.popUpUI.SetActive(false);
 
         this.canSelect = false;
 

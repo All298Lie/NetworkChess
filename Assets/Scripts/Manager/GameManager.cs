@@ -11,10 +11,14 @@ public class GameManager : MonoBehaviour
     [Header("게임 세팅")]
     [SerializeField] private Transform canvas;
 
-    [Header("프리팹")]
-    [SerializeField] private GameObject gameOverUIPrefab;
+    [Header("프로모션 UI")]
+    [SerializeField] private GameObject promotionUIPrefab;
+    public PromotionUIController PromotionUI { get; private set; }
 
+    [Header("게임오버 UI")]
+    [SerializeField] private GameObject gameOverUIPrefab;
     public GameOverUIController GameOverUI { get; private set; }
+
     public GameModeBase ActiveMode { get; private set; }
 
     public bool IsGameOver { get; private set; }
@@ -37,10 +41,8 @@ public class GameManager : MonoBehaviour
     #region Start 함수
     void Start()
     {
-        GameObject gameOverUI = Instantiate(gameOverUIPrefab, canvas);
-        gameOverUI.name = "GameOverUI";
-
-        this.GameOverUI = gameOverUI.GetComponent<GameOverUIController>();
+        InitializePromotionUI();
+        InitializeGameOverUI();
 
         InitializeGameMode();
     }
@@ -59,8 +61,28 @@ public class GameManager : MonoBehaviour
         if (NetworkManager.Instance != null)
         {
             NetworkManager.OnGameOver -= HandleGameOver;
-            NetworkManager.OnRoomLeave -= OnRoomLeaveSuccess;
+            NetworkManager.OnRoomLeave -= HandleRoomLeaveSuccess;
         }
+    }
+    #endregion
+
+    #region 프로모션 UI 초기화
+    private void InitializePromotionUI()
+    {
+        GameObject promotionUI = Instantiate(this.promotionUIPrefab, this.canvas);
+        promotionUI.name = "PromotionUI";
+
+        this.PromotionUI = promotionUI.GetComponent<PromotionUIController>();
+    }
+    #endregion
+
+    #region 게임오버 UI 초기화
+    private void InitializeGameOverUI()
+    {
+        GameObject gameOverUI = Instantiate(this.gameOverUIPrefab, this.canvas);
+        gameOverUI.name = "GameOverUI";
+
+        this.GameOverUI = gameOverUI.GetComponent<GameOverUIController>();
     }
     #endregion
 
@@ -91,7 +113,7 @@ public class GameManager : MonoBehaviour
         if (NetworkManager.Instance != null && GameData.IsReplay == false)
         {
             NetworkManager.OnGameOver += HandleGameOver;
-            NetworkManager.OnRoomLeave += OnRoomLeaveSuccess;
+            NetworkManager.OnRoomLeave += HandleRoomLeaveSuccess;
         }
 
 
@@ -151,9 +173,19 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region 게임 나가기 성공 시 호출되는 함수
-    private void OnRoomLeaveSuccess()
+    private void HandleRoomLeaveSuccess()
     {
         SceneManager.LoadScene("LobbyScene");
+    }
+    #endregion
+
+    #region 게임 리뷰 요청 시 호출되는 함수
+    private void HandleReplayReceived(S2C_ReplayRes res)
+    {
+        GameData.IsReplay = true;
+        GameData.FENHistory = res.FENHistory;
+
+        this.GameOverUI.CloseGameOverUI();
     }
     #endregion
 

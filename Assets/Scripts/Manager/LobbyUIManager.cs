@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using NetworkChess.Core;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -105,6 +106,8 @@ public class LobbyUIManager : MonoBehaviour
         NetworkManager.OnRoomLeave += HandleRoomLeave;
 
         NetworkManager.OnMatchStarted += HandleRoomMatch;
+
+        NetworkManager.OnReplayReceived += HandleReplayReceived;
     }
     #endregion
 
@@ -118,6 +121,8 @@ public class LobbyUIManager : MonoBehaviour
         NetworkManager.OnRoomLeave -= HandleRoomLeave;
 
         NetworkManager.OnMatchStarted -= HandleRoomMatch;
+
+        NetworkManager.OnReplayReceived -= HandleReplayReceived;
     }
     #endregion
 
@@ -407,6 +412,25 @@ public class LobbyUIManager : MonoBehaviour
     {
         // 1. 로딩 UI 닫기
         loadingUI.ClosePopUpUI();
+    }
+    #endregion
+
+    #region 리플레이 핸들러 (로비용)
+    private void HandleReplayReceived(S2C_ReplayRes res)
+    {
+        if (res.IsSuccess == false)
+        {
+            this.alert.ShowPopup("게임 리뷰", res.Message);
+
+            return;
+        }
+
+        GameData.Clear();
+        GameData.IsReplay = true;
+        GameData.ReplayCode = res.ReplayCode;
+        GameData.FENHistory = res.FENHistory;
+
+        SceneManager.LoadScene("GameScene");
     }
     #endregion
 
