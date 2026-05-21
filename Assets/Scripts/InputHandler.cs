@@ -75,6 +75,8 @@ public class InputHandler : MonoBehaviour
         if (GameManager.Instance.IsGameOver == true) return;
         if (PromotionUIController.Instance != null && PromotionUIController.Instance.IsActive() == true) return;
 
+        CLog.Log("[조작] 좌클릭 감지");
+
         Vector2 screenPos = pointerPositionAction.ReadValue<Vector2>();
 
         HighlightManager.Instance.OnLeftClickStarted(screenPos);

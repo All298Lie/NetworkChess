@@ -37,6 +37,9 @@ public class NetworkManager : MonoBehaviour
     // 매칭 완료 이벤트
     public static event Action<bool> OnMatchStarted;
 
+    // 게임 상태 통보 이벤트
+    public static event Action<S2C_GameStateNoti> OnGameStateNotified;
+
     // 게임 종료 이벤트
     public static event Action<string, string, string> OnGameOver;
 
@@ -348,6 +351,8 @@ public class NetworkManager : MonoBehaviour
         string opponentNickname = (isWhite == true) ? noti.BlackPlayerNickname : noti.WhitePlayerNickname;
 
         // 2. 인게임 데이터 준비
+        GameData.Clear();
+
         GameData.IsWhite = isWhite;
         GameData.CurrentMode = noti.GameMode;
         GameData.StartingFEN = (string.IsNullOrEmpty(noti.StartingFEN) == true) ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR" : noti.StartingFEN;
@@ -379,24 +384,7 @@ public class NetworkManager : MonoBehaviour
     #region 7. 게임 상태 통보
     private void HandleGameStateNoti(S2C_GameStateNoti noti)
     {
-        bool didIMove = (GameData.IsWhite != noti.IsWhiteTurn) && (GameData.IsSpectator == false);
-
-        if (didIMove == false)
-        {
-            CorePiece movedPiece = GameManager.Instance.ActiveMode.Board[noti.StartPos.x, noti.StartPos.y];
-
-            if (movedPiece != null)
-            {
-                GameManager.Instance.ActiveMode.HandlePieceMoveRequest(movedPiece, noti.EndPos, noti.PromotionType);
-            }
-        }
-
-        GameManager.Instance.ActiveMode.IsWhiteTurn = noti.IsWhiteTurn;
-        BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
-
-        HighlightManager.Instance.UpdateLastMoveHighlight(noti.StartPos, noti.EndPos);
-
-        CLog.Log($"[기물 이동] {noti.StartPos} -> {noti.EndPos} / 다음 턴 : {(noti.IsWhiteTurn == true ? "백" : "흑")}");
+        OnGameStateNotified?.Invoke(noti);
     }
     #endregion
 

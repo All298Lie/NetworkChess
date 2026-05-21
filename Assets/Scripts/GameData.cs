@@ -1,5 +1,4 @@
 ﻿using NetworkChess.Core;
-using NUnit.Framework;
 using System.Collections.Generic;
 
 public static class GameData

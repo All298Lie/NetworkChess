@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 using NetworkChess.Core;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -22,6 +23,8 @@ public class GameManager : MonoBehaviour
     public GameModeBase ActiveMode { get; private set; }
 
     public bool IsGameOver { get; private set; }
+
+    public event Action<S2C_GameStateNoti> OnTurnEnded;
 
     #region Awake 함수
     void Awake()
@@ -62,6 +65,10 @@ public class GameManager : MonoBehaviour
         {
             NetworkManager.OnGameOver -= HandleGameOver;
             NetworkManager.OnRoomLeave -= HandleRoomLeaveSuccess;
+
+            NetworkManager.OnGameStateNotified -= HandleGameStateNotified;
+
+            NetworkManager.OnReplayReceived -= HandleReplayReceived;
         }
     }
     #endregion
@@ -114,6 +121,10 @@ public class GameManager : MonoBehaviour
         {
             NetworkManager.OnGameOver += HandleGameOver;
             NetworkManager.OnRoomLeave += HandleRoomLeaveSuccess;
+
+            NetworkManager.OnGameStateNotified += HandleGameStateNotified;
+
+            NetworkManager.OnReplayReceived += HandleReplayReceived;
         }
 
 
@@ -186,6 +197,35 @@ public class GameManager : MonoBehaviour
         GameData.FENHistory = res.FENHistory;
 
         this.GameOverUI.CloseGameOverUI();
+    }
+    #endregion
+
+    #region 게임 상태 통보 수신시 호출되는 함수
+    private void HandleGameStateNotified(S2C_GameStateNoti noti)
+    {
+        // 1. 코어 데이터 처리
+        bool didIMove = (GameData.IsWhite != noti.IsWhiteTurn) && (GameData.IsSpectator == false);
+
+        if (didIMove == false)
+        {
+            CorePiece movedPiece = this.ActiveMode.Board[noti.StartPos.x, noti.StartPos.y];
+
+            if (movedPiece != null)
+            {
+                this.ActiveMode.HandlePieceMoveRequest(movedPiece, noti.EndPos, noti.PromotionType);
+            }
+        }
+
+        this.ActiveMode.IsWhiteTurn = noti.IsWhiteTurn;
+
+        // 2. 비주얼 및 하이라이트 매니저 동기화
+        BoardManager.Instance.SyncVisualsWithCore(this.ActiveMode);
+        HighlightManager.Instance.UpdateLastMoveHighlight(noti.StartPos, noti.EndPos);
+
+        // 3. UI 갱신
+        OnTurnEnded?.Invoke(noti);
+
+        CLog.Log($"[기물 이동] {noti.StartPos} -> {noti.EndPos} / 다음 턴 : {(noti.IsWhiteTurn == true ? "백" : "흑")}");
     }
     #endregion
 

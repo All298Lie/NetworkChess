@@ -265,7 +265,7 @@ public class PromotionUIController : MonoBehaviour
     {
         if (this.promotionPanel == null || this.promotionSelects == null) return false;
 
-        if (this.promotionPanel.activeSelf == false || this.promotionSelects.activeSelf == false) return false;
+        if (this.popUpUI.activeSelf == false) return false;
         
         return true;
     }

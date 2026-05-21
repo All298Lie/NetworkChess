@@ -330,7 +330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b9e2f835f9aa0d4b8f287a80051c861, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PromotionUI
-  popUpUI: {fileID: 0}
+  popUpUI: {fileID: 7581178736039885860}
   promotionPanel: {fileID: 4349574599064809007}
   promotionSelects: {fileID: 7587259200467941684}
   promotionUIRect: {fileID: 6753389683920294391}
