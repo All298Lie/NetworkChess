@@ -138,6 +138,14 @@ public class GameManager : MonoBehaviour
         else
         {
             this.ActiveMode.StartGame("w", "b", GameData.StartingFEN);
+
+            ChessMoveEntry entry = new ChessMoveEntry();
+            entry.FEN = GameData.StartingFEN;
+
+            List<ChessMoveEntry> initialTimeLine = new List<ChessMoveEntry>();
+            initialTimeLine.Add(entry);
+
+            ReplayManager.Instance.SetupTimeline(initialTimeLine);
         }
 
         // 4. 뷰어 세팅
@@ -203,29 +211,29 @@ public class GameManager : MonoBehaviour
     #region 게임 상태 통보 수신시 호출되는 함수
     private void HandleGameStateNotified(S2C_GameStateNoti noti)
     {
+        ChessMoveEntry entry = noti.Entry;
+
         // 1. 코어 데이터 처리
         bool didIMove = (GameData.IsWhite != noti.IsWhiteTurn) && (GameData.IsSpectator == false);
-
         if (didIMove == false)
         {
-            CorePiece movedPiece = this.ActiveMode.Board[noti.StartPos.x, noti.StartPos.y];
+
+            CorePiece movedPiece = this.ActiveMode.Board[entry.StartPos.x, entry.StartPos.y];
 
             if (movedPiece != null)
             {
-                this.ActiveMode.HandlePieceMoveRequest(movedPiece, noti.EndPos, noti.PromotionType);
+                this.ActiveMode.HandlePieceMoveRequest(movedPiece, entry.EndPos, noti.PromotionType);
             }
         }
 
         this.ActiveMode.IsWhiteTurn = noti.IsWhiteTurn;
 
-        // 2. 비주얼 및 하이라이트 매니저 동기화
-        BoardManager.Instance.SyncVisualsWithCore(this.ActiveMode);
-        HighlightManager.Instance.UpdateLastMoveHighlight(noti.StartPos, noti.EndPos);
+        ReplayManager.Instance.UpdateTimeLine(entry);
 
-        // 3. UI 갱신
+        // 2. UI 갱신
         OnTurnEnded?.Invoke(noti);
 
-        CLog.Log($"[기물 이동] {noti.StartPos} -> {noti.EndPos} / 다음 턴 : {(noti.IsWhiteTurn == true ? "백" : "흑")}");
+        CLog.Log($"[기물 이동] {entry.StartPos} -> {entry.EndPos} / 다음 턴 : {(noti.IsWhiteTurn == true ? "백" : "흑")}");
     }
     #endregion
 

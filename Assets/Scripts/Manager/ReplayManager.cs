@@ -1,12 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using NetworkChess.Core;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ReplayManager : MonoBehaviour
 {
     public static ReplayManager Instance { get; private set; }
 
-    private List<string> FENTimeline = new List<string>();
+    [SerializeField] private Button firstBtn;
+    [SerializeField] private Button previousBtn;
+    [SerializeField] private Button nextBtn;
+    [SerializeField] private Button lastBtn;
+
+    private List<ChessMoveEntry> entries = new List<ChessMoveEntry>();
     private int currentViewerIndex = 0;
+
+    public bool IsViewingLatest => this.currentViewerIndex == this.entries.Count - 1;
+
+    public int LatestIndex => this.entries.Count - 1;
 
     #region Awake 함수
     void Awake()
@@ -22,22 +33,32 @@ public class ReplayManager : MonoBehaviour
     }
     #endregion
 
-    #region 패킷에서 기록을 몽땅 받아올때 사용하는 함수
-    public void SetupTimeline(List<string> history)
+    #region Start 함수
+    void Start()
     {
-        this.FENTimeline = history;
-        this.currentViewerIndex = this.FENTimeline.Count - 1; // 최신 수로 세팅
+        firstBtn.onClick.AddListener(OnClickFirstMove);    
+        previousBtn.onClick.AddListener(OnClickPreviousMove);    
+        nextBtn.onClick.AddListener(OnClickNextMove);    
+        lastBtn.onClick.AddListener(OnClickLastMove);    
+    }
+    #endregion
+
+    #region 패킷에서 기록을 몽땅 받아올때 사용하는 함수
+    public void SetupTimeline(List<ChessMoveEntry> entries)
+    {
+        this.entries = entries;
+        this.currentViewerIndex = this.entries.Count - 1; // 최신 수로 세팅
     }
     #endregion
 
     #region 기록을 업데이트 하는 함수
-    public void UpdateTimeLine(string history)
+    public void UpdateTimeLine(ChessMoveEntry entry)
     {
-        this.FENTimeline.Add(history);
+        this.entries.Add(entry);
 
-        if (this.currentViewerIndex == FENTimeline.Count - 2)
+        if (this.currentViewerIndex == entries.Count - 2)
         {
-            JumpToPly(FENTimeline.Count - 1);
+            JumpToPly(entries.Count - 1);
         }
     }
     #endregion
@@ -47,41 +68,49 @@ public class ReplayManager : MonoBehaviour
     #region UI 버튼 (기보 클릭)
     public void JumpToPly(int targetIndex)
     {
-        if (targetIndex < 0 || targetIndex >= this.FENTimeline.Count) return;
+        if (targetIndex < 0 || targetIndex >= this.entries.Count) return;
 
         this.currentViewerIndex = targetIndex;
-        string targetFEN = this.FENTimeline[this.currentViewerIndex];
+        ChessMoveEntry entry = this.entries[this.currentViewerIndex];
 
-        // TODO: 보드 매니저에게 targetFen을 주면서 기물 렌더링 덮어씌우기
+        // 1. 기물 렌더링 덮어씌우기 작업
+        if (this.IsViewingLatest == true)
+        {
+            BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
+        }
+        else
+        {
+            BoardManager.Instance.SyncVisualsWithFEN(entry.FEN);
+        }
+
+        // 2. 하이라이트 작업
+        if (entry.StartPos != null && entry.EndPos != null)
+        {
+            HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
+        }
+        else
+        {
+            HighlightManager.Instance.HideMoveHighlights();
+        }
     }
     #endregion
 
+    
+
     #region 화살표 버튼 (처음 수)
-    public void OnClickFirstMove()
-    {
-        JumpToPly(0);
-    }
+    public void OnClickFirstMove() => JumpToPly(0);
     #endregion
 
     #region 화살표 버튼 (이전 수)
-    public void OnClickPreviousMove()
-    {
-        JumpToPly(this.currentViewerIndex - 1);
-    }
+    public void OnClickPreviousMove() => JumpToPly(this.currentViewerIndex - 1);
     #endregion
 
     #region 화살표 버튼 (다음 수)
-    public void OnClickNextMove()
-    {
-        JumpToPly(this.currentViewerIndex + 1);
-    }
+    public void OnClickNextMove() => JumpToPly(this.currentViewerIndex + 1);
     #endregion
 
     #region 화살표 버튼 (마지막 수)
-    public void OnClickLastMove()
-    {
-        JumpToPly(this.FENTimeline.Count - 1);
-    }
+    public void OnClickLastMove() => JumpToPly(this.entries.Count - 1);
     #endregion
 
     #endregion - 버튼 함수

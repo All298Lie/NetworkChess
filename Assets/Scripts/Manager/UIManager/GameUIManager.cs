@@ -53,18 +53,22 @@ public class GameUIManager : MonoBehaviour
     {
         bool didWhiteJustMove = (noti.IsWhiteTurn == false);
 
+        ChessMoveEntry entry = noti.Entry;
+
+        int ply = ReplayManager.Instance.LatestIndex;
+
         if (didWhiteJustMove == true)
         {
             GameObject history = Instantiate(this.historyItemPrefab, this.historyContent);
             this.lastHistoryItem = history.GetComponent<GameHistoryItemUI>();
 
-            this.lastHistoryItem.SetWhiteMove(noti.FullMoveNumber, noti.MoveNotation, noti.CurrentFEN);
+            this.lastHistoryItem.SetWhiteMove(noti.FullMoveNumber, entry.MoveNotation, ply);
         }
         else
         {
             if (this.lastHistoryItem != null)
             {
-                this.lastHistoryItem.UpdateBlackMove(noti.MoveNotation, noti.CurrentFEN);
+                this.lastHistoryItem.UpdateBlackMove(entry.MoveNotation, ply);
             }
         }
 

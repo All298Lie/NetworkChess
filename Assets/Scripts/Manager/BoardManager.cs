@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 using NetworkChess.Core;
+using UnityEngine.Pool;
 
 public class BoardManager : MonoBehaviour
 {
@@ -38,7 +39,12 @@ public class BoardManager : MonoBehaviour
     [SerializeField] Texture2D hoverCursor; // 선택 가능 동작
     [SerializeField] Texture2D grabCursor; // 잡기 동작
 
-    private readonly Vector2Int hotSpot = new Vector2Int(8, 8);
+    private readonly Vector2Int hotSpot = new Vector2Int(36, 17);
+
+    [Header("오브젝트 풀")]
+    private ObjectPool<PieceView> piecePool;
+    private List<PieceView> replayTempPieces = new List<PieceView>();
+    private Transform pieceParent;
 
     #region + 유니티 함수
 
@@ -73,6 +79,15 @@ public class BoardManager : MonoBehaviour
         }
 
         this.isSelected = false;
+
+        this.piecePool = new ObjectPool<PieceView>(
+            createFunc: CreatePiece,
+            actionOnGet: GetPiece,
+            actionOnRelease: ReleasePiece,
+            actionOnDestroy: DestroyPiece,
+            defaultCapacity: 32,
+            maxSize: 64
+        );
 
         GenerateTiles();
     }
@@ -156,11 +171,10 @@ public class BoardManager : MonoBehaviour
     {
         ClearSelection();
 
-        foreach (PieceView view in this.pieceViewMap.Values)
-        {
-            if (view != null) Destroy(view.gameObject);
-        }
+        foreach (PieceView temp in this.replayTempPieces) this.piecePool.Release(temp);
+        this.replayTempPieces.Clear();
 
+        foreach (PieceView view in this.pieceViewMap.Values) piecePool.Release(view);
         this.pieceViewMap.Clear();
 
         SetupBoard(activeMode);
@@ -241,7 +255,7 @@ public class BoardManager : MonoBehaviour
     #region 코어의 논리 보드를 기반으로 유니티 프리팹 껍데기를 씌우는 함수
     private void GenerateVisualBoard(GameModeBase currentMode)
     {
-        GameObject piecesObject = new GameObject("Pieces");
+        this.pieceParent = new GameObject("Pieces").transform;
         CorePiece[,] coreBoard = currentMode.Board;
 
         for (int x = 0; x < 8; x++)
@@ -252,7 +266,7 @@ public class BoardManager : MonoBehaviour
 
                 if (logicPiece != null)
                 {
-                    SpawnPieceVisual(piecesObject.transform, logicPiece, x, y);
+                    SpawnPieceVisual(this.pieceParent, logicPiece, x, y);
                 }
             }
         }
@@ -268,14 +282,12 @@ public class BoardManager : MonoBehaviour
             Vector3 worldPos = GetWorldPosition(x, y);
 
             // 1. 유니티 오브젝트 생성
-            GameObject pieceObject = Instantiate(piecePrefab, worldPos, Quaternion.identity, parent);
-            pieceObject.name = $"{(logicPiece.IsWhite ? "White" : "Black")}_{ data.name}";
-
-
-            // 2. 오브젝트에 CorePiece 등록 및 기물 맵핑
-            PieceView newPieceView = pieceObject.GetComponent<PieceView>();
+            PieceView newPieceView = this.piecePool.Get();
+            newPieceView.gameObject.name = $"{(logicPiece.IsWhite ? "White" : "Black")}_{ data.name}";
 
             newPieceView.Initialize(logicPiece);
+            newPieceView.MoveTo(worldPos);
+
             this.pieceViewMap.Add(logicPiece, newPieceView);
         }
     }
@@ -396,10 +408,13 @@ public class BoardManager : MonoBehaviour
     }
     #endregion
 
-    #region 로직 보드에 맞게 비주얼 보드 동기화 작업을 진행하는 함수
+    #region 로직 보드에 맞게 비주얼 보드 동기화 작업을 진행하는 함수 (최신 상태)
     public void SyncVisualsWithCore(GameModeBase activeMode)
     {
         // 1. 기존에 화면에 있는 모든 기물들의 매핑을 확인
+        foreach (PieceView temp in this.replayTempPieces) piecePool.Release(temp);
+        this.replayTempPieces.Clear();
+
         foreach (KeyValuePair<CorePiece, PieceView> pair in this.pieceViewMap)
         {
             CorePiece logicPiece = pair.Key;
@@ -428,7 +443,121 @@ public class BoardManager : MonoBehaviour
     }
     #endregion
 
+    #region FEN 문자열을 읽어서 비주얼 보드를 과거 시점으로 강제 동기화하는 함수
+    public void SyncVisualsWithFEN(string FEN)
+    {
+        // 1. 임시 기물 반납
+        foreach (PieceView temp in this.replayTempPieces) this.piecePool.Release(temp);
+        this.replayTempPieces.Clear();
+
+        // 2. 라이브 기물 숨기기
+        foreach (PieceView view in this.pieceViewMap.Values) view.gameObject.SetActive(false);
+
+        // 3. FEN에서 보드 배치 부분만 잘라내기
+        string piecePlacement = FEN.Split(' ')[0];
+        int x = 0;
+        int y = 7;
+
+        Dictionary<PieceType, CorePieceData> coreDataDic = GetCorePieceDataDic();
+
+        HashSet<PieceView> usedLiveViews = new HashSet<PieceView>();
+        foreach (char c in piecePlacement)
+        {
+            if (c == '/')
+            {
+                x = 0;
+                y--;
+                continue;
+            }
+
+            if (char.IsDigit(c) == true)
+            {
+                x += (int)char.GetNumericValue(c);
+                continue;
+            }
+
+            bool isWhite = char.IsUpper(c);
+            PieceType type = GetPieceTypeFromChar(c);
+
+            PieceView matchedView = null;
+            foreach (PieceView view in this.pieceViewMap.Values)
+            {
+                if (usedLiveViews.Contains(view) == false && view.LogicPiece.IsWhite == isWhite && view.LogicPiece.Data.type == type)
+                {
+                    matchedView = view;
+                    usedLiveViews.Add(view);
+                    break;
+                }
+            }
+
+            if (matchedView == null)
+            {
+                matchedView = this.piecePool.Get();
+
+                CorePiece tempPiece = new CorePiece(coreDataDic[type]);
+                tempPiece.IsWhite = isWhite;
+
+                matchedView.Initialize(tempPiece);
+                matchedView.gameObject.name = $"{(isWhite ? "White" : "Black")}_{this.pieceDic[type].name}_ReplayTemp";
+
+                this.replayTempPieces.Add(matchedView);
+            }
+
+            matchedView.gameObject.SetActive(true);
+            matchedView.MoveTo(GetWorldPosition(x, y));
+
+            x++;
+        }
+    }
+    #endregion
+
+    #region FEN 문자를 PieceType으로 변환하는 헬퍼 함수
+    private PieceType GetPieceTypeFromChar(char c)
+    {
+        switch (char.ToLower(c))
+        {
+            case 'p':
+                return PieceType.Pawn;
+
+            case 'b':
+                return PieceType.Bishop;
+
+            case 'n':
+                return PieceType.Knight;
+
+            case 'r':
+                return PieceType.Rook;
+
+            case 'q':
+                return PieceType.Queen;
+
+            case 'k': 
+                return PieceType.King;
+
+            default:
+                return PieceType.Pawn;
+        }
+    }
+    #endregion
+
     #endregion - 뷰어 관련 함수
+
+    #region + 오브젝트 풀 함수
+
+    private PieceView CreatePiece()
+    {
+        GameObject piece = Instantiate(this.piecePrefab, this.pieceParent);
+
+        return piece.GetComponent<PieceView>();
+    }
+
+    private void GetPiece(PieceView view) => view.gameObject.SetActive(true);
+
+    private void ReleasePiece(PieceView view) => view.gameObject.SetActive(false);
+
+    private void DestroyPiece(PieceView view) => Destroy(view.gameObject);
+
+    #endregion - 오브젝트 풀 함수
 
     #region + 마우스 조작 관련 함수
 
@@ -447,6 +576,8 @@ public class BoardManager : MonoBehaviour
     #region 좌클릭 시작 시 실행되는 함수
     public bool OnLeftClickStarted(Vector2 mousePos)
     {
+        if (ReplayManager.Instance.IsViewingLatest == false) return false;
+
         // 1. 마우스가 올려져있는 타일 좌표 가져오기
         BoardPos tilePos = GetTilePosFromMouse(mousePos);
 
