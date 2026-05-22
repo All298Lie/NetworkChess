@@ -84,7 +84,7 @@ public class ReplayManager : MonoBehaviour
         }
 
         // 2. 하이라이트 작업
-        if (entry.StartPos != null && entry.EndPos != null)
+        if (MoveValidator.IsOnBoard(entry.StartPos) == true && MoveValidator.IsOnBoard(entry.EndPos) == true)
         {
             HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
         }
@@ -94,8 +94,6 @@ public class ReplayManager : MonoBehaviour
         }
     }
     #endregion
-
-    
 
     #region 화살표 버튼 (처음 수)
     public void OnClickFirstMove() => JumpToPly(0);

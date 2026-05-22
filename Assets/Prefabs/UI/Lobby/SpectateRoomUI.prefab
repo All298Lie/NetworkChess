@@ -585,6 +585,7 @@ GameObject:
   - component: {fileID: 1287118677813577133}
   - component: {fileID: 3215474188584282720}
   - component: {fileID: 916208391183912635}
+  - component: {fileID: 3561015860829298166}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -694,6 +695,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3561015860829298166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2989260903558661694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &3957764959375615390
 GameObject:
   m_ObjectHideFlags: 0
@@ -1347,6 +1360,7 @@ GameObject:
   - component: {fileID: 3966904328076707346}
   - component: {fileID: 2057942790951642839}
   - component: {fileID: 8471186580624148831}
+  - component: {fileID: 7457573540563801517}
   m_Layer: 5
   m_Name: SpectateRoomBtn
   m_TagString: Untagged
@@ -1468,13 +1482,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 2057942790951642839}
-  btnTxt: {fileID: 665915191463828811}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &7457573540563801517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8768166215822341484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &9149709900121084447
 GameObject:
   m_ObjectHideFlags: 0

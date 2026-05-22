@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1426579495007570044}
   - component: {fileID: 4756230239053540409}
   - component: {fileID: 1933359390866403667}
+  - component: {fileID: 4696585218613665768}
   m_Layer: 5
   m_Name: JoinRoomBtn
   m_TagString: Untagged
@@ -134,13 +135,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 4756230239053540409}
-  btnTxt: {fileID: 4235565224096978173}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &4696585218613665768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 362901204986995916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &1327061531189537817
 GameObject:
   m_ObjectHideFlags: 0
@@ -709,6 +720,7 @@ GameObject:
   - component: {fileID: 6556008579624458758}
   - component: {fileID: 2621889684650286787}
   - component: {fileID: 6113350261003950014}
+  - component: {fileID: 3608171208522381693}
   m_Layer: 5
   m_Name: CreateRoomBtn
   m_TagString: Untagged
@@ -830,13 +842,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 2621889684650286787}
-  btnTxt: {fileID: 5751659334346942896}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &3608171208522381693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4378110988849405471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &6275055705699792610
 GameObject:
   m_ObjectHideFlags: 0
@@ -1297,6 +1319,7 @@ GameObject:
   - component: {fileID: 3647155579375294620}
   - component: {fileID: 6577672915608578571}
   - component: {fileID: 8587910885117591154}
+  - component: {fileID: 4290799920373071431}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -1406,3 +1429,15 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4290799920373071431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9078984155913533373}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger

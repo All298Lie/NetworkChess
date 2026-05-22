@@ -428,7 +428,7 @@ public class LobbyUIManager : MonoBehaviour
         GameData.Clear();
         GameData.IsReplay = true;
         GameData.ReplayCode = res.ReplayCode;
-        GameData.FENHistory = res.FENHistory;
+        GameData.Entries = res.Entries;
 
         SceneManager.LoadScene("GameScene");
     }

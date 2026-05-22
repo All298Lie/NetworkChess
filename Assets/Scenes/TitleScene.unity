@@ -310,6 +310,7 @@ GameObject:
   - component: {fileID: 428458985}
   - component: {fileID: 428458984}
   - component: {fileID: 428458987}
+  - component: {fileID: 428458988}
   m_Layer: 5
   m_Name: ConnectButton
   m_TagString: Untagged
@@ -436,6 +437,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &428458988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428458982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1797,6 +1810,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2013526071}
   m_CullTransparentMesh: 1
+--- !u!1 &2106763048
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2106763050}
+  - component: {fileID: 2106763049}
+  m_Layer: 0
+  m_Name: CursorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2106763049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2106763048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b95176fd83044e7488c57692844a240f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CursorManager
+  defaultCursor: {fileID: 2800000, guid: 1d0854c36aeee294092d2642acd17247, type: 3}
+  hoverCursor: {fileID: 2800000, guid: 4e50db20eb510dd4c82c3c06b62b96ca, type: 3}
+  grabCursor: {fileID: 2800000, guid: a61948c36fcdc344ca1dddc35701e682, type: 3}
+  hotSpot: {x: 28, y: 16}
+--- !u!4 &2106763050
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2106763048}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1239.2084, y: 574.8618, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2111354900
 GameObject:
   m_ObjectHideFlags: 0
@@ -1810,6 +1871,7 @@ GameObject:
   - component: {fileID: 2111354903}
   - component: {fileID: 2111354902}
   - component: {fileID: 2111354905}
+  - component: {fileID: 2111354906}
   m_Layer: 5
   m_Name: ExitButton
   m_TagString: Untagged
@@ -1936,6 +1998,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &2111354906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2111354900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1945,3 +2019,4 @@ SceneRoots:
   - {fileID: 1395957136}
   - {fileID: 1153444299}
   - {fileID: 1396104217}
+  - {fileID: 2106763050}

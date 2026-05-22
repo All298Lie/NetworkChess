@@ -114,6 +114,7 @@ GameObject:
   - component: {fileID: 887413398861003167}
   - component: {fileID: 584745618743527424}
   - component: {fileID: 6231827493190508903}
+  - component: {fileID: 355705211429542412}
   m_Layer: 5
   m_Name: JoinRoomBtn
   m_TagString: Untagged
@@ -235,13 +236,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f130748b45f51c841aefc04b6e30e1e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonTextColor
-  button: {fileID: 584745618743527424}
-  btnTxt: {fileID: 6442976427957171096}
   normalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   hoverColor: {r: 0.99215686, g: 0.9019608, b: 0.5411765, a: 1}
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &355705211429542412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842746257409978834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &3407791475251268272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1610,6 +1621,7 @@ GameObject:
   - component: {fileID: 1254947162683775615}
   - component: {fileID: 7326137818890483128}
   - component: {fileID: 2023054717603631379}
+  - component: {fileID: 4383731080320732601}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -1719,6 +1731,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4383731080320732601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8468483203399078152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &8494880340205001974
 GameObject:
   m_ObjectHideFlags: 0
@@ -1731,6 +1755,7 @@ GameObject:
   - component: {fileID: 8327103011199093626}
   - component: {fileID: 1606077225095273310}
   - component: {fileID: 2207975904903616150}
+  - component: {fileID: 5004878300594307497}
   m_Layer: 5
   m_Name: UndoButton
   m_TagString: Untagged
@@ -1840,6 +1865,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5004878300594307497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8494880340205001974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &8516393044928096057
 GameObject:
   m_ObjectHideFlags: 0

@@ -78,6 +78,7 @@ GameObject:
   - component: {fileID: 662735874617965113}
   - component: {fileID: 5536441212968170443}
   - component: {fileID: 3455152011792064298}
+  - component: {fileID: 9070325746437889158}
   m_Layer: 5
   m_Name: ReplayBtn
   m_TagString: Untagged
@@ -204,6 +205,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &9070325746437889158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1768135416289613323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &1806003360191872681
 GameObject:
   m_ObjectHideFlags: 0
@@ -491,6 +504,7 @@ GameObject:
   - component: {fileID: 7137088586482532105}
   - component: {fileID: 4549069513487942339}
   - component: {fileID: 3334649693899459227}
+  - component: {fileID: 3501199261377979942}
   m_Layer: 5
   m_Name: CopyCodeBtn
   m_TagString: Untagged
@@ -617,6 +631,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &3501199261377979942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2045855620088623296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &2343956762590349980
 GameObject:
   m_ObjectHideFlags: 0
@@ -1454,6 +1480,7 @@ GameObject:
   - component: {fileID: 8704286072110983353}
   - component: {fileID: 5210108863949282990}
   - component: {fileID: 6735295833951662978}
+  - component: {fileID: 4823458428329908572}
   m_Layer: 5
   m_Name: FavoriteBtn
   m_TagString: Untagged
@@ -1578,6 +1605,18 @@ MonoBehaviour:
   hoverMoveY: 4
   pressMoveY: -2
   pressedColor: {r: 0.5803922, g: 0.6392157, b: 0.72156864, a: 1}
+--- !u!114 &4823458428329908572
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7605924451353945023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &7831270293383586953
 GameObject:
   m_ObjectHideFlags: 0

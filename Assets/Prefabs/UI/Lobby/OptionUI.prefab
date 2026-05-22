@@ -2368,6 +2368,7 @@ GameObject:
   - component: {fileID: 5176040826330245330}
   - component: {fileID: 5196636061864915992}
   - component: {fileID: 9126574565642530761}
+  - component: {fileID: 8309568828129106753}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -2477,6 +2478,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8309568828129106753
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3944464273896712170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &4076419470805214488
 GameObject:
   m_ObjectHideFlags: 0

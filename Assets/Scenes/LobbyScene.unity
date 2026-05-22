@@ -269,6 +269,7 @@ GameObject:
   - component: {fileID: 428458985}
   - component: {fileID: 428458984}
   - component: {fileID: 428458987}
+  - component: {fileID: 428458988}
   m_Layer: 5
   m_Name: GameButton
   m_TagString: Untagged
@@ -395,6 +396,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &428458988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428458982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -802,6 +815,7 @@ GameObject:
   - component: {fileID: 708089176}
   - component: {fileID: 708089175}
   - component: {fileID: 708089178}
+  - component: {fileID: 708089179}
   m_Layer: 5
   m_Name: OptionButton
   m_TagString: Untagged
@@ -926,6 +940,18 @@ MonoBehaviour:
   hoverMoveY: 4
   pressMoveY: -2
   pressedColor: {r: 0.5803922, g: 0.6392157, b: 0.72156864, a: 1}
+--- !u!114 &708089179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708089173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &753411180
 GameObject:
   m_ObjectHideFlags: 0
@@ -1175,6 +1201,7 @@ GameObject:
   - component: {fileID: 1305587589}
   - component: {fileID: 1305587588}
   - component: {fileID: 1305587591}
+  - component: {fileID: 1305587592}
   m_Layer: 5
   m_Name: SpectatingButton
   m_TagString: Untagged
@@ -1301,6 +1328,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &1305587592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1305587586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &1376276927
 GameObject:
   m_ObjectHideFlags: 0
@@ -1696,6 +1735,7 @@ GameObject:
   - component: {fileID: 1477914513}
   - component: {fileID: 1477914512}
   - component: {fileID: 1477914515}
+  - component: {fileID: 1477914516}
   m_Layer: 5
   m_Name: ReplayButton
   m_TagString: Untagged
@@ -1822,6 +1862,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &1477914516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1477914510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1 &1495971040
 GameObject:
   m_ObjectHideFlags: 0
@@ -2507,6 +2559,7 @@ GameObject:
   - component: {fileID: 2111354903}
   - component: {fileID: 2111354902}
   - component: {fileID: 2111354905}
+  - component: {fileID: 2111354906}
   m_Layer: 5
   m_Name: DisconnectButton
   m_TagString: Untagged
@@ -2633,6 +2686,18 @@ MonoBehaviour:
   pressedColor: {r: 0.8509804, g: 0.46666667, b: 0.023529412, a: 1}
   disabledColor: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   selectedColor: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+--- !u!114 &2111354906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2111354900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be0138c962b4d845b5f98d369be8348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCursorChanger
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

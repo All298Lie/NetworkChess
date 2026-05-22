@@ -34,13 +34,6 @@ public class BoardManager : MonoBehaviour
 
     private bool isSelected;
 
-    [Header("커서 설정")]
-    [SerializeField] Texture2D defaultCursor; // 기본 동작
-    [SerializeField] Texture2D hoverCursor; // 선택 가능 동작
-    [SerializeField] Texture2D grabCursor; // 잡기 동작
-
-    private readonly Vector2Int hotSpot = new Vector2Int(36, 17);
-
     [Header("오브젝트 풀")]
     private ObjectPool<PieceView> piecePool;
     private List<PieceView> replayTempPieces = new List<PieceView>();
@@ -687,7 +680,7 @@ public class BoardManager : MonoBehaviour
         // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
         if (this.inputState == InputState.Dragging)
         {
-            Cursor.SetCursor(grabCursor, hotSpot, CursorMode.ForceSoftware);
+            CursorManager.Instance.SetGrabCursor();
 
             return;
         }
@@ -706,14 +699,14 @@ public class BoardManager : MonoBehaviour
 
             if (this.inputState == InputState.Selected || (hoveredPiece != null && isMyPiece == true && isMyTurn == true))
             {
-                Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.ForceSoftware);
+                CursorManager.Instance.SetHoverCursor();
 
                 return;
             }
         }
 
         // 3. 평상 시 상태일 경우 (기본 커서)
-        Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.ForceSoftware);
+        CursorManager.Instance.SetDefaultCursor();
     }
     #endregion
 

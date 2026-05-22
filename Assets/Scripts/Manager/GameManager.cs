@@ -133,7 +133,10 @@ public class GameManager : MonoBehaviour
         // 5. 상태에 따른 분기 처리
         if (GameData.IsReplay == true)
         {
-            SetupReplayMode();
+            ReplayManager.Instance.SetupTimeline(GameData.Entries);
+            ReplayManager.Instance.JumpToPly(0);
+
+            CLog.Log("[게임 리뷰] 리플레이 환경 구성 완료");
         }
         else
         {
@@ -141,6 +144,8 @@ public class GameManager : MonoBehaviour
 
             ChessMoveEntry entry = new ChessMoveEntry();
             entry.FEN = GameData.StartingFEN;
+            entry.StartPos = new BoardPos(-1, -1);
+            entry.EndPos = new BoardPos(-1, -1);
 
             List<ChessMoveEntry> initialTimeLine = new List<ChessMoveEntry>();
             initialTimeLine.Add(entry);
@@ -152,11 +157,6 @@ public class GameManager : MonoBehaviour
         BoardManager.Instance.SetupBoard(this.ActiveMode);
     }
     #endregion
-
-    private void SetupReplayMode()
-    {
-        CLog.Log("[게임 리뷰] 리플레이 환경 구성 완료");
-    }
 
     #region + 이벤트 호출 함수
 
@@ -201,10 +201,15 @@ public class GameManager : MonoBehaviour
     #region 게임 리뷰 요청 시 호출되는 함수
     private void HandleReplayReceived(S2C_ReplayRes res)
     {
-        GameData.IsReplay = true;
-        GameData.FENHistory = res.FENHistory;
+        if (res.IsSuccess == true)
+        {
+            GameData.IsReplay = true;
 
-        this.GameOverUI.CloseGameOverUI();
+            this.GameOverUI.CloseGameOverUI();
+
+            ReplayManager.Instance.SetupTimeline(res.Entries);
+            ReplayManager.Instance.JumpToPly(0);
+        }
     }
     #endregion
 
