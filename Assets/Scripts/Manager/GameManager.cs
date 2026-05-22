@@ -230,11 +230,4 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #endregion - 이벤트 호출 함수
-
-    #region 게임 나가기 버튼 클릭 시 작동되는 함수
-    public void OnClickExitButton()
-    {
-        SceneManager.LoadScene("LobbyScene");
-    }
-    #endregion
 }

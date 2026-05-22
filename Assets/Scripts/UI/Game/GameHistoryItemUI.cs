@@ -13,19 +13,19 @@ public class GameHistoryItemUI : MonoBehaviour
     [SerializeField] private Button whiteMoveBtn;
     [SerializeField] private Button blackMoveBtn;
 
-    private string whiteFEN;
-    private string blackFEN;
+    private int whitePlayIndex;
+    private int blackPlayIndex;
 
     #region 백 이동을 표기하는 함수
-    public void SetWhiteMove(int fullMoveNumber, string whiteMove, string whiteFEN)
+    public void SetWhiteMove(int fullMoveNumber, string whiteMove, int playIndex)
     {
         this.fullMoveNumber.text = $"{fullMoveNumber}.";
 
         this.whiteMove.text = whiteMove;
-        this.whiteFEN = whiteFEN;
+        this.whitePlayIndex = playIndex;
 
         this.whiteMoveBtn.onClick.RemoveAllListeners();
-        this.whiteMoveBtn.onClick.AddListener(() => OnMoveClick(this.whiteFEN));
+        this.whiteMoveBtn.onClick.AddListener(() => OnMoveClick(this.whitePlayIndex));
 
         this.blackMove.text = "";
         this.blackMoveBtn.interactable = false;
@@ -33,22 +33,22 @@ public class GameHistoryItemUI : MonoBehaviour
     #endregion
 
     #region 흑 이동을 표기하는 함수
-    public void UpdateBlackMove(string blackMove, string blackFEN)
+    public void UpdateBlackMove(string blackMove, int playIndex)
     {
         this.blackMove.text = blackMove;
-        this.blackFEN = blackFEN;
+        this.blackPlayIndex = playIndex;
 
         this.blackMoveBtn.onClick.RemoveAllListeners();
-        this.blackMoveBtn.onClick.AddListener(() => OnMoveClick(this.blackFEN));
+        this.blackMoveBtn.onClick.AddListener(() => OnMoveClick(this.blackPlayIndex));
 
         blackMoveBtn.interactable = true;
     }
     #endregion
 
     #region 버튼 클릭시 작동하는 함수
-    private void OnMoveClick(string targetFEN)
+    private void OnMoveClick(int playIndex)
     {
-        // 리플레이 시스템을 blackFEN으로 호출하여 보드 갱신
+        ReplayManager.Instance.JumpToPly(playIndex);
     }
     #endregion
 }

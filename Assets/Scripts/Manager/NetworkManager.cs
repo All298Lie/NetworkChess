@@ -369,7 +369,7 @@ public class NetworkManager : MonoBehaviour
     }
     #endregion
 
-    #region 6. 기물 이동 결과 통보
+    #region 6. 기물 이동 결과
     private void HandleGameMoveRes(S2C_GameMoveRes res)
     {
         if (res.IsSuccess == true) return;

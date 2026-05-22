@@ -3233,6 +3233,7 @@ MonoBehaviour:
   historyContent: {fileID: 846527614}
   historyScrollRect: {fileID: 1364723681}
   historyItemPrefab: {fileID: 8636903323777484298, guid: 7a8c4d350636ca746aad800ea39c60ea, type: 3}
+  resignBtn: {fileID: 753818294}
 --- !u!1 &1120005793
 GameObject:
   m_ObjectHideFlags: 0

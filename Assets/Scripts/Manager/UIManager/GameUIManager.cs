@@ -15,6 +15,9 @@ public class GameUIManager : MonoBehaviour
 
     private GameHistoryItemUI lastHistoryItem;
 
+    [Header("버튼")]
+    [SerializeField] private Button resignBtn;
+
     void Start()
     {
         if (GameManager.Instance != null)
@@ -22,6 +25,8 @@ public class GameUIManager : MonoBehaviour
             // GameManager.Instance.OnGameStarted += HandleGameStarted;
             GameManager.Instance.OnTurnEnded += HandleTurnEnded;
         }
+
+        InitializeButton();
     }
     
     void OnDestroy()
@@ -31,6 +36,11 @@ public class GameUIManager : MonoBehaviour
             // GameManager.Instance.OnGameStarted -= HandleGameStarted;
             GameManager.Instance.OnTurnEnded -= HandleTurnEnded;
         }
+    }
+
+    private void InitializeButton()
+    {
+        this.resignBtn.onClick.AddListener(OnResignClick);
     }
 
     private void HandleGameStarted()
@@ -69,5 +79,18 @@ public class GameUIManager : MonoBehaviour
 
         this.historyScrollRect.verticalNormalizedPosition = 0.0f;
     }
+    #endregion
+
+    #region + 버튼 함수
+
+    #region 기권 버튼을 누를 시 작동되는 함수
+    private void OnResignClick()
+    {
+        C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
+
+        _ = NetworkManager.Instance.SendPacket(req);
+    }
+    #endregion
+
     #endregion
 }
