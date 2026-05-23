@@ -54,6 +54,8 @@ public class ReplayManager : MonoBehaviour
     #region 기록을 업데이트 하는 함수
     public void UpdateTimeLine(ChessMoveEntry entry)
     {
+        if (entry == null || string.IsNullOrEmpty(entry.FEN) == true) return;
+
         this.entries.Add(entry);
 
         if (this.currentViewerIndex == entries.Count - 2)

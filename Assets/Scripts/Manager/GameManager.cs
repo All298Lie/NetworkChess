@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     public bool IsGameOver { get; private set; }
 
     public event Action<S2C_GameStateNoti> OnTurnEnded;
+    public event Action<List<ChessMoveEntry>> OnReplayStarted;
 
     #region Awake 함수
     void Awake()
@@ -135,6 +136,8 @@ public class GameManager : MonoBehaviour
         {
             ReplayManager.Instance.SetupTimeline(GameData.Entries);
             ReplayManager.Instance.JumpToPly(0);
+
+            OnReplayStarted?.Invoke(GameData.Entries);
 
             CLog.Log("[게임 리뷰] 리플레이 환경 구성 완료");
         }

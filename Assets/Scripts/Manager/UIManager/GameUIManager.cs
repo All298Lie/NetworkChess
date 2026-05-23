@@ -1,4 +1,5 @@
 ﻿using NetworkChess.Core;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,7 +23,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (GameManager.Instance != null)
         {
-            // GameManager.Instance.OnGameStarted += HandleGameStarted;
+            GameManager.Instance.OnReplayStarted += PopulateReplayHistory;
             GameManager.Instance.OnTurnEnded += HandleTurnEnded;
         }
 
@@ -33,7 +34,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (GameManager.Instance != null)
         {
-            // GameManager.Instance.OnGameStarted -= HandleGameStarted;
+            GameManager.Instance.OnReplayStarted -= PopulateReplayHistory;
             GameManager.Instance.OnTurnEnded -= HandleTurnEnded;
         }
     }
@@ -73,6 +74,31 @@ public class GameUIManager : MonoBehaviour
         }
 
         ScrollToBottom();
+    }
+    #endregion
+
+    #region 리플레이 로드 시 기보 목록을 띄우는 함수
+    public void PopulateReplayHistory(List<ChessMoveEntry> entries)
+    {
+        if (entries == null || entries.Count < 1) return;
+
+        for (int i = 1; i < entries.Count; i++)
+        {
+            ChessMoveEntry entry = entries[i];
+            bool isWhiteTurn = (i % 2 != 0);
+
+            if (isWhiteTurn == true)
+            {
+                GameObject history = Instantiate(this.historyItemPrefab, this.historyContent);
+
+                this.lastHistoryItem = history.GetComponent<GameHistoryItemUI>();
+                this.lastHistoryItem.SetWhiteMove(i / 2 + 1, entry.MoveNotation, i);
+            }
+            else
+            {
+                this.lastHistoryItem?.UpdateBlackMove(entry.MoveNotation, i);
+            }
+        } // for 문
     }
     #endregion
 
