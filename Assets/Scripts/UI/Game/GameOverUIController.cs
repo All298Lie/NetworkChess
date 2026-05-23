@@ -14,6 +14,8 @@ public class GameOverUIController : MonoBehaviour
     [SerializeField] private TMP_Text reasonTxt;
     [SerializeField] private TMP_Text replayCodeTxt;
 
+    private string replayCode;
+
     [Header("버튼")]
     [SerializeField] private Button returnLobbyBtn;
     [SerializeField] private Button replayBtn;
@@ -52,6 +54,7 @@ public class GameOverUIController : MonoBehaviour
         this.reasonTxt.text = reason;
 
         // 4. 공유 코드 표시
+        this.replayCode = replayCode;
         this.replayCodeTxt.text = $"공유 코드 : {replayCode}";
     }
     #endregion
@@ -67,6 +70,7 @@ public class GameOverUIController : MonoBehaviour
     private void OnReturnToLobby()
     {
         this.returnLobbyBtn.onClick.RemoveAllListeners();
+        this.replayBtn.onClick.RemoveAllListeners();
 
         C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
         NetworkManager.Instance.SendPacket(req).Forget();
@@ -76,7 +80,13 @@ public class GameOverUIController : MonoBehaviour
     #region 게임 리뷰 버튼을 누를 때 작동하는 함수
     private void OnReplayClick()
     {
+        this.returnLobbyBtn.onClick.RemoveAllListeners();
+        this.replayBtn.onClick.RemoveAllListeners();
 
+        C2S_ReplayReq req = new C2S_ReplayReq();
+        req.ReplayCode = this.replayCode;
+
+        NetworkManager.Instance.SendPacket(req).Forget();
     }
     #endregion
 

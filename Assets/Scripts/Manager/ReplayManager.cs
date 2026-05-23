@@ -76,7 +76,7 @@ public class ReplayManager : MonoBehaviour
         ChessMoveEntry entry = this.entries[this.currentViewerIndex];
 
         // 1. 기물 렌더링 덮어씌우기 작업
-        if (this.IsViewingLatest == true)
+        if (this.IsViewingLatest == true && GameData.IsReplay == false)
         {
             BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
         }
