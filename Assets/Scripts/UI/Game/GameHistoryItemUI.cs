@@ -41,7 +41,21 @@ public class GameHistoryItemUI : MonoBehaviour
         this.blackMoveBtn.onClick.RemoveAllListeners();
         this.blackMoveBtn.onClick.AddListener(() => OnMoveClick(this.blackPlayIndex));
 
-        blackMoveBtn.interactable = true;
+        this.blackMoveBtn.interactable = true;
+    }
+    #endregion
+
+    #region 흑 이동을 삭제하는 함수
+    public bool RemoveBlackMove()
+    {
+        if (this.blackMoveBtn.interactable == false) return false;
+
+        this.blackMoveBtn.onClick.RemoveAllListeners();
+
+        this.blackMove.text = "";
+        this.blackMoveBtn.interactable = false;
+
+        return true;
     }
     #endregion
 

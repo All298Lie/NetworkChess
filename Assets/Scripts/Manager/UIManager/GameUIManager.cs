@@ -1,6 +1,8 @@
 ﻿using NetworkChess.Core;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
@@ -13,6 +15,8 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private Transform historyContent;
     [SerializeField] private ScrollRect historyScrollRect;
     [SerializeField] private GameObject historyItemPrefab;
+    [SerializeField] private GameObject requestTab;
+    [SerializeField] private GameObject reviewTab;
 
     [Header("프로모션 UI")]
     [SerializeField] private GameObject promotionUIPrefab;
@@ -30,16 +34,21 @@ public class GameUIManager : MonoBehaviour
     private GameHistoryItemUI lastHistoryItem;
 
     [Header("버튼")]
-    [SerializeField] private Button resignBtn;
+    [SerializeField] private Button resignBtn; // 기권
+    [SerializeField] private Button drawReqBtn; // 무승부 요청
+    [SerializeField] private Button takebackReqBtn; // 무르기 요청
+    [SerializeField] private Button acceptBtn; // 수락
+    [SerializeField] private Button denyBtn; // 거절
+
+    [SerializeField] private Button exitBtn; // 로비로 나가기
+
+    private ProposalType proposalType;
+
+    private CancellationTokenSource timeoutCts;
+    private const int TIMEOUT_SECONDS = 5;
 
     void Start()
     {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnReplayStarted += PopulateReplayHistory;
-            GameManager.Instance.OnTurnEnded += HandleTurnEnded;
-        }
-
         InitializeButton();
 
         InitializeAlertPopUpUI();
@@ -51,9 +60,14 @@ public class GameUIManager : MonoBehaviour
 
         if (GameManager.Instance != null)
         {
+            GameManager.Instance.OnReplayStarted += PopulateReplayHistory;
+            GameManager.Instance.OnTurnEnded += HandleTurnEnded;
             GameManager.Instance.OnGameOverEvent += ShowGameOverUI;
             GameManager.Instance.OnCloseGameOverUI += CloseGameOverUI;
+            GameManager.Instance.OnChangeGameUIState += SetButtonView;
         }
+
+        SetProposalButtonView(false);
     }
     
     void OnDestroy()
@@ -64,6 +78,25 @@ public class GameUIManager : MonoBehaviour
             GameManager.Instance.OnTurnEnded -= HandleTurnEnded;
             GameManager.Instance.OnGameOverEvent -= ShowGameOverUI;
             GameManager.Instance.OnCloseGameOverUI -= CloseGameOverUI;
+            GameManager.Instance.OnChangeGameUIState -= SetButtonView;
+        }
+    }
+
+    void OnEnable()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.OnRemoveLastHistory += RemoveLastHistoryItem;
+            NetworkManager.OnSetProposalUI += SetProposalButtonView;
+        }
+    }
+
+    void OnDisable()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.OnRemoveLastHistory -= RemoveLastHistoryItem;
+            NetworkManager.OnSetProposalUI -= SetProposalButtonView;
         }
     }
 
@@ -108,6 +141,13 @@ public class GameUIManager : MonoBehaviour
     private void InitializeButton()
     {
         this.resignBtn.onClick.AddListener(OnResignClick);
+        this.drawReqBtn.onClick.AddListener(() => OnProposalClick(ProposalType.Draw));
+        this.takebackReqBtn.onClick.AddListener(() => OnProposalClick(ProposalType.Takeback));
+
+        this.acceptBtn.onClick.AddListener(() => OnProPosalReplyClick(true));
+        this.denyBtn.onClick.AddListener(() => OnProPosalReplyClick(false));
+
+        this.exitBtn.onClick.AddListener(OnExitClick);
     }
 
     private void ShowGameOverUI(string winner, string reason, string code) => this.GameOverUI.ShowGameOver(winner, reason, code);
@@ -176,6 +216,40 @@ public class GameUIManager : MonoBehaviour
     }
     #endregion
 
+    public void RemoveLastHistoryItem()
+    {
+        if (this.lastHistoryItem != null)
+        {
+            bool isBlackMoveEmpty = this.lastHistoryItem.RemoveBlackMove();
+
+            if (isBlackMoveEmpty == false)
+            {
+                Destroy(this.lastHistoryItem.gameObject);
+
+                this.lastHistoryItem = this.historyContent.GetChild(this.historyContent.childCount - 1).GetComponent<GameHistoryItemUI>();
+            }
+        }
+    }
+
+    #region 보이는 버튼을 바꾸는 함수
+    private void SetButtonView(bool isPlay)
+    {
+        this.requestTab.SetActive(isPlay == true);
+        this.reviewTab.SetActive(isPlay == false);
+    }
+    #endregion
+
+    #region 제안 시 수락/거절 버튼을 띄우는 함수
+    private void SetProposalButtonView(bool isProposal)
+    {
+        this.acceptBtn.gameObject.SetActive(isProposal == true);
+        this.denyBtn.gameObject.SetActive(isProposal == true);
+
+        this.drawReqBtn.gameObject.SetActive(isProposal == false);
+        this.takebackReqBtn.gameObject.SetActive(isProposal == false);
+    }
+    #endregion
+
     #region + 버튼 함수
 
     #region 기권 버튼을 누를 시 작동되는 함수
@@ -184,6 +258,50 @@ public class GameUIManager : MonoBehaviour
         C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
 
         _ = NetworkManager.Instance.SendPacket(req);
+    }
+    #endregion
+
+    #region 제안 버튼을 누를 시 작동되는 함수
+    private void OnProposalClick(ProposalType type)
+    {
+        C2S_ProposalReq req = new C2S_ProposalReq();
+        req.ProposalType = type;
+
+        _ = NetworkManager.Instance.SendPacket(req);
+    }
+    #endregion
+
+    #region 제안 답장 버튼을 누를 시 작동되는 함수
+    private void OnProPosalReplyClick(bool isAccept)
+    {
+        C2S_ProposalReplyReq req = new C2S_ProposalReplyReq();
+        req.ProposalType = this.proposalType;
+        req.IsAccepted = isAccept;
+
+        _ = NetworkManager.Instance.SendPacket(req);
+
+        SetProposalButtonView(false);
+    }
+    #endregion
+
+    #region 로비로 나가기 버튼을 누를 시 작동되는 함수
+    private void OnExitClick()
+    {
+
+        if (GameData.IsReplay == true) // 게임 리뷰일 경우
+        {
+            GameData.Clear();
+
+            SceneManager.LoadScene("LobbyScene");
+        }
+        else if (GameData.IsSpectator == true) // 관전일 경우
+        {
+            GameData.Clear();
+
+            C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
+
+            _ = NetworkManager.Instance.SendPacket(req);
+        }
     }
     #endregion
 

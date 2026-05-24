@@ -28,6 +28,8 @@ public class GameOverUIController : MonoBehaviour
     private CancellationTokenSource timeoutCts;
     private const int TIMEOUT_SECONDS = 5;
 
+    #region + 유니티 함수
+
     #region Start 함수
     void Awake()
     {
@@ -39,6 +41,20 @@ public class GameOverUIController : MonoBehaviour
         this.replayBtn.onClick.AddListener(OnReplayClick);
     }
     #endregion
+
+    #region OnDisable 함수
+    void OnDisable()
+    {
+        if (this.timeoutCts != null)
+        {
+            this.timeoutCts.Cancel();
+            
+            this.timeoutCts = null;
+        }
+    }
+    #endregion
+
+    #endregion - 유니티 함수
 
     #region 게임UI매니저 주입 함수
     public void Setup(AlertPopUpUI alert)
@@ -151,7 +167,7 @@ public class GameOverUIController : MonoBehaviour
     }
     #endregion
 
-    #region [수신 핸들러] 서버로부터 응답 패킷이 도착했을 때 호출되는 함수
+    #region 서버로부터 응답 패킷이 도착했을 때 호출되는 함수
     public void HandleRoomLeaveResponse(S2C_RoomLeaveRes res)
     {
         timeoutCts?.Cancel();

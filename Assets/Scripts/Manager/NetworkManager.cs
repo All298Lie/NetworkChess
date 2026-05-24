@@ -47,6 +47,10 @@ public class NetworkManager : MonoBehaviour
     public static event Action<S2C_ReplayRes> OnReplayReceived;
     public static event Action<S2C_FindReplayCodeRes> OnReplayCodeReceived;
 
+    // 무승부/무르기 제안 이벤트
+    public static event Action<bool> OnSetProposalUI;
+    public static event Action OnRemoveLastHistory;
+
     #region + 유니티 함수
 
     #region Awake 함수
@@ -198,6 +202,20 @@ public class NetworkManager : MonoBehaviour
                         this.workQueue.Enqueue(() => HandleFindReplayCode(findReplayCodeRes));
                         break;
 
+                    case PacketType.S2C_ProposalNoti:
+                        S2C_ProposalNoti proposalNoti = JsonConvert.DeserializeObject<S2C_ProposalNoti>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleProposalNoti(proposalNoti));
+                        break;
+
+                    case PacketType.S2C_ProposalReplyNoti:
+                        S2C_ProposalReplyNoti proposalReplyNoti = JsonConvert.DeserializeObject<S2C_ProposalReplyNoti>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleProposalReplyNoti(proposalReplyNoti));
+                        break;
+
+                    case PacketType.S2C_TakebackNoti:
+                        S2C_TakebackNoti takebackNoti = JsonConvert.DeserializeObject<S2C_TakebackNoti>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleTakebackNoti(takebackNoti));
+                        break;
                     default:
                         CLog.LogError($"<color=red>[네트워크]</color> 에러 : 등록되지 않은 패킷이 요청되어 무시되었습니다. {basePacket.Type}");
                         break;
@@ -417,6 +435,39 @@ public class NetworkManager : MonoBehaviour
     private void HandleFindReplayCode(S2C_FindReplayCodeRes res)
     {
         OnReplayCodeReceived?.Invoke(res);
+    }
+    #endregion
+
+    #region 11. 제안 요청 통보
+    private void HandleProposalNoti(S2C_ProposalNoti noti)
+    {
+        // 1. 수락/거절 버튼을 띄우기
+        OnSetProposalUI?.Invoke(true);
+    }
+    #endregion
+
+    #region 제안 응답 통보
+    private void HandleProposalReplyNoti(S2C_ProposalReplyNoti noti)
+    {
+        // 1. 비활성화된 버튼 활성화 (무승부 / 무르기)
+        OnSetProposalUI?.Invoke(false);
+    }
+    #endregion
+
+    #region 무르기 강제 동기화 통보
+    private void HandleTakebackNoti(S2C_TakebackNoti noti)
+    {
+        // 1. 코어 엔진 롤백 (이전 답변에서 추가한 RollbackState 함수 호출)
+        GameManager.Instance.ActiveMode.RollbackState(noti.RestoredFEN);
+
+        // 2. 리플레이 매니저 타임라인 갱신 (가장 마지막 수 날리기)
+        ReplayManager.Instance.PopLatestMove();
+
+        // 3. 기보 UI에서 맨 마지막 줄 삭제
+        OnRemoveLastHistory?.Invoke();
+
+        // 4. 보드판 하드 리셋 (홀로그램이 아닌 진짜 기물을 현재 코어 상태에 맞게 재배치!)
+        BoardManager.Instance.HardResetBoard(GameManager.Instance.ActiveMode);
     }
     #endregion
 

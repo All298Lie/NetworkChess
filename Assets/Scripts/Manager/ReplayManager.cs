@@ -65,6 +65,22 @@ public class ReplayManager : MonoBehaviour
     }
     #endregion
 
+    #region 마지막 이동을 제거하는 함수
+    public void PopLatestMove()
+    {
+        if (this.entries.Count > 1) // 최초 시작 FEN은 지우면 안 됨
+        {
+            this.entries.RemoveAt(this.entries.Count - 1);
+
+            // 뷰어 인덱스 동기화
+            if (this.currentViewerIndex >= this.entries.Count)
+            {
+                this.currentViewerIndex = this.entries.Count - 1;
+            }
+        }
+    }
+    #endregion
+
     #region + 버튼 함수
 
     #region UI 버튼 (기보 클릭)

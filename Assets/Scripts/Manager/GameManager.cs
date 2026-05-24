@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
 
     public event Action<string, string, string> OnGameOverEvent;
     public event Action OnCloseGameOverUI;
+    public event Action<bool> OnChangeGameUIState;
 
     #region Awake 함수
     void Awake()
@@ -109,6 +110,8 @@ public class GameManager : MonoBehaviour
             OnReplayStarted?.Invoke(GameData.Entries);
 
             CLog.Log("[게임 리뷰] 리플레이 환경 구성 완료");
+
+            OnChangeGameUIState?.Invoke(false);
         }
         else
         {
@@ -123,6 +126,8 @@ public class GameManager : MonoBehaviour
             initialTimeLine.Add(entry);
 
             ReplayManager.Instance.SetupTimeline(initialTimeLine);
+
+            OnChangeGameUIState?.Invoke(GameData.IsSpectator == false);
         }
 
         // 4. 뷰어 세팅
