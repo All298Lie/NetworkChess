@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using NetworkChess.Core;
+﻿using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +14,8 @@ public class LoadingUI : AnimateLoadUI
 
     [Header("팝업 UI")]
     [SerializeField] private GameObject popUpUI;
+
+    public event Action OnCancelLoading;
 
     #region + 유니티 함수
 
@@ -49,11 +50,7 @@ public class LoadingUI : AnimateLoadUI
     #region 취소 버튼 클릭 시 작동되는 함수
     private void OnCancelButtonClick()
     {
-        if (NetworkManager.Instance == null) return;
-
-        C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
-
-        NetworkManager.Instance.SendPacket(req).Forget();
+        OnCancelLoading?.Invoke();
     }
     #endregion
 }

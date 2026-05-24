@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using JetBrains.Annotations;
 using NetworkChess.Core;
 using TMPro;
 using UnityEngine;

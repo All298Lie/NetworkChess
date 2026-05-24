@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -14,6 +17,13 @@ public enum ReplayTab
 
 public class ReplayUI : PopUpUI
 {
+    private readonly Regex replayCodeRegex = new Regex("^[a-zA-Z0-9]{8}$", RegexOptions.Compiled);
+
+    private AlertPopUpUI alert;
+
+    private PopUpUI loadingUI;
+    private LoadingUI loading;
+
     [Header("상단 탭 버튼")]
     [SerializeField] private ButtonTextEffect recentTabBtn;
     [SerializeField] private ButtonTextEffect favoriteTabBtn;
@@ -29,9 +39,11 @@ public class ReplayUI : PopUpUI
 
     [Header("Search 탭")]
     [SerializeField] private GameObject searchUI;
+    [SerializeField] private Transform searchContent;
     [SerializeField] private TMP_InputField search;
     [SerializeField] private Button searchBtn;
     private HistoryItemUI searchItem;
+    private bool cancelSearch;
 
     [Header("프리팹")]
     [SerializeField] private GameObject historyItemPrefab;
@@ -46,6 +58,9 @@ public class ReplayUI : PopUpUI
 
     private ReplayTab currentTab = ReplayTab.None;
 
+    #region + 유니티 함수
+
+    #region Start 함수
     void Start()
     {
         // 1. 파일 불러오기
@@ -56,6 +71,9 @@ public class ReplayUI : PopUpUI
         this.recentTabBtn.Button.onClick.AddListener(() => SetTab(ReplayTab.Recent));
         this.favoriteTabBtn.Button.onClick.AddListener(() => SetTab(ReplayTab.Favorite));
         this.searchTabBtn.Button.onClick.AddListener(() => SetTab(ReplayTab.Search));
+        this.searchBtn.onClick.AddListener(OnSearchClick);
+
+        this.cancelSearch = false;
 
         InitializeObjectPool();
 
@@ -65,6 +83,50 @@ public class ReplayUI : PopUpUI
 
         SetTab(ReplayTab.Recent);
     }
+    #endregion
+
+    #region OnEnable 함수
+    void OnEnable()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.OnReplayCodeReceived += ReplayCodeReceived;
+        }
+
+        if (this.loading != null)
+        {
+            this.loading.OnCancelLoading += HandleCancelSearchReplayCode;
+        }
+    }
+    #endregion
+
+    #region OnDisable 함수
+    void OnDisable()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.OnReplayCodeReceived -= ReplayCodeReceived;
+        }
+
+        this.loading.OnCancelLoading -= HandleCancelSearchReplayCode;
+    }
+    #endregion
+
+    #endregion - 유니티 함수
+
+    #region + 초기화 관련 함수
+
+    #region 로비UI매니저 주입 함수
+    public void Setup(AlertPopUpUI alert, LoadingUI loading, PopUpUI loadingUI)
+    {
+        this.alert = alert;
+
+        this.loadingUI = loadingUI;
+        this.loading = loading;
+
+        this.loading.OnCancelLoading += HandleCancelSearchReplayCode;
+    }
+    #endregion
 
     #region 오브젝트풀링 초기화 함수
     private void InitializeObjectPool()
@@ -112,11 +174,13 @@ public class ReplayUI : PopUpUI
     #region 검색 탭 초기화 함수
     private void InitializeSearchTab()
     {
-        this.searchItem = GetItemForTab(this.searchUI.transform);
+        this.searchItem = GetItemForTab(this.searchContent);
 
         this.searchItem.gameObject.SetActive(false);
     }
     #endregion
+
+    #endregion - 초기화 관련 함수
 
     #region 탭 지정 함수
     private void SetTab(ReplayTab tab)
@@ -175,6 +239,70 @@ public class ReplayUI : PopUpUI
             targetItem.ForceUpdateFavoriteState(isFavorite);
         }
     }
+    #endregion
+
+    #region 검색 버튼 함수
+    private void OnSearchClick()
+    {
+        // 1. 내용을 입력했는지 확인
+        if (string.IsNullOrEmpty(this.search.text) == true)
+        {
+            this.alert.ShowPopup("게임 리뷰", "리플레이 코드 8자를 입력해야 합니다.");
+            return;
+        }
+
+        // 2. 기보 코드 형식인지 확인
+        if (this.replayCodeRegex.IsMatch(this.search.text) == false)
+        {
+            this.alert.ShowPopup("게임 리뷰", "잘못된 리플레이 코드 형식입니다.");
+            return;
+        }
+
+        this.searchItem.gameObject.SetActive(false);
+
+        this.cancelSearch = false;
+
+        // 3. 기보코드를 통해 게임 리뷰 요청
+        C2S_FindReplayCodeReq req = new C2S_FindReplayCodeReq();
+
+        req.ReplayCode = this.search.text;
+
+        NetworkManager.Instance.SendPacket(req).Forget();
+
+        // 4. 로딩 UI 팝업
+        this.loading.ShowWaiting("리플레이 기록을 검색 중입니다...", true);
+    }
+    #endregion
+
+    #region 리플레이 코드 검색 결과가 반환왔을 때 작동하는 함수
+    private void ReplayCodeReceived(S2C_FindReplayCodeRes res)
+    {
+        // 1. 취소했는지 확인
+        if (this.cancelSearch == true) return;
+
+        // 2. 로딩 창 닫기
+        this.loadingUI.ClosePopUpUI();
+
+        // 3. 탐색에 성공했는지 확인
+        if (res.IsSuccess == false)
+        {
+            this.alert.ShowPopup("리플레이 코드", res.Message);
+
+            return;
+        }
+
+        LocalHistoryData data = new LocalHistoryData();
+        data.MyNickname = "$Unknown";
+        data.MatchData = res.MatchData;
+
+        this.searchItem.Setup(data, this);
+
+        this.searchItem.gameObject.SetActive(true);
+    }
+    #endregion
+
+    #region 리플레이 코드 검색 중 취소 했을 경우 작동하는 함수
+    private void HandleCancelSearchReplayCode() => this.cancelSearch = true;
     #endregion
 
     #region + 오브젝트 풀링 함수

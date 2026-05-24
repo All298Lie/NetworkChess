@@ -932,6 +932,7 @@ MonoBehaviour:
   favoriteUI: {fileID: 1054523765555789524}
   favoriteContent: {fileID: 7205946748125179639}
   searchUI: {fileID: 4329536234494107255}
+  searchContent: {fileID: 7193097772697842992}
   search: {fileID: 2542319699731418429}
   searchBtn: {fileID: 9177525221263812756}
   historyItemPrefab: {fileID: 1485810986249816566, guid: 19826d487677179499e488762de4d5fa, type: 3}

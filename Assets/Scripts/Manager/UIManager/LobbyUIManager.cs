@@ -1,4 +1,5 @@
-﻿using NetworkChess.Core;
+﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -85,12 +86,14 @@ public class LobbyUIManager : MonoBehaviour
 
         InitializeSpectateRoomUI();
 
-        InitializeReplayUI();
-
         // 로딩 UI 초기화
         InitializeLoadingPopUpUI();
 
-        // 알람 UI와 매치 성공 UI가 화면 최상단에 위치해야하므로 위치 조정
+        // 리플레이 UI 초기화
+        InitializeReplayUI();
+
+        // 위치 조정이 필요한 게임오브젝트 설정
+        this.loadingUI.transform.SetAsLastSibling();
         this.alertPopUpUI.transform.SetAsLastSibling();
         this.matchRoomUI.transform.SetAsLastSibling();
     }
@@ -108,6 +111,11 @@ public class LobbyUIManager : MonoBehaviour
         NetworkManager.OnMatchStarted += HandleRoomMatch;
 
         NetworkManager.OnReplayReceived += HandleReplayReceived;
+
+        if (this.loading != null)
+        {
+            this.loading.OnCancelLoading += HandleCancelRoomWait;
+        }
     }
     #endregion
 
@@ -123,6 +131,8 @@ public class LobbyUIManager : MonoBehaviour
         NetworkManager.OnMatchStarted -= HandleRoomMatch;
 
         NetworkManager.OnReplayReceived -= HandleReplayReceived;
+
+        this.loading.OnCancelLoading -= HandleCancelRoomWait;
     }
     #endregion
 
@@ -244,6 +254,8 @@ public class LobbyUIManager : MonoBehaviour
         // 2. 로딩 팝업 UI 변수에 담기
         this.loadingUI = loadingPopUpUI.GetComponent<PopUpUI>();
         this.loading = loadingPopUpUI.GetComponent<LoadingUI>();
+
+        this.loading.OnCancelLoading += HandleCancelRoomWait;
     }
     #endregion
 
@@ -269,6 +281,8 @@ public class LobbyUIManager : MonoBehaviour
 
         // 2. 리플레이 UI 변수에 담기
         this.replayUI = replayUI.GetComponent<PopUpUI>();
+
+        replayUI.GetComponent<ReplayUI>().Setup(this.alert, this.loading, this.loadingUI);
     }
     #endregion
 
@@ -281,8 +295,6 @@ public class LobbyUIManager : MonoBehaviour
     {
         CLog.Log("[버튼 클릭] 게임 시작");
         this.gameStartUI.OpenPopUpUI();
-
-        // SceneManager.LoadScene("GameScene");
     }
     #endregion
 
@@ -388,10 +400,10 @@ public class LobbyUIManager : MonoBehaviour
     private void HandleRoomCreateSuccess()
     {
         // 1. 팝업 UI 닫기
-        createRoomUI.ClosePopUpUI();
+        this.createRoomUI.ClosePopUpUI();
 
         // 2. 로딩 UI 띄우기(취소 기능 O)
-        loading.ShowWaiting("상대방을 기다리는 중입니다...", true);
+        this.loading.ShowWaiting("상대방을 기다리는 중입니다...", true);
     }
     #endregion
 
@@ -431,6 +443,17 @@ public class LobbyUIManager : MonoBehaviour
         GameData.Entries = res.Entries;
 
         SceneManager.LoadScene("GameScene");
+    }
+    #endregion
+
+    #region 방 생성 후 대기를 취소할 경우 작동되는 함수
+    private void HandleCancelRoomWait()
+    {
+        if (NetworkManager.Instance == null) return;
+
+        C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
+
+        NetworkManager.Instance.SendPacket(req).Forget();
     }
     #endregion
 

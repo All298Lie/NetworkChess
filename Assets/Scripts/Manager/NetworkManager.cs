@@ -43,7 +43,9 @@ public class NetworkManager : MonoBehaviour
     // 게임 종료 이벤트
     public static event Action<string, string, string> OnGameOver;
 
+    // 리플레이 이벤트
     public static event Action<S2C_ReplayRes> OnReplayReceived;
+    public static event Action<S2C_FindReplayCodeRes> OnReplayCodeReceived;
 
     #region + 유니티 함수
 
@@ -141,6 +143,8 @@ public class NetworkManager : MonoBehaviour
                 BasePacket basePacket = JsonConvert.DeserializeObject<BasePacket>(jsonPayload);
                 if (basePacket == null) continue;
 
+                CLog.Log($"<color=green>[네트워크]</color> 패킷 수신 : {basePacket.Type}");
+
                 // 5. 패킷 라우터
                 switch (basePacket.Type)
                 {
@@ -185,8 +189,13 @@ public class NetworkManager : MonoBehaviour
                         break;
 
                     case PacketType.S2C_ReplayRes:
-                        S2C_ReplayRes res = JsonConvert.DeserializeObject<S2C_ReplayRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleReplayRes(res));
+                        S2C_ReplayRes replayRes = JsonConvert.DeserializeObject<S2C_ReplayRes>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleReplayRes(replayRes));
+                        break;
+
+                    case PacketType.S2C_FindReplayCodeRes:
+                        S2C_FindReplayCodeRes findReplayCodeRes = JsonConvert.DeserializeObject<S2C_FindReplayCodeRes>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleFindReplayCode(findReplayCodeRes));
                         break;
 
                     default:
@@ -401,6 +410,13 @@ public class NetworkManager : MonoBehaviour
     private void HandleReplayRes(S2C_ReplayRes res)
     {
         OnReplayReceived?.Invoke(res);
+    }
+    #endregion
+
+    #region 10. 리플레이 검색 결과
+    private void HandleFindReplayCode(S2C_FindReplayCodeRes res)
+    {
+        OnReplayCodeReceived?.Invoke(res);
     }
     #endregion
 
