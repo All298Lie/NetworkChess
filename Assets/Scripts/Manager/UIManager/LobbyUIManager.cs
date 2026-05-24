@@ -420,7 +420,7 @@ public class LobbyUIManager : MonoBehaviour
     #endregion
 
     #region 방 나가기 핸들러
-    private void HandleRoomLeave()
+    private void HandleRoomLeave(RoomLeaveReason reason)
     {
         // 1. 로딩 UI 닫기
         loadingUI.ClosePopUpUI();

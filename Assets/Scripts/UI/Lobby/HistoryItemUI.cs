@@ -64,7 +64,7 @@ public class HistoryItemUI : MonoBehaviour
         }
         else
         {
-            this.result.text = "-";
+            this.result.text = $"{(matchData.Winner == matchData.WhiteNickname ? "백" : "흑")} 승리";
             this.result.color = this.drawColor;
         }
 

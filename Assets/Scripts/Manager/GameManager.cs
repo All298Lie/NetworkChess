@@ -9,23 +9,15 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("게임 세팅")]
-    [SerializeField] private Transform canvas;
-
-    [Header("프로모션 UI")]
-    [SerializeField] private GameObject promotionUIPrefab;
-    public PromotionUIController PromotionUI { get; private set; }
-
-    [Header("게임오버 UI")]
-    [SerializeField] private GameObject gameOverUIPrefab;
-    public GameOverUIController GameOverUI { get; private set; }
-
     public GameModeBase ActiveMode { get; private set; }
 
     public bool IsGameOver { get; private set; }
 
     public event Action<S2C_GameStateNoti> OnTurnEnded;
     public event Action<List<ChessMoveEntry>> OnReplayStarted;
+
+    public event Action<string, string, string> OnGameOverEvent;
+    public event Action OnCloseGameOverUI;
 
     #region Awake 함수
     void Awake()
@@ -45,9 +37,6 @@ public class GameManager : MonoBehaviour
     #region Start 함수
     void Start()
     {
-        InitializePromotionUI();
-        InitializeGameOverUI();
-
         InitializeGameMode();
     }
     #endregion
@@ -71,26 +60,6 @@ public class GameManager : MonoBehaviour
 
             NetworkManager.OnReplayReceived -= HandleReplayReceived;
         }
-    }
-    #endregion
-
-    #region 프로모션 UI 초기화
-    private void InitializePromotionUI()
-    {
-        GameObject promotionUI = Instantiate(this.promotionUIPrefab, this.canvas);
-        promotionUI.name = "PromotionUI";
-
-        this.PromotionUI = promotionUI.GetComponent<PromotionUIController>();
-    }
-    #endregion
-
-    #region 게임오버 UI 초기화
-    private void InitializeGameOverUI()
-    {
-        GameObject gameOverUI = Instantiate(this.gameOverUIPrefab, this.canvas);
-        gameOverUI.name = "GameOverUI";
-
-        this.GameOverUI = gameOverUI.GetComponent<GameOverUIController>();
     }
     #endregion
 
@@ -167,7 +136,8 @@ public class GameManager : MonoBehaviour
     private void HandleGameOver(string winnerName, string reason, string replayCode)
     {
         this.IsGameOver = true;
-        this.GameOverUI.ShowGameOver(winnerName, reason, replayCode);
+
+        OnGameOverEvent?.Invoke(winnerName, reason, replayCode);
 
         CLog.Log("게임 종료 이벤트 감지");
     }
@@ -195,9 +165,25 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region 게임 나가기 성공 시 호출되는 함수
-    private void HandleRoomLeaveSuccess()
+    private void HandleRoomLeaveSuccess(RoomLeaveReason reason)
     {
-        SceneManager.LoadScene("LobbyScene");
+        switch (reason)
+        {
+            case RoomLeaveReason.Resign:
+                CLog.Log($"<color=green>[네트워크]</color> 기권 처리 완료. 게임오버 화면 대기 중...");
+                break;
+
+            case RoomLeaveReason.Disconnect:
+                CLog.Log($"<color=red>[네트워크]</color> 연결이 끊어졌습니다.");
+                SceneManager.LoadScene("TitleScene");
+                break;
+
+            case RoomLeaveReason.PostGameExit:
+            case RoomLeaveReason.CancelWaiting: // 예외 처리용
+            default: // 예외 처리용
+                SceneManager.LoadScene("LobbyScene");
+                break;
+        }
     }
     #endregion
 
@@ -208,7 +194,7 @@ public class GameManager : MonoBehaviour
         {
             GameData.IsReplay = true;
 
-            this.GameOverUI.CloseGameOverUI();
+            OnCloseGameOverUI?.Invoke();
 
             ReplayManager.Instance.SetupTimeline(res.Entries);
             ReplayManager.Instance.JumpToPly(0);

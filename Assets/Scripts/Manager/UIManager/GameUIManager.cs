@@ -14,6 +14,19 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private ScrollRect historyScrollRect;
     [SerializeField] private GameObject historyItemPrefab;
 
+    [Header("프로모션 UI")]
+    [SerializeField] private GameObject promotionUIPrefab;
+    public PromotionUIController PromotionUI { get; private set; }
+
+    [Header("게임오버 UI")]
+    [SerializeField] private GameObject gameOverUIPrefab;
+    public GameOverUIController GameOverUI { get; private set; }
+
+    [Header("알림 UI")]
+    [SerializeField] private GameObject alertPopUpUIPrefab;
+    private PopUpUI alertPopUpUI;
+    private AlertPopUpUI alert;
+
     private GameHistoryItemUI lastHistoryItem;
 
     [Header("버튼")]
@@ -28,6 +41,19 @@ public class GameUIManager : MonoBehaviour
         }
 
         InitializeButton();
+
+        InitializeAlertPopUpUI();
+
+        InitializePromotionUI();
+        InitializeGameOverUI();
+
+        this.alertPopUpUI.transform.SetAsLastSibling();
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameOverEvent += ShowGameOverUI;
+            GameManager.Instance.OnCloseGameOverUI += CloseGameOverUI;
+        }
     }
     
     void OnDestroy()
@@ -36,18 +62,57 @@ public class GameUIManager : MonoBehaviour
         {
             GameManager.Instance.OnReplayStarted -= PopulateReplayHistory;
             GameManager.Instance.OnTurnEnded -= HandleTurnEnded;
+            GameManager.Instance.OnGameOverEvent -= ShowGameOverUI;
+            GameManager.Instance.OnCloseGameOverUI -= CloseGameOverUI;
         }
     }
+
+    #region + 초기화 관련 함수
+
+    #region 프로모션 UI 초기화
+    private void InitializePromotionUI()
+    {
+        GameObject promotionUI = Instantiate(this.promotionUIPrefab, transform);
+        promotionUI.name = "PromotionUI";
+
+        this.PromotionUI = promotionUI.GetComponent<PromotionUIController>();
+    }
+    #endregion
+
+    #region 게임오버 UI 초기화
+    private void InitializeGameOverUI()
+    {
+        GameObject gameOverUI = Instantiate(this.gameOverUIPrefab, transform);
+        gameOverUI.name = "GameOverUI";
+
+        this.GameOverUI = gameOverUI.GetComponent<GameOverUIController>();
+        this.GameOverUI.Setup(this.alert);
+    }
+    #endregion
+
+    #region AlertPopUpUI 초기화 함수
+    private void InitializeAlertPopUpUI()
+    {
+        // 1. 프리팹을 통한 생성
+        GameObject alertPopUpUI = Instantiate(this.alertPopUpUIPrefab, transform);
+        alertPopUpUI.name = "AlertPopUpUI";
+
+        // 2. 알림 팝업 UI 변수에 담기
+        this.alertPopUpUI = alertPopUpUI.GetComponent<PopUpUI>();
+        this.alert = alertPopUpUI.GetComponent<AlertPopUpUI>();
+    }
+    #endregion
+
+    #endregion - 초기화 관련 함수
 
     private void InitializeButton()
     {
         this.resignBtn.onClick.AddListener(OnResignClick);
     }
 
-    private void HandleGameStarted()
-    {
+    private void ShowGameOverUI(string winner, string reason, string code) => this.GameOverUI.ShowGameOver(winner, reason, code);
 
-    }
+    private void CloseGameOverUI() => this.GameOverUI.CloseGameOverUI();
 
     #region 해당 턴에서 이뤄진 동작을 기록하는 함수
     private void HandleTurnEnded(S2C_GameStateNoti noti)

@@ -3341,6 +3341,9 @@ MonoBehaviour:
   historyContent: {fileID: 846527614}
   historyScrollRect: {fileID: 1364723681}
   historyItemPrefab: {fileID: 8636903323777484298, guid: 7a8c4d350636ca746aad800ea39c60ea, type: 3}
+  promotionUIPrefab: {fileID: 1825322621597664827, guid: fc9f9727c6ca8e74ca3a5df35fded325, type: 3}
+  gameOverUIPrefab: {fileID: 4433659120488585683, guid: bc7efc8b36e2c154dbcf0b783bba61d7, type: 3}
+  alertPopUpUIPrefab: {fileID: 7512621959670772634, guid: a4119f7070546c240a1a32c590dffe16, type: 3}
   resignBtn: {fileID: 753818294}
 --- !u!1 &1120005793
 GameObject:
@@ -3482,9 +3485,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 794123a9065feeb4bb3248734fba60fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  canvas: {fileID: 989493748}
-  promotionUIPrefab: {fileID: 1825322621597664827, guid: fc9f9727c6ca8e74ca3a5df35fded325, type: 3}
-  gameOverUIPrefab: {fileID: 4433659120488585683, guid: bc7efc8b36e2c154dbcf0b783bba61d7, type: 3}
 --- !u!4 &1344243723
 Transform:
   m_ObjectHideFlags: 0

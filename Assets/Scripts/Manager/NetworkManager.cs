@@ -29,7 +29,7 @@ public class NetworkManager : MonoBehaviour
     public static event Action OnRoomJoinSuccess;
 
     // 방 나가기 이벤트
-    public static event Action OnRoomLeave;
+    public static event Action<RoomLeaveReason> OnRoomLeave;
 
     // 방 관전 이벤트
     public static event Action OnRoomSpectateSuccess;
@@ -341,7 +341,7 @@ public class NetworkManager : MonoBehaviour
 
             GameData.Clear();
 
-            OnRoomLeave?.Invoke();
+            OnRoomLeave?.Invoke(res.LeaveReason);
         }
         else
         {
