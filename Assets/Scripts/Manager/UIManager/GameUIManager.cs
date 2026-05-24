@@ -1,6 +1,7 @@
 ﻿using NetworkChess.Core;
 using System.Collections.Generic;
 using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -42,7 +43,7 @@ public class GameUIManager : MonoBehaviour
 
     [SerializeField] private Button exitBtn; // 로비로 나가기
 
-    private ProposalType proposalType;
+    private ProposalType? proposalType;
 
     private CancellationTokenSource timeoutCts;
     private const int TIMEOUT_SECONDS = 5;
@@ -67,7 +68,7 @@ public class GameUIManager : MonoBehaviour
             GameManager.Instance.OnChangeGameUIState += SetButtonView;
         }
 
-        SetProposalButtonView(false);
+        SetProposalButtonView(false, null);
     }
     
     void OnDestroy()
@@ -240,8 +241,10 @@ public class GameUIManager : MonoBehaviour
     #endregion
 
     #region 제안 시 수락/거절 버튼을 띄우는 함수
-    private void SetProposalButtonView(bool isProposal)
+    private void SetProposalButtonView(bool isProposal, ProposalType? type)
     {
+        this.proposalType = type;
+
         this.acceptBtn.gameObject.SetActive(isProposal == true);
         this.denyBtn.gameObject.SetActive(isProposal == true);
 
@@ -275,12 +278,13 @@ public class GameUIManager : MonoBehaviour
     private void OnProPosalReplyClick(bool isAccept)
     {
         C2S_ProposalReplyReq req = new C2S_ProposalReplyReq();
-        req.ProposalType = this.proposalType;
+
+        if (this.proposalType != null ) req.ProposalType = this.proposalType.Value;
         req.IsAccepted = isAccept;
 
         _ = NetworkManager.Instance.SendPacket(req);
 
-        SetProposalButtonView(false);
+        SetProposalButtonView(false, null);
     }
     #endregion
 

@@ -197,10 +197,17 @@ public class GameManager : MonoBehaviour
     {
         if (res.IsSuccess == true)
         {
+            HighlightManager.Instance.HideMoveHighlights();
+
             GameData.IsReplay = true;
 
+            // 게임오버 UI 닫기
             OnCloseGameOverUI?.Invoke();
 
+            // 버튼 상태 변경
+            OnChangeGameUIState?.Invoke(false);
+
+            // 리플레이 설정 후, 시작점으로 이동
             ReplayManager.Instance.SetupTimeline(res.Entries);
             ReplayManager.Instance.JumpToPly(0);
         }

@@ -48,7 +48,7 @@ public class NetworkManager : MonoBehaviour
     public static event Action<S2C_FindReplayCodeRes> OnReplayCodeReceived;
 
     // 무승부/무르기 제안 이벤트
-    public static event Action<bool> OnSetProposalUI;
+    public static event Action<bool, ProposalType?> OnSetProposalUI;
     public static event Action OnRemoveLastHistory;
 
     #region + 유니티 함수
@@ -442,7 +442,7 @@ public class NetworkManager : MonoBehaviour
     private void HandleProposalNoti(S2C_ProposalNoti noti)
     {
         // 1. 수락/거절 버튼을 띄우기
-        OnSetProposalUI?.Invoke(true);
+        OnSetProposalUI?.Invoke(true, noti.ProposalType);
     }
     #endregion
 
@@ -450,7 +450,7 @@ public class NetworkManager : MonoBehaviour
     private void HandleProposalReplyNoti(S2C_ProposalReplyNoti noti)
     {
         // 1. 비활성화된 버튼 활성화 (무승부 / 무르기)
-        OnSetProposalUI?.Invoke(false);
+        OnSetProposalUI?.Invoke(false, null);
     }
     #endregion
 
