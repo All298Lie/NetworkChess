@@ -36,6 +36,10 @@ public class HistoryItemUI : MonoBehaviour
     private string currentReplayCode;
     private LocalHistoryData data;
 
+    private string replayTopNickname;
+    private string replayBottomNickname;
+    private bool isWhiteBottom = true;
+
     #region 초기화 함수
     public void Setup(LocalHistoryData data, ReplayUI manager)
     {
@@ -77,6 +81,22 @@ public class HistoryItemUI : MonoBehaviour
         // 3. 해당 코드의 즐겨찾기 여부 확인
         this.isFavorite = LocalCacheManager.Instance.IsFavorite(this.currentReplayCode);
 
+        // 4. 닉네임 저장
+        if (matchData.BlackNickname == data.MyNickname)
+        {
+            this.replayTopNickname = matchData.WhiteNickname;
+            this.replayBottomNickname = matchData.BlackNickname;
+
+            this.isWhiteBottom = false;
+        }
+        else
+        {
+            this.replayTopNickname = matchData.BlackNickname;
+            this.replayBottomNickname = matchData.WhiteNickname;
+
+            this.isWhiteBottom = true;
+        }
+
         UpdateFavoriteIcon();
 
         // 4. 버튼 이벤트 연결
@@ -116,7 +136,13 @@ public class HistoryItemUI : MonoBehaviour
     #region 게임 리뷰 버튼 클릭 시 작동하는 함수
     private void OnReplay()
     {
-        // 1. 서버에 FEN 기보 요청 패킷 발송
+        // 1. 게임데이터 기록
+        GameData.Clear();
+        GameData.ReplayTopNickname = this.replayTopNickname;
+        GameData.ReplayBottomNickname = this.replayBottomNickname;
+        GameData.IsWhite = this.isWhiteBottom;
+
+        // 2. 서버에 FEN 기보 요청 패킷 발송
         C2S_ReplayReq req = new C2S_ReplayReq();
 
         req.ReplayCode = this.currentReplayCode;

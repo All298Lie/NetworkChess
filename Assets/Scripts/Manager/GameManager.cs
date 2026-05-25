@@ -113,6 +113,21 @@ public class GameManager : MonoBehaviour
 
             OnChangeGameUIState?.Invoke(false);
         }
+        else if (GameData.IsSpectator == true)
+        {
+            ChessMoveEntry entry = GameData.Entries[GameData.Entries.Count - 1];
+
+            string currentFEN = entry.FEN;
+
+            this.ActiveMode.StartGame("w", "b", currentFEN);
+
+            ReplayManager.Instance.SetupTimeline(GameData.Entries);
+            ReplayManager.Instance.JumpToPly(GameData.Entries.Count - 1);
+
+            OnReplayStarted?.Invoke(GameData.Entries);
+
+            OnChangeGameUIState?.Invoke(false);
+        }
         else
         {
             this.ActiveMode.StartGame("w", "b", GameData.StartingFEN);
@@ -127,7 +142,7 @@ public class GameManager : MonoBehaviour
 
             ReplayManager.Instance.SetupTimeline(initialTimeLine);
 
-            OnChangeGameUIState?.Invoke(GameData.IsSpectator == false);
+            OnChangeGameUIState?.Invoke(true);
         }
 
         // 4. 뷰어 세팅

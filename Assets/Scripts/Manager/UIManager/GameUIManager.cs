@@ -21,6 +21,8 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject requestTab;
     [SerializeField] private GameObject reviewTab;
 
+    private GameHistoryItemUI lastHistoryItem;
+
     [Header("프로모션 UI")]
     [SerializeField] private GameObject promotionUIPrefab;
     public PromotionUIController PromotionUI { get; private set; }
@@ -33,8 +35,6 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject alertPopUpUIPrefab;
     private PopUpUI alertPopUpUI;
     private AlertPopUpUI alert;
-
-    private GameHistoryItemUI lastHistoryItem;
 
     [Header("버튼")]
     [SerializeField] private Button resignBtn; // 기권
@@ -74,6 +74,8 @@ public class GameUIManager : MonoBehaviour
         }
 
         SetProposalButtonView(false, null);
+
+        InitializePlayerInfo();
     }
     #endregion
 
@@ -151,8 +153,7 @@ public class GameUIManager : MonoBehaviour
     }
     #endregion
 
-    #endregion - 초기화 관련 함수
-
+    #region 버튼 초기화
     private void InitializeButton()
     {
         this.resignBtn.onClick.AddListener(OnResignClick);
@@ -164,6 +165,25 @@ public class GameUIManager : MonoBehaviour
 
         this.exitBtn.onClick.AddListener(OnExitClick);
     }
+    #endregion
+
+    #region 플레이어 정보 초기화
+    private void InitializePlayerInfo()
+    {
+        if (GameData.IsReplay == true || GameData.IsSpectator == true)
+        {
+            this.opponentInfo.Setup(GameData.ReplayTopNickname, GameData.IsWhite == false);
+            this.myInfo.Setup(GameData.ReplayBottomNickname, GameData.IsWhite == true);
+        }
+        else
+        {
+            this.opponentInfo.Setup(GameData.OpponentNickname, GameData.IsWhite == false);
+            this.myInfo.Setup(NetworkManager.Instance.MyNickname, GameData.IsWhite == true);
+        }
+    }
+    #endregion
+
+    #endregion - 초기화 관련 함수
 
     private void ShowGameOverUI(string winner, string reason, string code) => this.GameOverUI.ShowGameOver(winner, reason, code);
 

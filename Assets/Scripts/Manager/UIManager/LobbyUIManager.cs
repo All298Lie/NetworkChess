@@ -110,6 +110,8 @@ public class LobbyUIManager : MonoBehaviour
 
         NetworkManager.OnMatchStarted += HandleRoomMatch;
 
+        NetworkManager.OnRoomSpectateSuccess += HandleRoomSpectate;
+
         NetworkManager.OnReplayReceived += HandleReplayReceived;
 
         if (this.loading != null)
@@ -129,6 +131,8 @@ public class LobbyUIManager : MonoBehaviour
         NetworkManager.OnRoomLeave -= HandleRoomLeave;
 
         NetworkManager.OnMatchStarted -= HandleRoomMatch;
+
+        NetworkManager.OnRoomSpectateSuccess -= HandleRoomSpectate;
 
         NetworkManager.OnReplayReceived -= HandleReplayReceived;
 
@@ -427,6 +431,20 @@ public class LobbyUIManager : MonoBehaviour
     }
     #endregion
 
+    #region 방 관전 성공 핸들러
+    private void HandleRoomSpectate(S2C_RoomSpectateRes res)
+    {
+        GameData.Clear();
+        GameData.IsSpectator = true;
+        GameData.IsWhite = true;
+        GameData.ReplayTopNickname = res.BlackNickname;
+        GameData.ReplayBottomNickname = res.WhiteNickname;
+        GameData.Entries = res.MoveTimeLine;
+
+        SceneManager.LoadScene("GameScene");
+    }
+    #endregion
+
     #region 리플레이 핸들러 (로비용)
     private void HandleReplayReceived(S2C_ReplayRes res)
     {
@@ -437,7 +455,6 @@ public class LobbyUIManager : MonoBehaviour
             return;
         }
 
-        GameData.Clear();
         GameData.IsReplay = true;
         GameData.ReplayCode = res.ReplayCode;
         GameData.Entries = res.Entries;

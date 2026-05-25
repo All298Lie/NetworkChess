@@ -15,6 +15,9 @@ public static class GameData
     public static string StartingFEN { get; set; } = string.Empty;
     public static string OpponentNickname { get; set; } = string.Empty;
 
+    public static string ReplayTopNickname { get; set; } = string.Empty;
+    public static string ReplayBottomNickname { get; set; } = string.Empty;
+
     #region 설정 초기화 함수
     public static void Clear()
     {
@@ -29,6 +32,9 @@ public static class GameData
         CurrentMode = GameMode.Standard;
         StartingFEN = string.Empty;
         OpponentNickname = string.Empty;
+
+        ReplayTopNickname = string.Empty;
+        ReplayBottomNickname = string.Empty;
     }
     #endregion
 }

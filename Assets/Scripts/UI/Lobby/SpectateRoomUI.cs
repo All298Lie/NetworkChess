@@ -47,9 +47,8 @@ public class SpectateRoomUI : MonoBehaviour
         // 3. 자체 검증에 통과했을 경우 패킷 생성 및 서버 전송
         CLog.Log($"[네트워크] '{targetName}'님의 방으로 참가 요청을 보냅니다.");
 
-        C2S_RoomJoinReq req = new C2S_RoomJoinReq();
+        C2S_RoomSpectateReq req = new C2S_RoomSpectateReq();
         req.TargetNickname = targetName;
-        req.IsSpectator = true;
 
         if (NetworkManager.Instance != null)
         {

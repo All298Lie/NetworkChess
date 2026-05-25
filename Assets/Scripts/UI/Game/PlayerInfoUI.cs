@@ -1,52 +1,36 @@
-﻿using System;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerInfoUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text nickname;
-    [SerializeField] private TMP_Text timer;
+    [SerializeField] private Image icon;
 
-    private float time;
-    private bool isStarted = false;
+    private bool isWhite;
 
-    void Update()
+    void OnEnable()
     {
-        if (this.isStarted == false) return;
-
-        if (this.time > 0.0f)
-        {
-            this.time = Mathf.Max(0.0f, this.time - Time.deltaTime);
-
-            SetTime();
-        }
+        ThemeManager.OnPieceThemeChanged += UpdateIcon;
     }
 
-    private void SetTime()
+    void OnDisable()
     {
-        TimeSpan timeSpan = TimeSpan.FromSeconds(this.time);
-
-        if (this.time > 10.0f)
-        {
-            this.timer.text = timeSpan.ToString(@"mm\:ss");
-        }
-        else
-        {
-            this.timer.text = timeSpan.ToString(@"ss\.ff");
-        }
+        ThemeManager.OnPieceThemeChanged -= UpdateIcon;
     }
 
-    public void Setup(string nickname, int ms)
+    public void Setup(string nickname, bool isWhite)
     {
         this.nickname.text = nickname;
 
-        this.time = ms / 1000f;
+        this.isWhite = isWhite;
 
-        SetTime();
+        UpdateIcon();
     }
 
-    public void SetTimer(bool isStarted)
+    public void UpdateIcon()
     {
-        this.isStarted = isStarted;
+        if (isWhite == true) this.icon.sprite = ThemeManager.Instance.CurrentPieceTheme.whiteSprites.pawn;
+        else this.icon.sprite = ThemeManager.Instance.CurrentPieceTheme.blackSprites.pawn;
     }
 }
