@@ -1,0 +1,22 @@
+﻿using TMPro;
+using UnityEngine;
+
+public class AlertPopUpUI : MonoBehaviour
+{
+    [SerializeField] private GameObject popupUI;
+    [SerializeField] private TMP_Text titleText;
+    [SerializeField] private TMP_Text messageText;
+
+
+    #region 알람 UI를 팝업시켜주는 함수
+    public void ShowPopup(string title, string errorMessage)
+    {
+        // 1. 로그인 실패 사유 출력
+        this.titleText.text = title;
+        this.messageText.text = errorMessage;
+
+        // 2. 팝업UI 띄우기
+        this.popupUI.SetActive(true);
+    }
+    #endregion
+}

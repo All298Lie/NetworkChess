@@ -22,7 +22,7 @@ public class ThemeManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("테마매니저가 이미 존재합니다.");
+            CLog.LogWarning("테마매니저가 이미 존재합니다.");
             Destroy(gameObject);
         }
     }

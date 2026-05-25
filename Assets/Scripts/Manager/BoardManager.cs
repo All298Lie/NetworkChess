@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 using NetworkChess.Core;
+using UnityEngine.Pool;
 
 public class BoardManager : MonoBehaviour
 {
@@ -21,12 +22,8 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private Vector2 a1Position;
     [SerializeField] private float tileSize;
 
-    public CorePiece[,] Board { get; private set; }
     private Tile[,] tiles;
     private Dictionary<CorePiece, PieceView> pieceViewMap;
-
-    // FEN 표기법을 통해 초기 보드판 세팅 상태 설정
-    private const string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
     [Header("Input 시스템")]
     private BoardPos dragStartTile;
@@ -37,13 +34,14 @@ public class BoardManager : MonoBehaviour
 
     private bool isSelected;
 
-    [Header("커서 설정")]
-    [SerializeField] Texture2D defaultCursor; // 기본 동작
-    [SerializeField] Texture2D hoverCursor; // 선택 가능 동작
-    [SerializeField] Texture2D grabCursor; // 잡기 동작
+    [Header("오브젝트 풀")]
+    private ObjectPool<PieceView> piecePool;
+    private List<PieceView> replayTempPieces = new List<PieceView>();
+    private Transform pieceParent;
 
-    private readonly Vector2Int hotSpot = new Vector2Int(8, 8);
+    #region + 유니티 함수
 
+    #region Awake 함수
     void Awake()
     {
         if (Instance == null) // 싱글톤 패턴 디자인
@@ -52,7 +50,7 @@ public class BoardManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("보드 매니저가 이미 존재합니다.");
+            CLog.LogWarning("보드 매니저가 이미 존재합니다.");
             Destroy(gameObject);
         }
 
@@ -60,7 +58,6 @@ public class BoardManager : MonoBehaviour
 
         this.inputState = InputState.None;
 
-        this.Board = new CorePiece[8, 8];
         this.tiles = new Tile[8, 8];
         this.pieceViewMap = new Dictionary<CorePiece, PieceView>();
 
@@ -76,49 +73,33 @@ public class BoardManager : MonoBehaviour
 
         this.isSelected = false;
 
-        GenerateTiles();
-        InitializeBoard(START_FEN);
-    }
+        this.piecePool = new ObjectPool<PieceView>(
+            createFunc: CreatePiece,
+            actionOnGet: GetPiece,
+            actionOnRelease: ReleasePiece,
+            actionOnDestroy: DestroyPiece,
+            defaultCapacity: 32,
+            maxSize: 64
+        );
 
+        GenerateTiles();
+    }
+    #endregion
+
+    #region Update 함수
     void Update()
     {
         if (GameManager.Instance == null || GameManager.Instance.ActiveMode == null) return;
 
         UpdateCursorState();
     }
+    #endregion
 
-    // FEN 기보법을 통해 표기된 문자열을 통해 보드판 세팅 
-    private void InitializeBoard(string fen)
-    {
-        int x = 0;
-        int y = 7;
+    #endregion - 유니티 함수
 
-        GameObject piecesObject = new GameObject("Pieces");
+    #region + 초기화 함수
 
-        // FEN 기보법 확인
-        foreach (char c in fen)
-        {
-            if (c == '/') // '/'의 경우, 다음 줄로 넘김 표시
-            {
-                x = 0;
-                y = y - 1;
-            }
-            else if (char.IsDigit(c)) // 숫자일 경우 해당 칸만큼 빈 공간 표시
-            {
-                x = x + (c - '0');
-            }
-            else // 영문자일 경우 해당 기물 표시
-            {
-                bool isWhite = char.IsUpper(c); // 대문자일 경우 백 진영
-                PieceType type = GetPieceTypeFromChar(c);
-
-                SpawnPiece(piecesObject.transform, type, isWhite, x, y);
-                x = x + 1;
-            }
-        }
-    }
-
-    // PieceData(SO)를 CorePieceData로 변환해주는 함수
+    #region PieceData(SO)를 CorePieceData로 변환해주는 함수
     private CorePieceData ConvertToCoreData(PieceData data)
     {
         List<BoardPos> moveOffsets = new List<BoardPos>();
@@ -141,65 +122,9 @@ public class BoardManager : MonoBehaviour
 
         return new CorePieceData(data.type, moveOffsets, attackOffsets, slideDirections);
     }
+    #endregion
 
-    // 기물에 맞는 열거형을 반환하는 함수
-    private PieceType GetPieceTypeFromChar(char c)
-    {
-        switch (char.ToLower(c))
-        {
-            case 'n':
-                return PieceType.Knight;
-
-            case 'b':
-                return PieceType.Bishop;
-
-            case 'r':
-                return PieceType.Rook;
-
-            case 'q':
-                return PieceType.Queen;
-
-            case 'k':
-                return PieceType.King;
-
-            case 'p':
-            default:
-                return PieceType.Pawn;
-        }
-    }
-
-    // 기물을 보드판에 배치하는 함수
-    private void SpawnPiece(Transform parent, PieceType type, bool isWhite, int x, int y)
-    {
-        if (this.pieceDic.ContainsKey(type) == false) return;
-
-        PieceData data = this.pieceDic[type];
-        BoardPos boardPos = new BoardPos(x, y);
-
-        // 1. 생성 및 보드판 등록
-        CorePieceData coreData = ConvertToCoreData(data);
-        CorePiece logicPiece = new CorePiece(coreData)
-        {
-            IsWhite = isWhite,
-            CurrentPosition = boardPos,
-            HasMoved = false
-        };
-        this.Board[x, y] = logicPiece;
-
-        // 2. 유니티 오브젝트 생성
-        Vector3 worldPos = GetWorldPosition(x, y);
-
-        GameObject pieceObject = Instantiate(piecePrefab, worldPos, Quaternion.identity, parent);
-        pieceObject.name = $"{(isWhite ? "White" : "Black")}_{data.name}";
-        
-        PieceView newPieceView = pieceObject.GetComponent<PieceView>();
-
-        // 3. 오브젝트에 CorePiece 등록 및 기물 맵핑
-        newPieceView.Initialize(logicPiece);
-        this.pieceViewMap.Add(logicPiece, newPieceView);
-    }
-
-    // 타일을 생성하는 함수
+    #region 타일을 생성하는 함수
     private void GenerateTiles()
     {
         GameObject boardObject = Instantiate(this.boardPrefab, Vector3.zero, Quaternion.identity);
@@ -219,39 +144,164 @@ public class BoardManager : MonoBehaviour
             }
         }
     }
+    #endregion
 
-    // 마우스 커서 상태를 업데이트하는 함수
-    private void UpdateCursorState()
+    #region CorePiece 데이터를 담은 Dictionary 컨테이너를 가져오는 함수
+    public Dictionary<PieceType, CorePieceData> GetCorePieceDataDic()
     {
-        // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
-        if (this.inputState == InputState.Dragging)
+        Dictionary<PieceType, CorePieceData> dic = new Dictionary<PieceType, CorePieceData>();
+        foreach (KeyValuePair<PieceType, PieceData> keyValuePair in this.pieceDic)
         {
-            Cursor.SetCursor(grabCursor, hotSpot, CursorMode.ForceSoftware);
-
-            return;
+            dic.Add(keyValuePair.Key, ConvertToCoreData(keyValuePair.Value));
         }
 
-        Vector2 screenPos = Mouse.current.position.ReadValue();
-        BoardPos tilePos = GetTilePosFromMouse(screenPos);
+        return dic;
+    }
+    #endregion
 
-        // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
-        if (MoveValidator.IsOnBoard(tilePos) == true)
+    #region 비정상 상태 복구를 위한 하드 리셋 함수
+    public void HardResetBoard(GameModeBase activeMode)
+    {
+        ClearSelection();
+
+        foreach (PieceView temp in this.replayTempPieces) this.piecePool.Release(temp);
+        this.replayTempPieces.Clear();
+
+        foreach (PieceView view in this.pieceViewMap.Values) piecePool.Release(view);
+        this.pieceViewMap.Clear();
+
+        SetupBoard(activeMode);
+    }
+    #endregion
+
+    #endregion - 초기화 함수
+
+    #region + 계산 관련 함수
+
+    #region 마우스 좌표를 월드 좌표로 치환해주는 함수
+    private Vector3 GetMouseWorldPosition(Vector2 screenPos)
+    {
+        Vector3 mouseScreenPos = new Vector3(screenPos.x, screenPos.y, 0.0f);
+        mouseScreenPos.z = Mathf.Abs(this.mainCamera.transform.position.z);
+
+        return this.mainCamera.ScreenToWorldPoint(mouseScreenPos);
+    }
+    #endregion
+
+    #region 마우스 위치를 통해 타일 좌표를 얻는 함수
+    public BoardPos GetTilePosFromMouse(Vector2 screenPos)
+    {
+        Vector3 worldPos = GetMouseWorldPosition(screenPos);
+
+        int x = Mathf.RoundToInt((worldPos.x - this.a1Position.x) / this.tileSize);
+        int y = Mathf.RoundToInt((worldPos.y - this.a1Position.y) / this.tileSize);
+
+        if (GameData.IsWhite == false)
         {
-            CorePiece hoveredPiece = Board[tilePos.x, tilePos.y];
+            x = 7 - x;
+            y = 7 - y;
+        }
 
-            if (this.inputState == InputState.Selected || (hoveredPiece != null && hoveredPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn))
+        return new BoardPos(x, y);
+    }
+    #endregion
+
+    #region 외부 매니저가 특정 좌표의 Tile 컴포넌트를 가져갈 수 있게 하는 함수
+    public Tile GetTile(BoardPos pos)
+    {
+        if (MoveValidator.IsOnBoard(pos) == true)
+        {
+            return this.tiles[pos.x, pos.y];
+        }
+
+        return null;
+    }
+    #endregion
+
+    #region x, y 값 기준 객체가 존재해야할 월드 포지션을 가져오는 함수
+    public Vector3 GetWorldPosition(int x, int y)
+    {
+        if (GameData.IsWhite == false)
+        {
+            x = 7 - x;
+            y = 7 - y;
+        }
+
+        float worldX = this.a1Position.x + x * this.tileSize;
+        float worldY = this.a1Position.y + y * this.tileSize;
+
+        return new Vector3(worldX, worldY, 0.0f);
+    }
+    #endregion
+
+    #endregion - 계산 관련 함수
+
+    #region + 뷰어 관련 함수
+
+    #region 게임 시작 시 GameManager에서 호출해 줄 초기화 함수
+    public void SetupBoard(GameModeBase currentMode)
+    {
+        GenerateVisualBoard(currentMode);
+    }
+    #endregion
+
+    #region 코어의 논리 보드를 기반으로 유니티 프리팹 껍데기를 씌우는 함수
+    private void GenerateVisualBoard(GameModeBase currentMode)
+    {
+        this.pieceParent = new GameObject("Pieces").transform;
+        CorePiece[,] coreBoard = currentMode.Board;
+
+        for (int x = 0; x < 8; x++)
+        {
+            for (int y = 0; y < 8; y++)
             {
-                Cursor.SetCursor(hoverCursor, hotSpot, CursorMode.ForceSoftware);
+                CorePiece logicPiece = coreBoard[x, y];
 
-                return;
+                if (logicPiece != null)
+                {
+                    SpawnPieceVisual(this.pieceParent, logicPiece, x, y);
+                }
             }
         }
-
-        // 3. 평상 시 상태일 경우 (기본 커서)
-        Cursor.SetCursor(defaultCursor, hotSpot, CursorMode.ForceSoftware);
     }
+    #endregion
 
-    // 기물 이동을 시도하는 함수
+    #region 기물을 보드에 생성하는 뷰어 함수
+    private void SpawnPieceVisual(Transform parent, CorePiece logicPiece, int x, int y)
+    {
+        PieceType type = logicPiece.Data.type;
+        if (this.pieceDic.TryGetValue(type, out PieceData data) == true)
+        {
+            Vector3 worldPos = GetWorldPosition(x, y);
+
+            // 1. 유니티 오브젝트 생성
+            PieceView newPieceView = this.piecePool.Get();
+            newPieceView.gameObject.name = $"{(logicPiece.IsWhite ? "White" : "Black")}_{ data.name}";
+
+            newPieceView.Initialize(logicPiece);
+            newPieceView.MoveTo(worldPos);
+
+            this.pieceViewMap.Add(logicPiece, newPieceView);
+        }
+    }
+    #endregion
+
+    #region 기물 이동 가능 타일 표현 및 선택 판정 기물을 초기화하는 함수
+    private void ClearSelection()
+    {
+        if (this.selectedPiece != null && pieceViewMap.ContainsKey(this.selectedPiece) == true)
+        {
+            HighlightManager.Instance.HideMoveHighlights();
+            pieceViewMap[this.selectedPiece].GrabPiece(false);
+        }
+
+        this.isSelected = false;
+        this.selectedPiece = null;
+        this.inputState = InputState.None;
+    }
+    #endregion
+
+    #region 기물 이동을 시도하는 함수
     private async UniTaskVoid TryMovePiece(CorePiece piece, BoardPos targetPos)
     {
         ClearSelection();
@@ -275,7 +325,7 @@ public class BoardManager : MonoBehaviour
             {
                 // 비동기 상태로 프로모션UI 팝업
                 PromotionUIController.Instance.IsWhite = piece.IsWhite;
-                selectedPromotionType = await PromotionUIController.Instance.SelectPieceAsync(targetPos, piece.IsWhite);
+                selectedPromotionType = await PromotionUIController.Instance.SelectPieceAsync(targetPos, true); // true : 프로모션 UI 위치 상단으로 고정 - 이후 옵션으로 보드를 뒤집을 수 있게할 경우 수정 필요
 
                 if (selectedPromotionType == null)
                 {
@@ -290,67 +340,25 @@ public class BoardManager : MonoBehaviour
 
         if (isMoveValid == true)
         {
-            HighlightManager.Instance.UpdateLastMoveHighlight(originalPos, targetPos);
             UpdatePieceVisualPosition(piece, targetPos);
+
+            // 서버로 이동 요청 패킷 발송
+            C2S_GameMoveReq moveReq = new C2S_GameMoveReq();
+
+            moveReq.StartPos = originalPos;
+            moveReq.EndPos = targetPos;
+            moveReq.PromotionType = selectedPromotionType;
+
+            NetworkManager.Instance.SendPacket(moveReq).Forget();
         }
         else
         {
             CancelPieceMove(piece);
         }
     }
+    #endregion
 
-    // 기물 이동 가능 타일 표현 및 선택 판정 기물을 초기화하는 함수
-    private void ClearSelection()
-    {
-        if (this.selectedPiece != null && pieceViewMap.ContainsKey(this.selectedPiece) == true)
-        {
-            HighlightManager.Instance.HideMoveHighlights();
-            pieceViewMap[this.selectedPiece].GrabPiece(false);
-        }
-
-        this.isSelected = false;
-        this.selectedPiece = null;
-        this.inputState = InputState.None;
-    }
-
-    // 마우스 좌표를 월드 좌표로 치환해주는 함수
-    private Vector3 GetMouseWorldPosition(Vector2 screenPos)
-    {
-        Vector3 mouseScreenPos = new Vector3(screenPos.x, screenPos.y, 0.0f);
-        mouseScreenPos.z = Mathf.Abs(this.mainCamera.transform.position.z);
-
-        return this.mainCamera.ScreenToWorldPoint(mouseScreenPos);
-    }
-
-    // 마우스 위치를 통해 타일 좌표를 얻는 함수
-    public BoardPos GetTilePosFromMouse(Vector2 screenPos)
-    {
-        Vector3 worldPos = GetMouseWorldPosition(screenPos);
-
-        int x = Mathf.RoundToInt((worldPos.x - this.a1Position.x) / this.tileSize);
-        int y = Mathf.RoundToInt((worldPos.y - this.a1Position.y) / this.tileSize);
-
-        return new BoardPos(x, y);
-    }
-
-    // 외부 매니저가 특정 좌표의 Tile 컴포넌트를 가져갈 수 있게 하는 함수
-    public Tile GetTile(BoardPos pos)
-    {
-        if (MoveValidator.IsOnBoard(pos) == true)
-        {
-            return this.tiles[pos.x, pos.y];
-        }
-
-        return null;
-    }
-
-    // x, y 값 기준 객체가 존재해야할 월드 포지션을 가져오는 함수
-    public Vector3 GetWorldPosition(int x, int y)
-    {
-        return new Vector3(this.a1Position.x + (x * this.tileSize), this.a1Position.y + (y * this.tileSize), 0.0f);
-    }
-
-    // 폰을 프로모션 처리하는 함수
+    #region 폰을 프로모션 처리하는 함수
     public void PromotePawnView(CorePiece pawn, PieceType type)
     {
         if (this.pieceDic.ContainsKey(type) == true)
@@ -363,15 +371,190 @@ public class BoardManager : MonoBehaviour
             }
         }
     }
+    #endregion
 
-    // 기물 이동을 취소 처리하는 함수
+    #region 기물 이동을 취소 처리하는 함수
     public void CancelPieceMove(CorePiece piece)
     {
         Vector3 originalWorldPos = GetWorldPosition(piece.CurrentPosition.x, piece.CurrentPosition.y);
         pieceViewMap[piece]?.MoveTo(originalWorldPos);
     }
+    #endregion
 
-    // 좌클릭 드래그 시 실행되는 함수
+    #region 기물 파괴 처리 시 뷰어에서도 없어지도록 하는 함수
+    public void DeactivatePiece(CorePiece capturedPiece)
+    {
+        if (this.pieceViewMap.TryGetValue(capturedPiece, out PieceView pieceView) == true)
+        {
+            pieceView.gameObject.SetActive(false);
+        }
+    }
+    #endregion
+
+    #region 기물 이동 시 뷰어에서도 반영되도록 하는 함수
+    public void UpdatePieceVisualPosition(CorePiece piece, BoardPos newPos)
+    {
+        if (this.pieceViewMap.TryGetValue(piece, out PieceView view) == true)
+        {
+            view.MoveTo(GetWorldPosition(newPos.x, newPos.y));
+        }
+    }
+    #endregion
+
+    #region 로직 보드에 맞게 비주얼 보드 동기화 작업을 진행하는 함수 (최신 상태)
+    public void SyncVisualsWithCore(GameModeBase activeMode)
+    {
+        // 1. 기존에 화면에 있는 모든 기물들의 매핑을 확인
+        foreach (PieceView temp in this.replayTempPieces) piecePool.Release(temp);
+        this.replayTempPieces.Clear();
+
+        foreach (KeyValuePair<CorePiece, PieceView> pair in this.pieceViewMap)
+        {
+            CorePiece logicPiece = pair.Key;
+            PieceView view = pair.Value;
+
+            // 2. 논리 보드에서 이 기물이 파괴된 상태일 경우
+            bool isAlive = false;
+            BoardPos pos = logicPiece.CurrentPosition;
+
+            if (MoveValidator.IsOnBoard(pos) == true && activeMode.Board[pos.x, pos.y] == logicPiece)
+            {
+                isAlive = true;
+            }
+
+            // 3. 살아있는 기물이면 키고 죽었을 경우 끄기
+            if (isAlive == true)
+            {
+                view.gameObject.SetActive(true);
+                view.MoveTo(GetWorldPosition(pos.x, pos.y));
+            }
+            else
+            {
+                view.gameObject.SetActive(false);
+            }
+        }
+    }
+    #endregion
+
+    #region FEN 문자열을 읽어서 비주얼 보드를 과거 시점으로 강제 동기화하는 함수
+    public void SyncVisualsWithFEN(string FEN)
+    {
+        // 1. 임시 기물 반납
+        foreach (PieceView temp in this.replayTempPieces) this.piecePool.Release(temp);
+        this.replayTempPieces.Clear();
+
+        // 2. 라이브 기물 숨기기
+        foreach (PieceView view in this.pieceViewMap.Values) view.gameObject.SetActive(false);
+
+        // 3. FEN에서 보드 배치 부분만 잘라내기
+        string piecePlacement = FEN.Split(' ')[0];
+        int x = 0;
+        int y = 7;
+
+        Dictionary<PieceType, CorePieceData> coreDataDic = GetCorePieceDataDic();
+
+        HashSet<PieceView> usedLiveViews = new HashSet<PieceView>();
+        foreach (char c in piecePlacement)
+        {
+            if (c == '/')
+            {
+                x = 0;
+                y--;
+                continue;
+            }
+
+            if (char.IsDigit(c) == true)
+            {
+                x += (int)char.GetNumericValue(c);
+                continue;
+            }
+
+            bool isWhite = char.IsUpper(c);
+            PieceType type = GetPieceTypeFromChar(c);
+
+            PieceView matchedView = null;
+            foreach (PieceView view in this.pieceViewMap.Values)
+            {
+                if (usedLiveViews.Contains(view) == false && view.LogicPiece.IsWhite == isWhite && view.LogicPiece.Data.type == type)
+                {
+                    matchedView = view;
+                    usedLiveViews.Add(view);
+                    break;
+                }
+            }
+
+            if (matchedView == null)
+            {
+                matchedView = this.piecePool.Get();
+
+                CorePiece tempPiece = new CorePiece(coreDataDic[type]);
+                tempPiece.IsWhite = isWhite;
+
+                matchedView.Initialize(tempPiece);
+                matchedView.gameObject.name = $"{(isWhite ? "White" : "Black")}_{this.pieceDic[type].name}_ReplayTemp";
+
+                this.replayTempPieces.Add(matchedView);
+            }
+
+            matchedView.gameObject.SetActive(true);
+            matchedView.MoveTo(GetWorldPosition(x, y));
+
+            x++;
+        }
+    }
+    #endregion
+
+    #region FEN 문자를 PieceType으로 변환하는 헬퍼 함수
+    private PieceType GetPieceTypeFromChar(char c)
+    {
+        switch (char.ToLower(c))
+        {
+            case 'p':
+                return PieceType.Pawn;
+
+            case 'b':
+                return PieceType.Bishop;
+
+            case 'n':
+                return PieceType.Knight;
+
+            case 'r':
+                return PieceType.Rook;
+
+            case 'q':
+                return PieceType.Queen;
+
+            case 'k': 
+                return PieceType.King;
+
+            default:
+                return PieceType.Pawn;
+        }
+    }
+    #endregion
+
+    #endregion - 뷰어 관련 함수
+
+    #region + 오브젝트 풀 함수
+
+    private PieceView CreatePiece()
+    {
+        GameObject piece = Instantiate(this.piecePrefab, this.pieceParent);
+
+        return piece.GetComponent<PieceView>();
+    }
+
+    private void GetPiece(PieceView view) => view.gameObject.SetActive(true);
+
+    private void ReleasePiece(PieceView view) => view.gameObject.SetActive(false);
+
+    private void DestroyPiece(PieceView view) => Destroy(view.gameObject);
+
+    #endregion - 오브젝트 풀 함수
+
+    #region + 마우스 조작 관련 함수
+
+    #region 좌클릭 드래그 시 실행되는 함수
     public void OnDragPiece(Vector2 mousePos)
     {
         if (this.selectedPiece != null && this.pieceViewMap.ContainsKey(this.selectedPiece) == true)
@@ -381,19 +564,26 @@ public class BoardManager : MonoBehaviour
             pieceViewMap[this.selectedPiece].transform.position = mouseWorldPos;
         }
     }
+    #endregion
 
-    // 좌클릭 시작 시 실행되는 함수
+    #region 좌클릭 시작 시 실행되는 함수
     public bool OnLeftClickStarted(Vector2 mousePos)
     {
+        if (ReplayManager.Instance.IsViewingLatest == false) return false;
+
         // 1. 마우스가 올려져있는 타일 좌표 가져오기
         BoardPos tilePos = GetTilePosFromMouse(mousePos);
 
         // 2. 마우스 위에 있는 타일이 보드 위인지 확인
         if (MoveValidator.IsOnBoard(tilePos) == true)
         {
-            CorePiece clickedPiece = this.Board[tilePos.x, tilePos.y];
+            CorePiece clickedPiece = GameManager.Instance.ActiveMode.Board[tilePos.x, tilePos.y];
 
-            if (clickedPiece != null && clickedPiece.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn) // 클릭한 기물 진영의 턴이 아닐 경우(싱글플레이)
+            bool isMyPiece = (clickedPiece != null && clickedPiece.IsWhite == GameData.IsWhite); // 내 기물인지 확인
+
+            bool isMyTurn = (GameData.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn); // 내 턴인지 확인
+
+            if (clickedPiece != null && isMyPiece == true && isMyTurn == true) // 내 턴, 내 기물을 클릭한 경우
             {
                 if (this.selectedPiece != null && this.selectedPiece != clickedPiece)
                 {
@@ -437,8 +627,9 @@ public class BoardManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 
-    // 좌클릭 취소 시 실행되는 함수
+    #region 좌클릭 취소 시 실행되는 함수
     public void OnLeftClickCanceled(Vector2 mousePos)
     {
         // 1. 예외 처리
@@ -467,8 +658,9 @@ public class BoardManager : MonoBehaviour
             TryMovePiece(this.selectedPiece, tilePos).Forget();
         }
     }
+    #endregion
 
-    // 우클릭 시작 시 실행되는 함수
+    #region 우클릭 시작 시 실행되는 함수
     public bool OnRightClickStarted()
     {
         // 1. 예외 처리
@@ -480,33 +672,43 @@ public class BoardManager : MonoBehaviour
 
         return true;
     }
+    #endregion
 
-    public void DestroyPiece(CorePiece capturedPiece)
+    #region 마우스 커서 상태를 업데이트하는 함수
+    private void UpdateCursorState()
     {
-        if (this.pieceViewMap.TryGetValue(capturedPiece, out PieceView pieceView) == true)
+        // 1. 기물을 잡고 드래그 중인 상태일 경우 (잡는 형태의 커서)
+        if (this.inputState == InputState.Dragging)
         {
-            Destroy(pieceView.gameObject);
+            CursorManager.Instance.SetGrabCursor();
 
-            pieceViewMap.Remove(capturedPiece);
-        }
-    }
-
-    public Dictionary<PieceType, CorePieceData> GetCorePieceDataDic()
-    {
-        Dictionary<PieceType, CorePieceData> dic = new Dictionary<PieceType, CorePieceData>();
-        foreach (KeyValuePair<PieceType, PieceData> keyValuePair in this.pieceDic)
-        {
-            dic.Add(keyValuePair.Key, ConvertToCoreData(keyValuePair.Value));
+            return;
         }
 
-        return dic;
-    }
+        Vector2 screenPos = Mouse.current.position.ReadValue();
+        BoardPos tilePos = GetTilePosFromMouse(screenPos);
 
-    public void UpdatePieceVisualPosition(CorePiece piece, BoardPos newPos)
-    {
-        if (this.pieceViewMap.TryGetValue(piece, out PieceView view) == true)
+        // 2. 보드판 안에서 이동 시킬 수 있는 기물에 마우스 커서를 올려놨을 경우 (잡을 수 있는 상태의 커서)
+        if (MoveValidator.IsOnBoard(tilePos) == true)
         {
-            view.MoveTo(GetWorldPosition(newPos.x, newPos.y));
+            CorePiece hoveredPiece = GameManager.Instance.ActiveMode.Board[tilePos.x, tilePos.y];
+
+            bool isMyPiece = (hoveredPiece != null && hoveredPiece.IsWhite == GameData.IsWhite); // 내 기물인지 확인
+
+            bool isMyTurn = (GameData.IsWhite == GameManager.Instance.ActiveMode.IsWhiteTurn); // 내 턴인지 확인(프리무브 구현 시 제거)
+
+            if (this.inputState == InputState.Selected || (hoveredPiece != null && isMyPiece == true && isMyTurn == true))
+            {
+                CursorManager.Instance.SetHoverCursor();
+
+                return;
+            }
         }
+
+        // 3. 평상 시 상태일 경우 (기본 커서)
+        CursorManager.Instance.SetDefaultCursor();
     }
+    #endregion
+
+    #endregion - 마우스 조작 관련 함수
 }
