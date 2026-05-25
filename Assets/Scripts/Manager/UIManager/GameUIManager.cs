@@ -1,4 +1,6 @@
-﻿using NetworkChess.Core;
+﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Unity.VisualScripting;
@@ -45,9 +47,12 @@ public class GameUIManager : MonoBehaviour
 
     private ProposalType? proposalType;
 
+    private bool isNetworkProcessing = false;
+    private bool isProposalPending = false;
     private CancellationTokenSource timeoutCts;
     private const int TIMEOUT_SECONDS = 5;
 
+    #region Start 함수
     void Start()
     {
         InitializeButton();
@@ -70,7 +75,9 @@ public class GameUIManager : MonoBehaviour
 
         SetProposalButtonView(false, null);
     }
-    
+    #endregion
+
+    #region OnDestroy 함수
     void OnDestroy()
     {
         if (GameManager.Instance != null)
@@ -82,24 +89,31 @@ public class GameUIManager : MonoBehaviour
             GameManager.Instance.OnChangeGameUIState -= SetButtonView;
         }
     }
+    #endregion
 
+    #region OnEnable 함수
     void OnEnable()
     {
         if (NetworkManager.Instance != null)
         {
             NetworkManager.OnRemoveLastHistory += RemoveLastHistoryItem;
             NetworkManager.OnSetProposalUI += SetProposalButtonView;
+            NetworkManager.OnCancelNetworkTimer += CancelTimer;
         }
     }
+    #endregion
 
+    #region OnDisable 함수
     void OnDisable()
     {
         if (NetworkManager.Instance != null)
         {
             NetworkManager.OnRemoveLastHistory -= RemoveLastHistoryItem;
             NetworkManager.OnSetProposalUI -= SetProposalButtonView;
+            NetworkManager.OnCancelNetworkTimer -= CancelTimer;
         }
     }
+    #endregion
 
     #region + 초기화 관련 함수
 
@@ -145,8 +159,8 @@ public class GameUIManager : MonoBehaviour
         this.drawReqBtn.onClick.AddListener(() => OnProposalClick(ProposalType.Draw));
         this.takebackReqBtn.onClick.AddListener(() => OnProposalClick(ProposalType.Takeback));
 
-        this.acceptBtn.onClick.AddListener(() => OnProPosalReplyClick(true));
-        this.denyBtn.onClick.AddListener(() => OnProPosalReplyClick(false));
+        this.acceptBtn.onClick.AddListener(() => OnProposalReplyClick(true));
+        this.denyBtn.onClick.AddListener(() => OnProposalReplyClick(false));
 
         this.exitBtn.onClick.AddListener(OnExitClick);
     }
@@ -217,6 +231,7 @@ public class GameUIManager : MonoBehaviour
     }
     #endregion
 
+    #region 마지막 대수 기보 표기를 삭제하는 함수
     public void RemoveLastHistoryItem()
     {
         if (this.lastHistoryItem != null)
@@ -231,6 +246,7 @@ public class GameUIManager : MonoBehaviour
             }
         }
     }
+    #endregion
 
     #region 보이는 버튼을 바꾸는 함수
     private void SetButtonView(bool isPlay)
@@ -258,24 +274,49 @@ public class GameUIManager : MonoBehaviour
     #region 기권 버튼을 누를 시 작동되는 함수
     private void OnResignClick()
     {
+        // 1. 패킷 송신 중인지 확인
+        if (this.isNetworkProcessing == true) return;
+
+        // 2. 버튼 잠금
+        this.isNetworkProcessing = true;
+        this.resignBtn.interactable = false;
+
+        // 3. 패킷 전송
         C2S_RoomLeaveReq req = new C2S_RoomLeaveReq();
 
         _ = NetworkManager.Instance.SendPacket(req);
+
+        // 4. 잠금 타이머 가동
+        StartNetworkTimer().Forget();
     }
     #endregion
 
     #region 제안 버튼을 누를 시 작동되는 함수
     private void OnProposalClick(ProposalType type)
     {
+        // 1. 패킷 송신 중이거나 다른 제안을 기다리는 중인지 확인
+        if (this.isNetworkProcessing == true || this.isProposalPending == true) return;
+
+        // 2. 버튼 잠금
+        this.isNetworkProcessing = true;
+        this.isProposalPending = true;
+
+        this.drawReqBtn.interactable = false;
+        this.takebackReqBtn.interactable = false;
+
+        // 3. 패킷 전송
         C2S_ProposalReq req = new C2S_ProposalReq();
         req.ProposalType = type;
 
         _ = NetworkManager.Instance.SendPacket(req);
+
+        // 4. 잠금 타이머 가동
+        StartNetworkTimer().Forget();
     }
     #endregion
 
     #region 제안 답장 버튼을 누를 시 작동되는 함수
-    private void OnProPosalReplyClick(bool isAccept)
+    private void OnProposalReplyClick(bool isAccept)
     {
         C2S_ProposalReplyReq req = new C2S_ProposalReplyReq();
 
@@ -309,5 +350,46 @@ public class GameUIManager : MonoBehaviour
     }
     #endregion
 
+    #region 타임아웃 타이머 비동기 함수
+    private async UniTaskVoid StartNetworkTimer()
+    {
+        this.timeoutCts?.Cancel();
+        this.timeoutCts?.Dispose();
+        this.timeoutCts = new CancellationTokenSource();
+
+        try
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(TIMEOUT_SECONDS), cancellationToken: this.timeoutCts.Token);
+
+            Debug.LogWarning($"<color=red>[네트워크]</color> 서버 응답 시간 초과 (요청 버튼)");
+
+            // 타임아웃 발생 시 다시 누를 수 있도록 잠금 해제
+            this.isNetworkProcessing = false;
+            this.isProposalPending = false;
+
+            if (this.resignBtn != null) this.resignBtn.interactable = true;
+            if (this.drawReqBtn != null) this.drawReqBtn.interactable = true;
+            if (this.takebackReqBtn != null) this.takebackReqBtn.interactable = true;
+        }
+        catch (OperationCanceledException)
+        {
+            // 정상적으로 서버 응답을 받아 타이머가 취소된 경우
+            Debug.Log($"<color=green>[네트워크]</color> 버튼 요청 타임아웃 타이머 정상 안전 종료");
+        }
+    }
     #endregion
+
+    #region 타이머 취소 함수
+    public void CancelTimer(bool isProposalPending)
+    {
+        this.timeoutCts?.Cancel();
+        this.timeoutCts?.Dispose();
+        this.timeoutCts = null;
+
+        this.isNetworkProcessing = false;
+        if (isProposalPending == true) this.isNetworkProcessing = false;
+    }
+    #endregion
+
+    #endregion - 버튼함수
 }

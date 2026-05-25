@@ -50,6 +50,7 @@ public class NetworkManager : MonoBehaviour
     // 무승부/무르기 제안 이벤트
     public static event Action<bool, ProposalType?> OnSetProposalUI;
     public static event Action OnRemoveLastHistory;
+    public static event Action<bool> OnCancelNetworkTimer;
 
     #region + 유니티 함수
 
@@ -441,16 +442,32 @@ public class NetworkManager : MonoBehaviour
     #region 11. 제안 요청 통보
     private void HandleProposalNoti(S2C_ProposalNoti noti)
     {
-        // 1. 수락/거절 버튼을 띄우기
-        OnSetProposalUI?.Invoke(true, noti.ProposalType);
+        if (noti.Sender == this.MyNickname)
+        {
+            // 네트워크 타이머 해제
+            OnCancelNetworkTimer?.Invoke(false);
+        }
+        else if (GameData.IsSpectator == false)
+        {
+            // 수락/거절 버튼을 띄우기
+            OnSetProposalUI?.Invoke(true, noti.ProposalType);
+        }
     }
     #endregion
 
     #region 제안 응답 통보
     private void HandleProposalReplyNoti(S2C_ProposalReplyNoti noti)
     {
-        // 1. 비활성화된 버튼 활성화 (무승부 / 무르기)
-        OnSetProposalUI?.Invoke(false, null);
+        if (noti.Sender == this.MyNickname)
+        {
+            // 네트워크 타이머 해제
+            OnCancelNetworkTimer?.Invoke(true);
+        }
+        else if (GameData.IsSpectator == false)
+        {
+            // 비활성화된 버튼 활성화 (무승부 / 무르기)
+            OnSetProposalUI?.Invoke(false, null);
+        } 
     }
     #endregion
 
@@ -468,6 +485,16 @@ public class NetworkManager : MonoBehaviour
 
         // 4. 보드판 하드 리셋 (홀로그램이 아닌 진짜 기물을 현재 코어 상태에 맞게 재배치!)
         BoardManager.Instance.HardResetBoard(GameManager.Instance.ActiveMode);
+
+        // 5. 이전 수의 하이라이트로 변경
+        if (MoveValidator.IsOnBoard(noti.StartPos) == true && MoveValidator.IsOnBoard(noti.EndPos) == true)
+        {
+            HighlightManager.Instance.UpdateLastMoveHighlight(noti.StartPos, noti.EndPos);
+        }
+        else
+        {
+            HighlightManager.Instance.HideMoveHighlights();
+        }
     }
     #endregion
 

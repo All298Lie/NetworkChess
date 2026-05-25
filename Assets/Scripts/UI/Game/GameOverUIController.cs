@@ -145,6 +145,7 @@ public class GameOverUIController : MonoBehaviour
     {
         // 혹시 기존에 돌고 있던 타이머가 있다면 취소 후 새로 생성
         this.timeoutCts?.Cancel();
+        this.timeoutCts?.Dispose();
         this.timeoutCts = new CancellationTokenSource();
 
         try
@@ -170,7 +171,9 @@ public class GameOverUIController : MonoBehaviour
     #region 서버로부터 응답 패킷이 도착했을 때 호출되는 함수
     public void HandleRoomLeaveResponse(S2C_RoomLeaveRes res)
     {
-        timeoutCts?.Cancel();
+        this.timeoutCts?.Cancel();
+        this.timeoutCts?.Dispose();
+        this.timeoutCts = null;
 
         if (res.IsSuccess == false)
         {
