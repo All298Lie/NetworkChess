@@ -387,7 +387,13 @@ public class GameUIManager : MonoBehaviour
         this.timeoutCts = null;
 
         this.isNetworkProcessing = false;
-        if (isProposalPending == true) this.isNetworkProcessing = false;
+        if (isProposalPending == true)
+        {
+            this.isProposalPending = false;
+
+            if (this.drawReqBtn != null) this.drawReqBtn.interactable = true;
+            if (this.takebackReqBtn != null) this.takebackReqBtn.interactable = true;
+        }
     }
     #endregion
 

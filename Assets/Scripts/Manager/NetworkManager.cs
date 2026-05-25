@@ -460,13 +460,13 @@ public class NetworkManager : MonoBehaviour
     {
         if (noti.Sender == this.MyNickname)
         {
-            // 네트워크 타이머 해제
-            OnCancelNetworkTimer?.Invoke(true);
+            // 비활성화된 버튼 활성화 (무승부 / 무르기)
+            OnSetProposalUI?.Invoke(false, null);
         }
         else if (GameData.IsSpectator == false)
         {
-            // 비활성화된 버튼 활성화 (무승부 / 무르기)
-            OnSetProposalUI?.Invoke(false, null);
+            // 네트워크 타이머 해제
+            OnCancelNetworkTimer?.Invoke(true);
         } 
     }
     #endregion
