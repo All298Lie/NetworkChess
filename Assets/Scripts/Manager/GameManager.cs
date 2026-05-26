@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
 
     public event Action<S2C_GameStateNoti> OnTurnEnded;
     public event Action<List<ChessMoveEntry>> OnReplayStarted;
+    public event Action<string, bool> OnPieceMoveSound;
 
     public event Action<string, string, string> OnGameOverEvent;
     public event Action OnCloseGameOverUI;
@@ -234,8 +235,13 @@ public class GameManager : MonoBehaviour
     {
         ChessMoveEntry entry = noti.Entry;
 
-        // 1. 코어 데이터 처리
         bool didIMove = (GameData.IsWhite != noti.IsWhiteTurn) && (GameData.IsSpectator == false);
+
+        string SAN = entry.MoveNotation;
+
+        OnPieceMoveSound?.Invoke(SAN, didIMove);
+
+        // 1. 코어 데이터 처리
         if (didIMove == false)
         {
 
