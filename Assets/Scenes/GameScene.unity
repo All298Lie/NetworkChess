@@ -4019,6 +4019,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfa81e26951326547a046c2d597610c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  myMoveClip: {fileID: 8300000, guid: c09e613ea12d5f748ae8f87be168ff9d, type: 3}
+  opponentMoveClip: {fileID: 8300000, guid: d651b0e0c6fff3f48a1180651dfe5718, type: 3}
+  captureClip: {fileID: 8300000, guid: 4da5fc4bbab0b354ea247845fe60feec, type: 3}
 --- !u!4 &1316407603
 Transform:
   m_ObjectHideFlags: 0
