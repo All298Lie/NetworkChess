@@ -1,10 +1,12 @@
 ﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 using NetworkChess.Core;
 using UnityEngine.Pool;
+using System;
 
 public class BoardManager : MonoBehaviour
 {
@@ -33,6 +35,10 @@ public class BoardManager : MonoBehaviour
     private Camera mainCamera;
 
     private bool isSelected;
+
+    [Header("애니메이션 설정")]
+    [SerializeField] private float moveDuration = 0.1f;
+    [SerializeField] private Ease moveEase = Ease.OutQuad; // 부드러운 감속 곡선
 
     [Header("오브젝트 풀")]
     private ObjectPool<PieceView> piecePool;
@@ -302,7 +308,7 @@ public class BoardManager : MonoBehaviour
     #endregion
 
     #region 기물 이동을 시도하는 함수
-    private async UniTaskVoid TryMovePiece(CorePiece piece, BoardPos targetPos)
+    private async UniTaskVoid TryMovePiece(CorePiece piece, BoardPos targetPos, bool isInstant = false)
     {
         ClearSelection();
 
@@ -340,7 +346,7 @@ public class BoardManager : MonoBehaviour
 
         if (isMoveValid == true)
         {
-            UpdatePieceVisualPosition(piece, targetPos);
+            UpdatePieceVisualPosition(piece, targetPos, isInstant);
 
             // 서버로 이동 요청 패킷 발송
             C2S_GameMoveReq moveReq = new C2S_GameMoveReq();
@@ -392,11 +398,18 @@ public class BoardManager : MonoBehaviour
     #endregion
 
     #region 기물 이동 시 뷰어에서도 반영되도록 하는 함수
-    public void UpdatePieceVisualPosition(CorePiece piece, BoardPos newPos)
+    public void UpdatePieceVisualPosition(CorePiece piece, BoardPos newPos, bool isInstant = false)
     {
         if (this.pieceViewMap.TryGetValue(piece, out PieceView view) == true)
         {
-            view.MoveTo(GetWorldPosition(newPos.x, newPos.y));
+            if (isInstant == true)
+            {
+                view.MoveTo(GetWorldPosition(newPos.x, newPos.y));
+            }
+            else
+            {
+                AnimatePieceMove(piece.CurrentPosition, newPos);
+            }
         }
     }
     #endregion
@@ -533,6 +546,62 @@ public class BoardManager : MonoBehaviour
     }
     #endregion
 
+    #region 기물 이동에 애니메이션을 넣어주는 함수
+    public void AnimatePieceMove(BoardPos startPos, BoardPos endPos, Action onComplete = null)
+    {
+        Vector3 startWorldPos = GetWorldPosition(startPos.x, startPos.y);
+        Vector3 endWorldPos = GetWorldPosition(endPos.x, endPos.y);
+
+        PieceView targetView = null;
+        PieceView capturedTempView = null;
+
+        // 1. 시작 위치에 있는 기물과 끝 위치에 있는 기물 탐색
+        foreach (PieceView view in this.pieceViewMap.Values) // 실시간 대전 기물 탐색
+        {
+            if (view.gameObject.activeSelf == false) continue;
+
+            if (Vector3.Distance(view.transform.position, startWorldPos) < 0.1f) targetView = view;
+        }
+
+        if (targetView == null)
+        {
+            foreach (PieceView view in this.replayTempPieces) // 리플레이 임시 기물 탐색
+            {
+                if (view.gameObject.activeSelf == false) continue;
+
+                if (Vector3.Distance(view.transform.position, startWorldPos) < 0.1f) targetView = view;
+                if (Vector3.Distance(view.transform.position, endWorldPos) < 0.1f) capturedTempView = view;
+            }
+        }
+
+        // 2. 애니메이션 실행
+        if (targetView != null)
+        {
+            targetView.GetComponent<SpriteRenderer>().sortingOrder = 100;
+
+            targetView.transform.DOKill();
+            targetView.transform.DOMove(endWorldPos, this.moveDuration)
+                .SetEase(this.moveEase)
+                .OnComplete(() =>
+                {
+                    if (capturedTempView != null && this.replayTempPieces.Contains(capturedTempView) == true)
+                    {
+                        this.replayTempPieces.Remove(capturedTempView);
+                        this.piecePool.Release(capturedTempView);
+                    }
+
+                    targetView.GetComponent<SpriteRenderer>().sortingOrder = 0;
+
+                    onComplete?.Invoke();
+                });
+        }
+        else
+        {
+            onComplete?.Invoke();
+        }
+    }
+    #endregion
+
     #endregion - 뷰어 관련 함수
 
     #region + 오브젝트 풀 함수
@@ -655,7 +724,7 @@ public class BoardManager : MonoBehaviour
         }
         else
         {
-            TryMovePiece(this.selectedPiece, tilePos).Forget();
+            TryMovePiece(this.selectedPiece, tilePos, true).Forget();
         }
     }
     #endregion

@@ -181,7 +181,7 @@ public class GameManager : MonoBehaviour
     #region 기물 이동 시 호출되는 함수
     private void HandlePieceMoved(CorePiece piece, BoardPos newPos)
     {
-        BoardManager.Instance.UpdatePieceVisualPosition(piece, newPos);
+        BoardManager.Instance.UpdatePieceVisualPosition(piece, newPos, true);
     }
     #endregion
 
@@ -255,7 +255,7 @@ public class GameManager : MonoBehaviour
 
         this.ActiveMode.IsWhiteTurn = noti.IsWhiteTurn;
 
-        ReplayManager.Instance.UpdateTimeLine(entry);
+        ReplayManager.Instance.UpdateTimeLine(entry, didIMove);
 
         // 2. UI 갱신
         OnTurnEnded?.Invoke(noti);

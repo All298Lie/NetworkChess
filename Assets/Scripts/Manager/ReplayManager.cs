@@ -1,4 +1,5 @@
 ﻿using NetworkChess.Core;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +19,8 @@ public class ReplayManager : MonoBehaviour
     public bool IsViewingLatest => this.currentViewerIndex == this.entries.Count - 1;
 
     public int LatestIndex => this.entries.Count - 1;
+
+    public event Action<string, bool> OnReplayPieceMoveSound;
 
     #region Awake 함수
     void Awake()
@@ -52,7 +55,7 @@ public class ReplayManager : MonoBehaviour
     #endregion
 
     #region 기록을 업데이트 하는 함수
-    public void UpdateTimeLine(ChessMoveEntry entry)
+    public void UpdateTimeLine(ChessMoveEntry entry, bool skipAnimation = false)
     {
         if (entry == null || string.IsNullOrEmpty(entry.FEN) == true) return;
 
@@ -60,7 +63,7 @@ public class ReplayManager : MonoBehaviour
 
         if (this.currentViewerIndex == entries.Count - 2)
         {
-            JumpToPly(entries.Count - 1);
+            JumpToPly(entries.Count - 1, skipAnimation);
         }
     }
     #endregion
@@ -84,31 +87,53 @@ public class ReplayManager : MonoBehaviour
     #region + 버튼 함수
 
     #region UI 버튼 (기보 클릭)
-    public void JumpToPly(int targetIndex)
+    public void JumpToPly(int targetIndex, bool skipAnimation = false)
     {
+        // 1. 유효한 인덱스인지 확인
         if (targetIndex < 0 || targetIndex >= this.entries.Count) return;
 
         this.currentViewerIndex = targetIndex;
         ChessMoveEntry entry = this.entries[this.currentViewerIndex];
 
-        // 1. 기물 렌더링 덮어씌우기 작업
-        if (this.IsViewingLatest == true && GameData.IsReplay == false)
-        {
-            BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
-        }
-        else
+        // 2. 하이라이트 초기화
+        HighlightManager.Instance.HideMoveHighlights();
+
+        // 3. 시작 보드로 이동할 경우 즉시 세팅
+        if (this.currentViewerIndex == 0)
         {
             BoardManager.Instance.SyncVisualsWithFEN(entry.FEN);
+
+            return;
         }
 
-        // 2. 하이라이트 작업
-        if (MoveValidator.IsOnBoard(entry.StartPos) == true && MoveValidator.IsOnBoard(entry.EndPos) == true)
+        // 4. 직전 상태로 보드 갱신
+        int prevIndex = this.currentViewerIndex - 1;
+        ChessMoveEntry prevEntry = this.entries[prevIndex];
+
+        BoardManager.Instance.SyncVisualsWithFEN(prevEntry.FEN);
+
+        // 5. 직전 상태에서 이동한 기물을 애니메이션으로 연출
+        if (skipAnimation == false)
         {
-            HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
+            BoardManager.Instance.AnimatePieceMove(entry.StartPos, entry.EndPos, () =>
+            {
+                if (this.IsViewingLatest == true && GameData.IsReplay == false)
+                {
+                    BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
+                }
+            });
         }
-        else
+
+        // 7. 하이라이트 작업
+        HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
+
+        // 8. 리플레이/복기 사운드 재생
+        if (this.IsViewingLatest == true && GameData.IsReplay == false) return;
+
+        // 사운드 이벤트 직접 호출!
+        if (GameManager.Instance != null)
         {
-            HighlightManager.Instance.HideMoveHighlights();
+            OnReplayPieceMoveSound?.Invoke(entry.MoveNotation, true);
         }
     }
     #endregion
