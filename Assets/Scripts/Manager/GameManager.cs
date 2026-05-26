@@ -148,6 +148,12 @@ public class GameManager : MonoBehaviour
 
         // 4. 뷰어 세팅
         BoardManager.Instance.SetupBoard(this.ActiveMode);
+
+        // 5. 리플레이일 경우, 보드 되감는 연출 애니메이션 재생
+        if (GameData.IsReplay == true)
+        {
+            ReplayManager.Instance.AnimateRewindEffectAsync().Forget();
+        }
     }
     #endregion
 

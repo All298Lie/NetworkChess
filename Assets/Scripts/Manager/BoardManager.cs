@@ -37,7 +37,7 @@ public class BoardManager : MonoBehaviour
     private bool isSelected;
 
     [Header("애니메이션 설정")]
-    [SerializeField] private float moveDuration = 0.1f;
+    [SerializeField] public float moveDuration = 0.1f;
     [SerializeField] private Ease moveEase = Ease.OutQuad; // 부드러운 감속 곡선
 
     [Header("오브젝트 풀")]
@@ -615,7 +615,12 @@ public class BoardManager : MonoBehaviour
 
     private void GetPiece(PieceView view) => view.gameObject.SetActive(true);
 
-    private void ReleasePiece(PieceView view) => view.gameObject.SetActive(false);
+    private void ReleasePiece(PieceView view)
+    {
+        view.transform.DOKill();
+
+        view.gameObject.SetActive(false);
+    }
 
     private void DestroyPiece(PieceView view) => Destroy(view.gameObject);
 

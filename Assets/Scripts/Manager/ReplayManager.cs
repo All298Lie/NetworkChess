@@ -1,6 +1,8 @@
-﻿using NetworkChess.Core;
+﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +10,7 @@ public class ReplayManager : MonoBehaviour
 {
     public static ReplayManager Instance { get; private set; }
 
+    [Header("버튼")]
     [SerializeField] private Button firstBtn;
     [SerializeField] private Button previousBtn;
     [SerializeField] private Button nextBtn;
@@ -21,6 +24,9 @@ public class ReplayManager : MonoBehaviour
     public int LatestIndex => this.entries.Count - 1;
 
     public event Action<string, bool> OnReplayPieceMoveSound;
+
+    private CancellationTokenSource rewindCancelTokenSource;
+    private bool isRewind = false;
 
     #region Awake 함수
     void Awake()
@@ -39,10 +45,75 @@ public class ReplayManager : MonoBehaviour
     #region Start 함수
     void Start()
     {
-        firstBtn.onClick.AddListener(OnClickFirstMove);    
-        previousBtn.onClick.AddListener(OnClickPreviousMove);    
-        nextBtn.onClick.AddListener(OnClickNextMove);    
-        lastBtn.onClick.AddListener(OnClickLastMove);    
+        this.firstBtn.onClick.AddListener(OnClickFirstMove);
+        this.previousBtn.onClick.AddListener(OnClickPreviousMove);
+        this.nextBtn.onClick.AddListener(OnClickNextMove);
+        this.lastBtn.onClick.AddListener(OnClickLastMove);    
+    }
+    #endregion
+
+    #region OnDestroy 함수
+    void OnDestroy()
+    {
+        if (this.rewindCancelTokenSource != null)
+        {
+            this.rewindCancelTokenSource.Cancel();
+            this.rewindCancelTokenSource.Dispose();
+
+            this.rewindCancelTokenSource = null;
+        }
+    }
+    #endregion
+
+    #region 리플레이 진입 시 최초 1회 실행할 보드 되감기 연출 비동기 함수
+    public async UniTaskVoid AnimateRewindEffectAsync()
+    {
+        // 1. 기존에 연출이 돌고있었다면 취소 처리
+        this.rewindCancelTokenSource?.Cancel();
+        this.rewindCancelTokenSource?.Dispose();
+        this.rewindCancelTokenSource = new CancellationTokenSource();
+        CancellationToken token = this.rewindCancelTokenSource.Token;
+
+        // 2. 현재 저장된 기보 확인
+        if (this.entries == null || this.entries.Count <= 1) return;
+
+        // 3. 버튼 상호작용 잠금
+        this.isRewind = true;
+
+        float originMoveDuration = BoardManager.Instance.moveDuration;
+
+        // 4. 되감기 연출 시작
+        try
+        {
+            int totalPlies = this.entries.Count - 1;
+
+            // 속도 조절용 변수
+            int maxDelayMs = 80;
+            int minDelayMs = 10;
+
+            for (int index = totalPlies; index >= 0; index--)
+            {
+                if (token.IsCancellationRequested == true) return; // 연출이 취소 되었을 경우 리턴
+
+                // 사인 함수를 사용해 시작과 끝이 가장 느렸다가 중간 지점에 올 수록 빨라지도록 하여 애니메이션 속도 조절
+                float progress = 1f - ((float)index / (totalPlies - 1)); // 작업 진행도 : 0.0 ~ 1.0
+                float curveWeight = Mathf.Sin(progress * Mathf.PI); // 사인 곡선을 이용한 가중치
+                int currentDelayMs = Mathf.RoundToInt(Mathf.Lerp(maxDelayMs, minDelayMs, curveWeight)); // 시간 계산
+
+                BoardManager.Instance.moveDuration = currentDelayMs / 1000f; // 초 -> 밀리초 계산 (UniTask는 밀리초단위, DOTween은 초단위라 보정 필요)
+
+                this.ExecuteJumpToPly(index);
+
+                await UniTask.Delay(currentDelayMs, cancellationToken: token);
+            }
+        }
+        finally
+        {
+            BoardManager.Instance.moveDuration = originMoveDuration;
+
+            // 버튼 상호작용 잠금 해제
+            this.isRewind = false;
+        }
     }
     #endregion
 
@@ -84,10 +155,7 @@ public class ReplayManager : MonoBehaviour
     }
     #endregion
 
-    #region + 버튼 함수
-
-    #region UI 버튼 (기보 클릭)
-    public void JumpToPly(int targetIndex, bool skipAnimation = false)
+    private void ExecuteJumpToPly(int targetIndex, bool skipAnimation = false)
     {
         // 1. 유효한 인덱스인지 확인
         if (targetIndex < 0 || targetIndex >= this.entries.Count) return;
@@ -124,17 +192,25 @@ public class ReplayManager : MonoBehaviour
             });
         }
 
-        // 7. 하이라이트 작업
+        // 6. 하이라이트 작업
         HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
 
-        // 8. 리플레이/복기 사운드 재생
+        // 7. 리플레이/복기 사운드 재생
         if (this.IsViewingLatest == true && GameData.IsReplay == false) return;
 
-        // 사운드 이벤트 직접 호출!
-        if (GameManager.Instance != null)
-        {
-            OnReplayPieceMoveSound?.Invoke(entry.MoveNotation, true);
-        }
+        OnReplayPieceMoveSound?.Invoke(entry.MoveNotation, true);
+    }
+
+    #region + 버튼 함수
+
+    #region UI 버튼 (기보 클릭)
+    public void JumpToPly(int targetIndex, bool skipAnimation = false)
+    {
+        // 1. 연출 중인지 확인
+        if (this.isRewind == true) return;
+
+        // 2. 로직 호출
+        ExecuteJumpToPly(targetIndex, skipAnimation);
     }
     #endregion
 
