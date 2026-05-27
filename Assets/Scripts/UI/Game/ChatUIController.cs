@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using NetworkChess.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -18,10 +19,17 @@ public class ChatUIController : MonoBehaviour
 
     void Start()
     {
+        if (GameData.IsReplay == true)
+        {
+            gameObject.SetActive(false);
+
+            return;
+        }
+
         this.input.gameObject.SetActive(false);
 
-        this.input.onSubmit.AddListener(OnSubmitChat);
-        this.input.onEndEdit.AddListener(OnEndEditChat);
+        this.input.onSubmit.AddListener((text) => OnSubmitChat(text).Forget());
+        this.input.onEndEdit.AddListener((text) => OnEndEditChat(text));
 
 
         if (NetworkManager.Instance != null)
@@ -52,8 +60,10 @@ public class ChatUIController : MonoBehaviour
     }
 
     #region 채팅창 열기 (엔터 키)
-    private void OpenChatInput()
+    private async UniTaskVoid OpenChatInputAsync()
     {
+        await UniTask.WaitForEndOfFrame(this);
+
         this.input.gameObject.SetActive(true);
         this.input.text = "";
 
@@ -63,12 +73,16 @@ public class ChatUIController : MonoBehaviour
     #endregion
 
     #region 채팅 전송 (엔터 키로 완료 시)
-    private void OnSubmitChat(string text)
+    private async UniTaskVoid OnSubmitChat(string text)
     {
         // 1. 채팅이 작성되었는지 확인
         if (string.IsNullOrWhiteSpace(text) == false)
         {
-            // TODO: 서버로 채팅 패킷 전송 로직
+            C2S_ChatReq req = new C2S_ChatReq();
+            
+            req.Message = text;
+
+            await NetworkManager.Instance.SendPacket(req);
 
             CLog.Log($"[채팅 전송] {text}");
         }
@@ -94,8 +108,6 @@ public class ChatUIController : MonoBehaviour
         this.input.text = "";
         this.input.DeactivateInputField();
         this.input.gameObject.SetActive(false);
-
-        EventSystem.current.SetSelectedGameObject(null);
     }
     #endregion
 
@@ -104,7 +116,17 @@ public class ChatUIController : MonoBehaviour
     {
         // 1. 채팅 프리팹 생성 및 데이터 세팅
         GameObject newChat = Instantiate(this.chatMessagePrefab, this.content);
-        newChat.GetComponent<TMP_Text>().text = $"[{senderName}]: {message}";
+        TMP_Text chatText = newChat.GetComponent<TMP_Text>();
+
+        if (senderName == "$System")
+        {
+            
+            chatText.text = $"[<color=#38BDF8>시스템</color>] {message}";
+        }
+        else
+        {
+            chatText.text = $"[<color=#A0AEC0>{senderName}</color>] {message}";
+        }
 
         // 2. 채팅을 추가한 후, 스크롤을 맨 아래로 내림
         UpdateChatScrollAsync().Forget();
@@ -125,9 +147,9 @@ public class ChatUIController : MonoBehaviour
 
     private void OnEnterKeyPressed(InputAction.CallbackContext context)
     {
-        if (this.input.gameObject.activeSelf == false)
+        if (context.performed == true && this.input.gameObject.activeSelf == false)
         {
-            OpenChatInput();
+            OpenChatInputAsync().Forget();
         }
     }
 }

@@ -224,6 +224,12 @@ public class NetworkManager : MonoBehaviour
                         S2C_TakebackNoti takebackNoti = JsonConvert.DeserializeObject<S2C_TakebackNoti>(jsonPayload);
                         this.workQueue.Enqueue(() => HandleTakebackNoti(takebackNoti));
                         break;
+
+                    case PacketType.S2C_ChatNoti:
+                        S2C_ChatNoti chatNoti = JsonConvert.DeserializeObject<S2C_ChatNoti>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleChat(chatNoti));
+                        break;
+
                     default:
                         CLog.LogError($"<color=red>[네트워크]</color> 에러 : 등록되지 않은 패킷이 요청되어 무시되었습니다. {basePacket.Type}");
                         break;
@@ -447,6 +453,8 @@ public class NetworkManager : MonoBehaviour
             // 수락/거절 버튼을 띄우기
             OnSetProposalUI?.Invoke(true, noti.ProposalType);
         }
+
+        OnChatReceived?.Invoke("$System", noti.Message);
     }
     #endregion
 
@@ -462,7 +470,9 @@ public class NetworkManager : MonoBehaviour
         {
             // 네트워크 타이머 해제
             OnCancelNetworkTimer?.Invoke(true);
-        } 
+        }
+
+        OnChatReceived?.Invoke("$System", noti.Message);
     }
     #endregion
 
@@ -508,6 +518,13 @@ public class NetworkManager : MonoBehaviour
             CLog.LogWarning($"[네트워크] <color=red>방 입장 실패</color> : {res.Message}");
             OnRoomFailed?.Invoke(res.Message);
         }
+    }
+    #endregion
+
+    #region 15. 채팅 통보
+    private void HandleChat(S2C_ChatNoti noti)
+    {
+        OnChatReceived?.Invoke(noti.Sender, noti.Message);
     }
     #endregion
 

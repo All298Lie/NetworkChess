@@ -174,6 +174,18 @@ public class ReplayManager : MonoBehaviour
             return;
         }
 
+        if (skipAnimation == true)
+        {
+            if (this.IsViewingLatest == true && GameData.IsReplay == false)
+            {
+                BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
+            }
+
+            HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
+
+            return;
+        }
+
         // 4. 직전 상태로 보드 갱신
         int prevIndex = this.currentViewerIndex - 1;
         ChessMoveEntry prevEntry = this.entries[prevIndex];
@@ -181,16 +193,13 @@ public class ReplayManager : MonoBehaviour
         BoardManager.Instance.SyncVisualsWithFEN(prevEntry.FEN);
 
         // 5. 직전 상태에서 이동한 기물을 애니메이션으로 연출
-        if (skipAnimation == false)
+        BoardManager.Instance.AnimatePieceMove(entry.StartPos, entry.EndPos, () =>
         {
-            BoardManager.Instance.AnimatePieceMove(entry.StartPos, entry.EndPos, () =>
+            if (this.IsViewingLatest == true && GameData.IsReplay == false)
             {
-                if (this.IsViewingLatest == true && GameData.IsReplay == false)
-                {
-                    BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
-                }
-            });
-        }
+                BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
+            }
+        });
 
         // 6. 하이라이트 작업
         HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
