@@ -6198,6 +6198,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae6db7746c8a37b489a77ebd4013588d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatUIController
+  chatMessagePrefab: {fileID: 3764030641536567992, guid: d91b5a8fcc0d70c4c88c1f93a697a2ff, type: 3}
+  chatScrollRect: {fileID: 1576408340}
+  input: {fileID: 396273571}
+  content: {fileID: 9948731}
+  enterAction:
+    m_Name: Enter
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 9cdc94fe-f66e-482b-83b4-03c91d76eebe
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: b21087c9-6c67-4af1-8b74-c338eb0fc676
+      m_Path: <Keyboard>/enter
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Enter
+      m_Flags: 0
+    m_Flags: 0
 --- !u!1 &1947931106
 GameObject:
   m_ObjectHideFlags: 0

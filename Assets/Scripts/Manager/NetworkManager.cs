@@ -52,6 +52,8 @@ public class NetworkManager : MonoBehaviour
     public static event Action OnRemoveLastHistory;
     public static event Action<bool> OnCancelNetworkTimer;
 
+    public static event Action<string, string> OnChatReceived;
+
     #region + 유니티 함수
 
     #region Awake 함수
