@@ -52,7 +52,6 @@ public class JoinRoomUI : RoomPopUpBase
 
         C2S_RoomJoinReq req = new C2S_RoomJoinReq();
         req.TargetNickname = targetName;
-        req.IsSpectator = false;
 
         if (NetworkManager.Instance != null)
         {

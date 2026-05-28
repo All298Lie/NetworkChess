@@ -3,7 +3,6 @@ using NetworkChess.Core;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -21,6 +20,8 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject requestTab;
     [SerializeField] private GameObject reviewTab;
 
+    private GameHistoryItemUI lastHistoryItem;
+
     [Header("프로모션 UI")]
     [SerializeField] private GameObject promotionUIPrefab;
     public PromotionUIController PromotionUI { get; private set; }
@@ -34,7 +35,8 @@ public class GameUIManager : MonoBehaviour
     private PopUpUI alertPopUpUI;
     private AlertPopUpUI alert;
 
-    private GameHistoryItemUI lastHistoryItem;
+    [Header("환경설정 UI")]
+    [SerializeField] private PopUpUI optionUI;
 
     [Header("버튼")]
     [SerializeField] private Button resignBtn; // 기권
@@ -44,6 +46,8 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private Button denyBtn; // 거절
 
     [SerializeField] private Button exitBtn; // 로비로 나가기
+
+    [SerializeField] private Button optionBtn;
 
     private ProposalType? proposalType;
 
@@ -64,6 +68,8 @@ public class GameUIManager : MonoBehaviour
 
         this.alertPopUpUI.transform.SetAsLastSibling();
 
+        this.optionUI.ClosePopUpUI();
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnReplayStarted += PopulateReplayHistory;
@@ -74,6 +80,8 @@ public class GameUIManager : MonoBehaviour
         }
 
         SetProposalButtonView(false, null);
+
+        InitializePlayerInfo();
     }
     #endregion
 
@@ -151,8 +159,7 @@ public class GameUIManager : MonoBehaviour
     }
     #endregion
 
-    #endregion - 초기화 관련 함수
-
+    #region 버튼 초기화
     private void InitializeButton()
     {
         this.resignBtn.onClick.AddListener(OnResignClick);
@@ -163,7 +170,28 @@ public class GameUIManager : MonoBehaviour
         this.denyBtn.onClick.AddListener(() => OnProposalReplyClick(false));
 
         this.exitBtn.onClick.AddListener(OnExitClick);
+
+        this.optionBtn.onClick.AddListener(OnOptionClick);
     }
+    #endregion
+
+    #region 플레이어 정보 초기화
+    private void InitializePlayerInfo()
+    {
+        if (GameData.IsReplay == true || GameData.IsSpectator == true)
+        {
+            this.opponentInfo.Setup(GameData.ReplayTopNickname, GameData.IsWhite == false);
+            this.myInfo.Setup(GameData.ReplayBottomNickname, GameData.IsWhite == true);
+        }
+        else
+        {
+            this.opponentInfo.Setup(GameData.OpponentNickname, GameData.IsWhite == false);
+            this.myInfo.Setup(NetworkManager.Instance.MyNickname, GameData.IsWhite == true);
+        }
+    }
+    #endregion
+
+    #endregion - 초기화 관련 함수
 
     private void ShowGameOverUI(string winner, string reason, string code) => this.GameOverUI.ShowGameOver(winner, reason, code);
 
@@ -395,6 +423,10 @@ public class GameUIManager : MonoBehaviour
             if (this.takebackReqBtn != null) this.takebackReqBtn.interactable = true;
         }
     }
+    #endregion
+
+    #region 환경설정 버튼을 누를 시 작동되는 함수
+    private void OnOptionClick() => this.optionUI.OpenPopUpUI();
     #endregion
 
     #endregion - 버튼함수

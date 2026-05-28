@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
 
     public event Action<S2C_GameStateNoti> OnTurnEnded;
     public event Action<List<ChessMoveEntry>> OnReplayStarted;
+    public event Action<string, bool> OnPieceMoveSound;
 
     public event Action<string, string, string> OnGameOverEvent;
     public event Action OnCloseGameOverUI;
@@ -113,6 +114,21 @@ public class GameManager : MonoBehaviour
 
             OnChangeGameUIState?.Invoke(false);
         }
+        else if (GameData.IsSpectator == true)
+        {
+            ChessMoveEntry entry = GameData.Entries[GameData.Entries.Count - 1];
+
+            string currentFEN = entry.FEN;
+
+            this.ActiveMode.StartGame("w", "b", currentFEN);
+
+            ReplayManager.Instance.SetupTimeline(GameData.Entries);
+            ReplayManager.Instance.JumpToPly(GameData.Entries.Count - 1);
+
+            OnReplayStarted?.Invoke(GameData.Entries);
+
+            OnChangeGameUIState?.Invoke(false);
+        }
         else
         {
             this.ActiveMode.StartGame("w", "b", GameData.StartingFEN);
@@ -127,11 +143,17 @@ public class GameManager : MonoBehaviour
 
             ReplayManager.Instance.SetupTimeline(initialTimeLine);
 
-            OnChangeGameUIState?.Invoke(GameData.IsSpectator == false);
+            OnChangeGameUIState?.Invoke(true);
         }
 
         // 4. 뷰어 세팅
         BoardManager.Instance.SetupBoard(this.ActiveMode);
+
+        // 5. 리플레이일 경우, 보드 되감는 연출 애니메이션 재생
+        if (GameData.IsReplay == true)
+        {
+            ReplayManager.Instance.AnimateRewindEffectAsync().Forget();
+        }
     }
     #endregion
 
@@ -165,7 +187,7 @@ public class GameManager : MonoBehaviour
     #region 기물 이동 시 호출되는 함수
     private void HandlePieceMoved(CorePiece piece, BoardPos newPos)
     {
-        BoardManager.Instance.UpdatePieceVisualPosition(piece, newPos);
+        BoardManager.Instance.UpdatePieceVisualPosition(piece, newPos, true);
     }
     #endregion
 
@@ -219,8 +241,13 @@ public class GameManager : MonoBehaviour
     {
         ChessMoveEntry entry = noti.Entry;
 
-        // 1. 코어 데이터 처리
         bool didIMove = (GameData.IsWhite != noti.IsWhiteTurn) && (GameData.IsSpectator == false);
+
+        string SAN = entry.MoveNotation;
+
+        OnPieceMoveSound?.Invoke(SAN, didIMove);
+
+        // 1. 코어 데이터 처리
         if (didIMove == false)
         {
 
@@ -234,7 +261,7 @@ public class GameManager : MonoBehaviour
 
         this.ActiveMode.IsWhiteTurn = noti.IsWhiteTurn;
 
-        ReplayManager.Instance.UpdateTimeLine(entry);
+        ReplayManager.Instance.UpdateTimeLine(entry, didIMove);
 
         // 2. UI 갱신
         OnTurnEnded?.Invoke(noti);

@@ -74,6 +74,17 @@ public class GameOverUIController : MonoBehaviour
         {
             this.resultTxt.text = "무승부";
         }
+        else if (GameData.IsSpectator == true)
+        {
+            if (GameData.ReplayBottomNickname == winner)
+            {
+                this.reasonTxt.text = $"{(GameData.IsWhite == true ? "백" : "흑")} 승리";
+            }
+            else
+            {
+                this.reasonTxt.text = $"{(GameData.IsWhite == false ? "백" : "흑")} 승리";
+            }
+        }
         else if (winner == NetworkManager.Instance.MyNickname)
         {
             this.resultTxt.text = "승리";
@@ -127,13 +138,17 @@ public class GameOverUIController : MonoBehaviour
         // 2. 버튼 비활성화
         this.isProgress = true;
 
-        // 3. 리플레이 요청
+        // 3. 게임데이터 설정
+        GameData.ReplayTopNickname = GameData.OpponentNickname;
+        GameData.ReplayBottomNickname = NetworkManager.Instance.MyNickname;
+
+        // 4. 리플레이 요청
         C2S_ReplayReq req = new C2S_ReplayReq();
         req.ReplayCode = this.replayCode;
 
         NetworkManager.Instance.SendPacket(req).Forget();
 
-        // 4. 타임아웃 감시 타이머 구동
+        // 5. 타임아웃 감시 타이머 구동
         StartTimeoutTimer().Forget();
     }
     #endregion

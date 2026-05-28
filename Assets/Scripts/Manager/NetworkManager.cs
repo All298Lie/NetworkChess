@@ -32,7 +32,7 @@ public class NetworkManager : MonoBehaviour
     public static event Action<RoomLeaveReason> OnRoomLeave;
 
     // 방 관전 이벤트
-    public static event Action OnRoomSpectateSuccess;
+    public static event Action<S2C_RoomSpectateRes> OnRoomSpectateSuccess;
 
     // 매칭 완료 이벤트
     public static event Action<bool> OnMatchStarted;
@@ -51,6 +51,8 @@ public class NetworkManager : MonoBehaviour
     public static event Action<bool, ProposalType?> OnSetProposalUI;
     public static event Action OnRemoveLastHistory;
     public static event Action<bool> OnCancelNetworkTimer;
+
+    public static event Action<string, string> OnChatReceived;
 
     #region + 유니티 함수
 
@@ -178,6 +180,11 @@ public class NetworkManager : MonoBehaviour
                         this.workQueue.Enqueue(() => HandleRoomMatchNoti(matchNoti).Forget());
                         break;
 
+                    case PacketType.S2C_RoomSpectateRes:
+                        S2C_RoomSpectateRes roomSpectateRes = JsonConvert.DeserializeObject<S2C_RoomSpectateRes>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleRoomSpectate(roomSpectateRes));
+                        break;
+
                     case PacketType.S2C_GameMoveRes:
                         S2C_GameMoveRes moveRes = JsonConvert.DeserializeObject<S2C_GameMoveRes>(jsonPayload);
                         this.workQueue.Enqueue(() => HandleGameMoveRes(moveRes));
@@ -217,6 +224,12 @@ public class NetworkManager : MonoBehaviour
                         S2C_TakebackNoti takebackNoti = JsonConvert.DeserializeObject<S2C_TakebackNoti>(jsonPayload);
                         this.workQueue.Enqueue(() => HandleTakebackNoti(takebackNoti));
                         break;
+
+                    case PacketType.S2C_ChatNoti:
+                        S2C_ChatNoti chatNoti = JsonConvert.DeserializeObject<S2C_ChatNoti>(jsonPayload);
+                        this.workQueue.Enqueue(() => HandleChat(chatNoti));
+                        break;
+
                     default:
                         CLog.LogError($"<color=red>[네트워크]</color> 에러 : 등록되지 않은 패킷이 요청되어 무시되었습니다. {basePacket.Type}");
                         break;
@@ -325,23 +338,11 @@ public class NetworkManager : MonoBehaviour
     {
         if (res.IsSuccess == true)
         {
-            CLog.Log($"[네트워크] <color=green>방 입장 성공</color> : {res.Message}");
-
             // 1. 네트워크 매니저가 자신의 상태를 먼저 갱신
-            this.CurrentRoomId = res.RoomId;
+            this.CurrentRoomId = res.RoomOwnerNickname;
 
-            // 2. 이벤트 발생
-            if (res.IsSpectator == false)
-            {
-                CLog.Log($"[방 참여] '{res.RoomId}'님 방 참가 완료.");
-                OnRoomJoinSuccess?.Invoke();
-            }
-            else
-            {
-                CLog.Log($"[방 관전] '{res.RoomId}'님 방 관전 완료.");
-                GameData.IsSpectator = true;
-                OnRoomSpectateSuccess?.Invoke();
-            }
+            CLog.Log($"[방 참여] '{res.RoomOwnerNickname}'님 방 참가 완료.");
+            OnRoomJoinSuccess?.Invoke();
         }
         else
         {
@@ -452,10 +453,12 @@ public class NetworkManager : MonoBehaviour
             // 수락/거절 버튼을 띄우기
             OnSetProposalUI?.Invoke(true, noti.ProposalType);
         }
+
+        OnChatReceived?.Invoke("$System", noti.Message);
     }
     #endregion
 
-    #region 제안 응답 통보
+    #region 12. 제안 응답 통보
     private void HandleProposalReplyNoti(S2C_ProposalReplyNoti noti)
     {
         if (noti.Sender == this.MyNickname)
@@ -467,11 +470,13 @@ public class NetworkManager : MonoBehaviour
         {
             // 네트워크 타이머 해제
             OnCancelNetworkTimer?.Invoke(true);
-        } 
+        }
+
+        OnChatReceived?.Invoke("$System", noti.Message);
     }
     #endregion
 
-    #region 무르기 강제 동기화 통보
+    #region 13. 무르기 강제 동기화 통보
     private void HandleTakebackNoti(S2C_TakebackNoti noti)
     {
         // 1. 코어 엔진 롤백 (이전 답변에서 추가한 RollbackState 함수 호출)
@@ -495,6 +500,31 @@ public class NetworkManager : MonoBehaviour
         {
             HighlightManager.Instance.HideMoveHighlights();
         }
+    }
+    #endregion
+
+    #region 14. 방 관전 결과
+    private void HandleRoomSpectate(S2C_RoomSpectateRes res)
+    {
+        if (res.IsSuccess == true)
+        {
+            this.CurrentRoomId = res.RoomOwnerNickname;
+
+            CLog.Log($"[방 관전] '{res.RoomOwnerNickname}'님 방 관전 완료.");
+            OnRoomSpectateSuccess?.Invoke(res);
+        }
+        else
+        {
+            CLog.LogWarning($"[네트워크] <color=red>방 입장 실패</color> : {res.Message}");
+            OnRoomFailed?.Invoke(res.Message);
+        }
+    }
+    #endregion
+
+    #region 15. 채팅 통보
+    private void HandleChat(S2C_ChatNoti noti)
+    {
+        OnChatReceived?.Invoke(noti.Sender, noti.Message);
     }
     #endregion
 
