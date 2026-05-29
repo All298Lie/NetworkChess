@@ -111,16 +111,35 @@ public class HighlightManager : MonoBehaviour
 
         foreach (BoardPos pos in legalMoves)
         {
+            BoardPos highlightPos = pos;
             bool isCapture = (GameManager.Instance.ActiveMode.Board[pos.x, pos.y] != null);
 
-            if (enPassantPos.HasValue == true && enPassantPos.Value == pos && piece.Data.type == PieceType.Pawn)
+            if (piece.Data.type == PieceType.King)
+            {
+                CorePiece targetPiece = GameManager.Instance.ActiveMode.Board[pos.x, pos.y];
+
+                // 목적지에 아군 룩이 있다면 캐슬링 처리
+                if (targetPiece != null && targetPiece.IsWhite == piece.IsWhite && targetPiece.Data.type == PieceType.Rook)
+                {
+                    bool isKingSide = pos.x > piece.CurrentPosition.x;
+                    int finalKingX = isKingSide ? 6 : 2;
+
+                    // 화면에 점을 찍을 위치를 룩의 머리 위에서 캐슬링 위치로 덮어씌우기
+                    highlightPos = new BoardPos(finalKingX, pos.y);
+
+                    // 공격(Capture) 하이라이트로 표시되지 않게 강제 false 처리
+                    isCapture = false;
+                }
+            }
+            else if (enPassantPos.HasValue == true && enPassantPos.Value == pos && piece.Data.type == PieceType.Pawn)
             {
                 isCapture = true;
             }
 
-            SetMoveHighlight(pos, true, isCapture);
+            // 하이라이트 설정 및 목록에 추가
+            SetMoveHighlight(highlightPos, true, isCapture);
 
-            this.highlightedTiles.Add(pos);
+            this.highlightedTiles.Add(highlightPos);
         }
     }
     #endregion

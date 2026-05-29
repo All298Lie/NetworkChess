@@ -68,15 +68,18 @@ public class GameManager : MonoBehaviour
     #region 게임모드 관련 초기화 함수
     private void InitializeGameMode()
     {
-        Dictionary<PieceType, CorePieceData> dataDic = BoardManager.Instance.GetCorePieceDataDic();
-
         // 1. 게임모드에 따른 설정
         switch (GameData.CurrentMode)
         {
             case GameMode.Standard:
                 // 순수 C# 코어 매니저 생성
-                StandardChessMode standardMode = new StandardChessMode(dataDic);
-                this.ActiveMode = standardMode;
+                Dictionary<PieceType, CorePieceData> standardDataDic = BoardManager.Instance.GetCorePieceDataDic();
+                this.ActiveMode = new StandardChessMode(standardDataDic);
+                break;
+
+            case GameMode.FischerRandom:
+                Dictionary<PieceType, CorePieceData> fischerRandomDataDic = BoardManager.Instance.GetCorePieceDataDic();
+                this.ActiveMode = new FischerRandomMode(fischerRandomDataDic);
                 break;
 
             default:

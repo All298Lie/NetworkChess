@@ -321,17 +321,62 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
+        BoardPos requestPos = targetPos;
+        bool isCastling = false;
+
+        if (piece.Data.type == PieceType.King && GameManager.Instance.ActiveMode.LegalMovesCache.TryGetValue(piece, out List<BoardPos> kingLegalMoves))
+        {
+            foreach (BoardPos legalPos in kingLegalMoves)
+            {
+                CorePiece targetRook = GameManager.Instance.ActiveMode.Board[legalPos.x, legalPos.y];
+
+                // 합법적 이동 경로 중에 아군 룩이 있다면? (캐슬링 후보지)
+                if (targetRook != null && targetRook.IsWhite == piece.IsWhite && targetRook.Data.type == PieceType.Rook)
+                {
+                    bool isKingSide = legalPos.x > piece.CurrentPosition.x;
+                    int finalKingX = isKingSide ? 6 : 2;
+
+                    // 유저가 스탠다드처럼 최종 위치(finalKingX)에 놓았거나, 피셔 랜덤처럼 룩 머리 위(legalPos)에 직접 놓았을 경우
+                    if ((targetPos.x == finalKingX && targetPos.y == piece.CurrentPosition.y) || targetPos == legalPos)
+                    {
+                        // 실제 서버(코어) 로직이 요구하는 '룩의 좌표'로 요청 위치를 덮어씌웁니다!
+                        requestPos = legalPos;
+                        isCastling = true;
+                        break;
+                    }
+                }
+            }
+        }
+
         // 2. 클라이언트 예측(프로모션 가능한지 확인)
         PieceType? selectedPromotionType = null;
 
         if (piece.Data.type == PieceType.Pawn)
         {
             int promotionY = piece.IsWhite ? 7 : 0;
-            if (targetPos.y == promotionY) // 폰의 위치가 프로모션 위치일 경우
+
+            // targetPos 대신 requestPos로 일관성을 맞춰주는 것이 좋습니다.
+            if (requestPos.y == promotionY)
             {
+                bool isLegalMove = false;
+                if (GameManager.Instance.ActiveMode.LegalMovesCache.TryGetValue(piece, out List<BoardPos> pawnLegalMoves))
+                {
+                    if (pawnLegalMoves.Contains(requestPos) == true)
+                    {
+                        isLegalMove = true;
+                    }
+                }
+
+                // 갈 수 없는 위치일 경우, 팝업을 띄우지 않고 곧바로 이동 취소
+                if (isLegalMove == false)
+                {
+                    CancelPieceMove(piece);
+                    return;
+                }
+
                 // 비동기 상태로 프로모션UI 팝업
                 PromotionUIController.Instance.IsWhite = piece.IsWhite;
-                selectedPromotionType = await PromotionUIController.Instance.SelectPieceAsync(targetPos, true); // true : 프로모션 UI 위치 상단으로 고정 - 이후 옵션으로 보드를 뒤집을 수 있게할 경우 수정 필요
+                selectedPromotionType = await PromotionUIController.Instance.SelectPieceAsync(targetPos, true); // true : 프로모션 UI 위치 상단으로 고정
 
                 if (selectedPromotionType == null)
                 {
@@ -342,17 +387,24 @@ public class BoardManager : MonoBehaviour
         }
 
         // 3. 유저 선택이 완료되었거나 일반 이동일 경우 서버로 요청 전송(예정)
-        bool isMoveValid = GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, targetPos, selectedPromotionType);
+        bool isMoveValid = GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, requestPos, selectedPromotionType);
 
         if (isMoveValid == true)
         {
-            UpdatePieceVisualPosition(piece, targetPos, isInstant);
+            if (isCastling == true)
+            {
+                UpdatePieceVisualPosition(piece, piece.CurrentPosition, true);
+            }
+            else
+            {
+                UpdatePieceVisualPosition(piece, targetPos, isInstant);
+            }
 
             // 서버로 이동 요청 패킷 발송
             C2S_GameMoveReq moveReq = new C2S_GameMoveReq();
 
             moveReq.StartPos = originalPos;
-            moveReq.EndPos = targetPos;
+            moveReq.EndPos = requestPos;
             moveReq.PromotionType = selectedPromotionType;
 
             NetworkManager.Instance.SendPacket(moveReq).Forget();
