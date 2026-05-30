@@ -913,7 +913,11 @@ MonoBehaviour:
   popUpUI: {fileID: 7955874106994699346}
   dropdown: {fileID: 9073049725400275628}
   createRoomBtn: {fileID: 6346889427668519829}
-  modeOptions: []
+  modeOptions:
+  - displayName: "\uC2A4\uD0E0\uB2E4\uB4DC \uCCB4\uC2A4"
+    modeType: 0
+  - displayName: "\uD53C\uC154 \uB79C\uB364 \uCCB4\uC2A4"
+    modeType: 2
   currentSelectedMode: 0
 --- !u!1 &4821751717015836632
 GameObject:
