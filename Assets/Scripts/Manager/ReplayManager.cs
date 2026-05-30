@@ -155,6 +155,7 @@ public class ReplayManager : MonoBehaviour
     }
     #endregion
 
+    #region 해당 인덱스의 기보 화면으로 이동하는 함수
     private void ExecuteJumpToPly(int targetIndex, bool skipAnimation = false)
     {
         // 1. 유효한 인덱스인지 확인
@@ -209,6 +210,7 @@ public class ReplayManager : MonoBehaviour
 
         OnReplayPieceMoveSound?.Invoke(entry.MoveNotation, true);
     }
+    #endregion
 
     #region + 버튼 함수
 

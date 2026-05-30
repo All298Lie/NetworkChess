@@ -7,4 +7,7 @@ public class BoardThemeData : ScriptableObject
 
     [Header("보드판")]
     public Sprite boardSprite;
+
+    public Color32 blackColor;
+    public Color32 whiteColor;
 }

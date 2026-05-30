@@ -22,6 +22,7 @@ public class HistoryItemUI : MonoBehaviour
     [Header("Top")]
     [SerializeField] private TMP_Text result;
     [SerializeField] private TMP_Text reason;
+    [SerializeField] private TMP_Text gamemode;
     [SerializeField] private Button favoriteBtn;
 
     [Header("Middle")]
@@ -75,6 +76,8 @@ public class HistoryItemUI : MonoBehaviour
         // 2. 그 외 텍스트 데이터 설정
         this.versus.text = $"{matchData.WhiteNickname}{(matchData.WhiteNickname == data.MyNickname ? "(나)" : "")} vs {matchData.BlackNickname}{(matchData.BlackNickname == data.MyNickname ? "(나)" : "")}";
         this.reason.text = matchData.Reason;
+        this.gamemode.text = GetGameModeString(matchData.GameMode);
+
         this.playTime.text = matchData.PlayTime.ToLocalTime().ToString("yyyy-MM-dd");
         this.replayCode.text = $"[공유코드 {matchData.ReplayCode}]";
 
@@ -184,6 +187,30 @@ public class HistoryItemUI : MonoBehaviour
         UpdateFavoriteIcon();
     }
     #endregion
+
+    private string GetGameModeString(GameMode mode)
+    {
+        switch (mode)
+        {
+            case GameMode.Standard:
+                return "스탠다드";
+
+            case GameMode.FischerRandom:
+                return "피셔 랜덤";
+
+            case GameMode.KingOfTheHill:
+                return "언덕의 왕";
+
+            case GameMode.Torpedo:
+                return "어뢰 체스";
+
+            case GameMode.Horde:
+                return "호드 체스";
+
+            default:
+                return "알 수 없음";
+        }
+    }
 
     public string GetPlayCode() => this.currentReplayCode;
 }

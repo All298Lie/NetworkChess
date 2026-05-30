@@ -134,14 +134,23 @@ public class NetworkManager : MonoBehaviour
             {
                 // 1. header 데이터(4바이트) 수신
                 int headerRead = await ReceiveExactAsync(headerBuffer, 4);
-                if (headerRead == 0) break;
+                if (headerRead == 0)
+                {
+                    CLog.LogWarning("<color=red>[네트워크]</color> 서버에서 연결 종료(0 byte) 신호를 보냈습니다.");
+                    Disconnect();
+                    break;
+                }
 
                 int payloadLength = BitConverter.ToInt32(headerBuffer, 0);
                 byte[] payloadBuffer = new byte[payloadLength];
 
                 // 2.payload 데이터 수신
                 int payloadRead = await ReceiveExactAsync(payloadBuffer, payloadLength);
-                if (payloadRead == 0) break;
+                if (payloadRead == 0)
+                {
+                    Disconnect();
+                    break;
+                }
 
                 // 3. JSON 문자열로 디코딩
                 string jsonPayload = Encoding.UTF8.GetString(payloadBuffer);

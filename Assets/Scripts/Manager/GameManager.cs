@@ -74,9 +74,28 @@ public class GameManager : MonoBehaviour
         switch (GameData.CurrentMode)
         {
             case GameMode.Standard:
-                // 순수 C# 코어 매니저 생성
-                StandardChessMode standardMode = new StandardChessMode(dataDic);
-                this.ActiveMode = standardMode;
+                Dictionary<PieceType, CorePieceData> standardDataDic = BoardManager.Instance.GetCorePieceDataDic();
+                this.ActiveMode = new StandardChessMode(standardDataDic);
+                break;
+
+            case GameMode.FischerRandom:
+                Dictionary<PieceType, CorePieceData> fischerRandomDataDic = BoardManager.Instance.GetCorePieceDataDic();
+                this.ActiveMode = new FischerRandomMode(fischerRandomDataDic);
+                break;
+
+            case GameMode.KingOfTheHill:
+                Dictionary<PieceType, CorePieceData> kingOfTheHillDataDic = BoardManager.Instance.GetCorePieceDataDic();
+                this.ActiveMode = new KingOfTheHillMode(kingOfTheHillDataDic);
+                break;
+
+            case GameMode.Torpedo:
+                Dictionary<PieceType, CorePieceData> torpedoDataDic = BoardManager.Instance.GetCorePieceDataDic();
+                this.ActiveMode = new TorpedoChessMode(torpedoDataDic);
+                break;
+
+            case GameMode.Horde:
+                Dictionary<PieceType, CorePieceData> hordeDataDic = BoardManager.Instance.GetCorePieceDataDic();
+                this.ActiveMode = new HordeChessMode(hordeDataDic);
                 break;
 
             default:
@@ -98,7 +117,6 @@ public class GameManager : MonoBehaviour
 
             NetworkManager.OnReplayReceived += HandleReplayReceived;
         }
-
 
         CLog.Log($"현재 활성화된 체스 모드: {GameData.CurrentMode}");
 

@@ -31,7 +31,7 @@ public class SettingsUIController : MonoBehaviour
 
         // 해상도
         this.resDropdown.value = PlayerPrefs.GetInt("ResIndex", 0);
-        this.fullscreenToggle.isOn = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        this.fullscreenToggle.isOn = PlayerPrefs.GetInt("Fullscreen", 0) == 1;
 
         // 테마
         this.boardThemeDropdown.value = PlayerPrefs.GetInt("BoardTheme", 0);

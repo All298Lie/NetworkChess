@@ -14,3 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardThemeData
   themeName: "\uBCF4\uB4DC 5"
   boardSprite: {fileID: 21300000, guid: 84df1e772a519104abe155a814b2ff42, type: 3}
+  blackColor:
+    serializedVersion: 2
+    rgba: 4738936
+  whiteColor:
+    serializedVersion: 2
+    rgba: 10606050

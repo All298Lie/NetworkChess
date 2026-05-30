@@ -78,11 +78,11 @@ public class GameOverUIController : MonoBehaviour
         {
             if (GameData.ReplayBottomNickname == winner)
             {
-                this.reasonTxt.text = $"{(GameData.IsWhite == true ? "백" : "흑")} 승리";
+                this.resultTxt.text = $"{(GameData.IsWhite == true ? "백" : "흑")} 승리";
             }
             else
             {
-                this.reasonTxt.text = $"{(GameData.IsWhite == false ? "백" : "흑")} 승리";
+                this.resultTxt.text = $"{(GameData.IsWhite == false ? "백" : "흑")} 승리";
             }
         }
         else if (winner == NetworkManager.Instance.MyNickname)
@@ -103,10 +103,12 @@ public class GameOverUIController : MonoBehaviour
     }
     #endregion
 
+    #region 게임오버 UI 닫기
     public void CloseGameOverUI()
     {
         gameObject.SetActive(false);
     }
+    #endregion
 
     #region + 버튼 클릭 관련 함수
 
