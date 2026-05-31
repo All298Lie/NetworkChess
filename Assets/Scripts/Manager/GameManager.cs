@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     public bool IsGameOver { get; private set; }
 
     public event Action<S2C_GameStateNoti> OnTurnEnded;
+    public event Action OnGameStart;
     public event Action<List<ChessMoveEntry>> OnReplayStarted;
     public event Action<string, bool> OnPieceMoveSound;
 
@@ -172,6 +173,8 @@ public class GameManager : MonoBehaviour
         {
             ReplayManager.Instance.AnimateRewindEffectAsync().Forget();
         }
+
+        OnGameStart?.Invoke();
     }
     #endregion
 
