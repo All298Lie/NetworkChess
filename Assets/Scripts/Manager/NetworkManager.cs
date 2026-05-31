@@ -52,7 +52,7 @@ public class NetworkManager : MonoBehaviour
     public static event Action OnRemoveLastHistory;
     public static event Action<bool> OnCancelNetworkTimer;
 
-    public static event Action<string, string> OnChatReceived;
+    public static event Action<string, string, bool> OnChatReceived;
 
     #region + 유니티 함수
 
@@ -463,31 +463,26 @@ public class NetworkManager : MonoBehaviour
             OnSetProposalUI?.Invoke(true, noti.ProposalType);
         }
 
-        OnChatReceived?.Invoke("$System", noti.Message);
+        OnChatReceived?.Invoke("$System", noti.Message, false);
     }
     #endregion
 
     #region 12. 제안 응답 통보
     private void HandleProposalReplyNoti(S2C_ProposalReplyNoti noti)
     {
-        if (noti.Sender == this.MyNickname)
-        {
-            // 비활성화된 버튼 활성화 (무승부 / 무르기)
-            OnSetProposalUI?.Invoke(false, null);
-        }
-        else if (GameData.IsSpectator == false)
-        {
-            // 네트워크 타이머 해제
-            OnCancelNetworkTimer?.Invoke(true);
-        }
+        OnSetProposalUI?.Invoke(false, null);
+        OnCancelNetworkTimer?.Invoke(true);
 
-        OnChatReceived?.Invoke("$System", noti.Message);
+        OnChatReceived?.Invoke("$System", noti.Message, false);
     }
     #endregion
 
     #region 13. 무르기 강제 동기화 통보
     private void HandleTakebackNoti(S2C_TakebackNoti noti)
     {
+        OnSetProposalUI?.Invoke(false, null);
+        OnCancelNetworkTimer?.Invoke(true);
+
         // 1. 코어 엔진 롤백 (이전 답변에서 추가한 RollbackState 함수 호출)
         GameManager.Instance.ActiveMode.RollbackState(noti.RestoredFEN);
 
@@ -533,7 +528,7 @@ public class NetworkManager : MonoBehaviour
     #region 15. 채팅 통보
     private void HandleChat(S2C_ChatNoti noti)
     {
-        OnChatReceived?.Invoke(noti.Sender, noti.Message);
+        OnChatReceived?.Invoke(noti.Sender, noti.Message, noti.IsSpectator);
     }
     #endregion
 

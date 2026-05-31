@@ -147,10 +147,10 @@ public class ReplayManager : MonoBehaviour
             this.entries.RemoveAt(this.entries.Count - 1);
 
             // 뷰어 인덱스 동기화
-            if (this.currentViewerIndex >= this.entries.Count)
-            {
-                this.currentViewerIndex = this.entries.Count - 1;
-            }
+            this.currentViewerIndex = this.entries.Count - 1;
+
+            this.isRewind = false;
+            this.rewindCancelTokenSource?.Cancel();
         }
     }
     #endregion

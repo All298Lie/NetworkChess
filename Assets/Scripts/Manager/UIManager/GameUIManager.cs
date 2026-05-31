@@ -268,9 +268,18 @@ public class GameUIManager : MonoBehaviour
 
             if (isBlackMoveEmpty == false)
             {
-                Destroy(this.lastHistoryItem.gameObject);
+                GameHistoryItemUI targetToDestroy = this.lastHistoryItem;
 
-                this.lastHistoryItem = this.historyContent.GetChild(this.historyContent.childCount - 1).GetComponent<GameHistoryItemUI>();
+                if (this.historyContent.childCount >= 2)
+                {
+                    this.lastHistoryItem = this.historyContent.GetChild(this.historyContent.childCount - 2).GetComponent<GameHistoryItemUI>();
+                }
+                else
+                {
+                    this.lastHistoryItem = null;
+                }
+
+                Destroy(targetToDestroy.gameObject);
             }
         }
     }
@@ -296,6 +305,14 @@ public class GameUIManager : MonoBehaviour
         this.takebackReqBtn.gameObject.SetActive(isProposal == false);
     }
     #endregion
+
+    #region 제안 처리가 완료되었을 때 UI 상태를 강제 초기화하는 함수
+    public void ResetProposalUIState()
+    {
+        CancelTimer(true);
+
+        SetProposalButtonView(false, null);
+    }
 
     #region + 버튼 함수
 

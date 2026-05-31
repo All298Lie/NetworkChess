@@ -112,7 +112,7 @@ public class ChatUIController : MonoBehaviour
     #endregion
 
     #region 서버로부터 채팅 패킷 수신 시 호출될 함수
-    public void ReceiveChatPacket(string senderName, string message)
+    public void ReceiveChatPacket(string senderName, string message, bool isSpectator)
     {
         // 1. 채팅 프리팹 생성 및 데이터 세팅
         GameObject newChat = Instantiate(this.chatMessagePrefab, this.content);
@@ -125,7 +125,7 @@ public class ChatUIController : MonoBehaviour
         }
         else
         {
-            chatText.text = $"[<color=#A0AEC0>{senderName}</color>] {message}";
+            chatText.text = $"{(isSpectator == true ? "[관전]" : "")}[<color=#A0AEC0>{senderName}</color>] {message}";
         }
 
         // 2. 채팅을 추가한 후, 스크롤을 맨 아래로 내림
