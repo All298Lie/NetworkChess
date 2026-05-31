@@ -12,6 +12,9 @@ public class GlobalSettingsManager : MonoBehaviour
     [SerializeField] private BoardThemeData[] boardThemeData;
     [SerializeField] private PieceThemeData[] pieceThemeData;
 
+    #region + 유니티 함수
+
+    #region Awake 함수
     void Awake()
     {
         if (Instance == null)
@@ -32,22 +35,29 @@ public class GlobalSettingsManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    #endregion
 
+    #region Start 함수
     void Start()
     {
         LoadAndApplyThemeSettings();
     }
+    #endregion
 
+    #endregion - 유니티 함수
+
+    #region 해상도 초기화
     private void InitResolutions()
     {
         Resolution[] allResolutions = Screen.resolutions;
         this.AvilableResolutions.Clear();
 
+        // 1. 현재 해상도 확인
         int currentMonitorWidth = Screen.currentResolution.width;
         int currentMonitorHeight = Screen.currentResolution.height;
         bool isVerticalMonitor = currentMonitorWidth < currentMonitorHeight;
 
-        // 16 : 9 비율 계산
+        // 2. 유니티에서 지원하는 16:9 해상도 추출
         float targetRatio = 16f / 9f;
         int minWidth = isVerticalMonitor ? 800 : 1200;
 
@@ -69,12 +79,38 @@ public class GlobalSettingsManager : MonoBehaviour
             }
         } // foreach 문 끝점
 
+        // 3. 울트라와이드 모니터를 위해 표준 16:9 해상도 수동 주입
+        int[] standardWidths = { 1280, 1366, 1600, 1920, 2560 };
+        foreach (int width in standardWidths)
+        {
+            int height = Mathf.RoundToInt(width / targetRatio);
+            if (width <= currentMonitorWidth && height <= currentMonitorHeight)
+            {
+                if (this.AvilableResolutions.Exists(x => (x.width == width && x.height == height)) == false)
+                {
+                    Resolution res = new Resolution();
+
+                    res.width = width;
+                    res.height = height;
+
+                    this.AvilableResolutions.Add(res);
+                }
+            }
+        }
+
+        // 4. 사용가능한 해상도 목록이 없을 경우, 높이를 기준으로 생성
         if (this.AvilableResolutions.Count == 0)
         {
             Resolution fallbackRes = new Resolution();
 
             fallbackRes.width = Mathf.Max(800, currentMonitorWidth - 100);
             fallbackRes.height = Mathf.RoundToInt(fallbackRes.width / targetRatio);
+
+            if (fallbackRes.width > currentMonitorWidth)
+            {
+                fallbackRes.width = currentMonitorWidth - 50;
+                fallbackRes.height = Mathf.RoundToInt(fallbackRes.width / targetRatio);
+            }
 
             this.AvilableResolutions.Add(fallbackRes);
 
@@ -84,17 +120,19 @@ public class GlobalSettingsManager : MonoBehaviour
         // 해상도 크기에 맞게 정렬
         this.AvilableResolutions.Sort((a, b) => b.width.CompareTo(a.width));
     }
-    
-    // 기존에 설정한 환경설정을 불러오고 적용하는 함수
+    #endregion
+
+    #region 기존에 설정한 환경설정을 불러오고 적용하는 함수
     private void LoadAndApplyVideoSettings()
     {
         int resIndex = PlayerPrefs.GetInt("ResIndex", 0);
-        bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 0) == 1;
 
         ApplyResolution(resIndex, isFullscreen);
     }
+    #endregion
 
-    // 기존에 설정한 테마를 불러오고 적용하는 함수
+    #region 기존에 설정한 테마를 불러오고 적용하는 함수
     private void LoadAndApplyThemeSettings()
     {
         int boardIndex = PlayerPrefs.GetInt("BoardTheme", 0);
@@ -102,8 +140,9 @@ public class GlobalSettingsManager : MonoBehaviour
 
         ApplyTheme(boardIndex, pieceIndex);
     }
+    #endregion
 
-    // 해상도 조정하는 함수
+    #region 해상도 조정하는 함수
     public void ApplyResolution(int index, bool isFullscreen)
     {
         if (index < 0 || index >= this.AvilableResolutions.Count)
@@ -111,8 +150,13 @@ public class GlobalSettingsManager : MonoBehaviour
             index = 0;
         }
 
-        bool isVerticalMonitor = Screen.currentResolution.width < Screen.currentResolution.height;
-        if (isVerticalMonitor == true)
+        int currentMonitorWidth = Screen.currentResolution.width;
+        int currentMonitorHeight = Screen.currentResolution.height;
+
+        bool isVerticalMonitor = currentMonitorWidth < currentMonitorHeight;
+        bool isUltraWideMonitor = ((float)currentMonitorWidth / currentMonitorHeight) >= 2.0f;
+
+        if (isVerticalMonitor == true || isUltraWideMonitor == true)
         {
             isFullscreen = false;
         }
@@ -126,10 +170,9 @@ public class GlobalSettingsManager : MonoBehaviour
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
         PlayerPrefs.Save();
     }
+    #endregion
 
-    // TODO : 사운드, 효과음 추가 시 오디오 설정하는 함수 및 객체 추가
-
-    // 테마 적용 함수 추가
+    #region 테마 적용 함수 추가
     public void ApplyTheme(int boardThemeIndex, int pieceThemeIndex)
     {
         if (ThemeManager.Instance != null)
@@ -149,4 +192,5 @@ public class GlobalSettingsManager : MonoBehaviour
         PlayerPrefs.SetInt("PieceTheme", pieceThemeIndex);
         PlayerPrefs.Save();
     }
+    #endregion
 }

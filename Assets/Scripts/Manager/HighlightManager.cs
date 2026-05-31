@@ -111,16 +111,26 @@ public class HighlightManager : MonoBehaviour
 
         foreach (BoardPos pos in legalMoves)
         {
+            CorePiece targetPiece = GameManager.Instance.ActiveMode.Board[pos.x, pos.y];
             bool isCapture = (GameManager.Instance.ActiveMode.Board[pos.x, pos.y] != null);
+
+            BoardPos renderPos = pos;
+
+            if (piece.Data.type == PieceType.King && targetPiece != null && targetPiece.IsWhite == piece.IsWhite && targetPiece.Data.type == PieceType.Rook)
+            {
+                bool isKingSide = pos.x > piece.CurrentPosition.x;
+                renderPos = new BoardPos((isKingSide == true ? 6 : 2), piece.CurrentPosition.y);
+                isCapture = false;
+            }
 
             if (enPassantPos.HasValue == true && enPassantPos.Value == pos && piece.Data.type == PieceType.Pawn)
             {
                 isCapture = true;
             }
 
-            SetMoveHighlight(pos, true, isCapture);
+            SetMoveHighlight(renderPos, true, isCapture);
 
-            this.highlightedTiles.Add(pos);
+            this.highlightedTiles.Add(renderPos);
         }
     }
     #endregion

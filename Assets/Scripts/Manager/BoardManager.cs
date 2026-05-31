@@ -321,7 +321,31 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        // 2. 클라이언트 예측(프로모션 가능한지 확인)
+
+        // 2. 캐슬링 시도인지 확인
+        bool isCastling = false;
+        if (piece.Data.type == PieceType.King)
+        {
+            int y = originalPos.y;
+            if (targetPos.y == y && (targetPos.x == 6 || targetPos.x == 2))
+            {
+                bool isKingSide = (targetPos.x == 6);
+
+                int rookX = MoveValidator.FindCastlingRook(GameManager.Instance.ActiveMode.Board, piece.IsWhite, y, isKingSide);
+                if (rookX != -1)
+                {
+                    BoardPos mappedRookPos = new BoardPos(rookX, y);
+
+                    if (GameManager.Instance.ActiveMode.LegalMovesCache.ContainsKey(piece) == true && GameManager.Instance.ActiveMode.LegalMovesCache[piece].Contains(mappedRookPos) == true)
+                    {
+                        targetPos = mappedRookPos;
+                        isCastling = true;
+                    }
+                }
+            }
+        } // if 문
+
+        // 3. 클라이언트 예측(프로모션 가능한지 확인)
         PieceType? selectedPromotionType = null;
 
         if (piece.Data.type == PieceType.Pawn)
@@ -341,12 +365,12 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // 3. 유저 선택이 완료되었거나 일반 이동일 경우 서버로 요청 전송(예정)
+        // 4. 유저 선택이 완료되었거나 일반 이동일 경우 서버로 요청 전송(예정)
         bool isMoveValid = GameManager.Instance.ActiveMode.HandlePieceMoveRequest(piece, targetPos, selectedPromotionType);
 
         if (isMoveValid == true)
         {
-            UpdatePieceVisualPosition(piece, targetPos, isInstant);
+            if (isCastling == false) UpdatePieceVisualPosition(piece, targetPos, isInstant);
 
             // 서버로 이동 요청 패킷 발송
             C2S_GameMoveReq moveReq = new C2S_GameMoveReq();

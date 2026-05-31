@@ -181,6 +181,10 @@ public class ReplayManager : MonoBehaviour
             {
                 BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
             }
+            else
+            {
+                BoardManager.Instance.SyncVisualsWithFEN(entry.FEN);
+            }
 
             HighlightManager.Instance.UpdateLastMoveHighlight(entry.StartPos, entry.EndPos);
 
@@ -199,6 +203,10 @@ public class ReplayManager : MonoBehaviour
             if (this.IsViewingLatest == true && GameData.IsReplay == false)
             {
                 BoardManager.Instance.SyncVisualsWithCore(GameManager.Instance.ActiveMode);
+            }
+            else
+            {
+                BoardManager.Instance.SyncVisualsWithFEN(entry.FEN);
             }
         });
 
