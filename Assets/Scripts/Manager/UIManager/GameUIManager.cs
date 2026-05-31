@@ -306,14 +306,6 @@ public class GameUIManager : MonoBehaviour
     }
     #endregion
 
-    #region 제안 처리가 완료되었을 때 UI 상태를 강제 초기화하는 함수
-    public void ResetProposalUIState()
-    {
-        CancelTimer(true);
-
-        SetProposalButtonView(false, null);
-    }
-
     #region + 버튼 함수
 
     #region 기권 버튼을 누를 시 작동되는 함수

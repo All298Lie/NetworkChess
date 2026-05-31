@@ -40,6 +40,7 @@ public class HistoryItemUI : MonoBehaviour
     private string replayTopNickname;
     private string replayBottomNickname;
     private bool isWhiteBottom = true;
+    private GameMode mode;
 
     #region 초기화 함수
     public void Setup(LocalHistoryData data, ReplayUI manager)
@@ -100,6 +101,8 @@ public class HistoryItemUI : MonoBehaviour
             this.isWhiteBottom = true;
         }
 
+        this.mode = matchData.GameMode;
+
         UpdateFavoriteIcon();
 
         // 4. 버튼 이벤트 연결
@@ -144,6 +147,7 @@ public class HistoryItemUI : MonoBehaviour
         GameData.ReplayTopNickname = this.replayTopNickname;
         GameData.ReplayBottomNickname = this.replayBottomNickname;
         GameData.IsWhite = this.isWhiteBottom;
+        GameData.CurrentMode = this.mode;
 
         // 2. 서버에 FEN 기보 요청 패킷 발송
         C2S_ReplayReq req = new C2S_ReplayReq();

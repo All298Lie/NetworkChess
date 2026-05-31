@@ -440,6 +440,7 @@ public class LobbyUIManager : MonoBehaviour
         GameData.ReplayTopNickname = res.BlackNickname;
         GameData.ReplayBottomNickname = res.WhiteNickname;
         GameData.Entries = res.MoveTimeLine;
+        GameData.CurrentMode = res.GameMode;
 
         SceneManager.LoadScene("GameScene");
     }
