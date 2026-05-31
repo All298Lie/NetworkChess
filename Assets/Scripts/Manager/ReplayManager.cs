@@ -172,6 +172,8 @@ public class ReplayManager : MonoBehaviour
         {
             BoardManager.Instance.SyncVisualsWithFEN(entry.FEN);
 
+            HighlightManager.Instance.UpdateLastMoveHighlight(new BoardPos(-1, -1), new BoardPos(-1, -1));
+
             return;
         }
 
