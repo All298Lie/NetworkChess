@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
 
     public bool IsGameOver { get; private set; }
 
+    #region 이벤트 관리
     public event Action<S2C_GameStateNoti> OnTurnEnded;
     public event Action OnGameStart;
     public event Action<List<ChessMoveEntry>> OnReplayStarted;
@@ -21,6 +22,7 @@ public class GameManager : MonoBehaviour
     public event Action<string, string, string> OnGameOverEvent;
     public event Action OnCloseGameOverUI;
     public event Action<bool> OnChangeGameUIState;
+    #endregion
 
     #region Awake 함수
     void Awake()
@@ -240,19 +242,11 @@ public class GameManager : MonoBehaviour
     {
         if (res.IsSuccess == true)
         {
-            HighlightManager.Instance.HideMoveHighlights();
-
-            GameData.IsReplay = true;
-
-            // 게임오버 UI 닫기
-            OnCloseGameOverUI?.Invoke();
-
-            // 버튼 상태 변경
-            OnChangeGameUIState?.Invoke(false);
+            GameData.Entries = res.Entries;
+            GameData.ReplayCode = res.ReplayCode;
 
             // 리플레이 설정 후, 시작점으로 이동
-            ReplayManager.Instance.SetupTimeline(res.Entries);
-            ReplayManager.Instance.JumpToPly(0);
+            SceneManager.LoadScene("GameScene");
         }
     }
     #endregion

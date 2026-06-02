@@ -141,8 +141,16 @@ public class GameOverUIController : MonoBehaviour
         this.isProgress = true;
 
         // 3. 게임데이터 설정
-        GameData.ReplayTopNickname = GameData.OpponentNickname;
+        bool isMyTurn = GameData.IsWhite;
+        GameMode currentMode = GameData.CurrentMode;
+        string opponentNickname = GameData.OpponentNickname;
+
+        GameData.Clear();
+        GameData.IsReplay = true;
+        GameData.ReplayTopNickname = opponentNickname;
         GameData.ReplayBottomNickname = NetworkManager.Instance.MyNickname;
+        GameData.IsWhite = isMyTurn;
+        GameData.CurrentMode = currentMode;
 
         // 4. 리플레이 요청
         C2S_ReplayReq req = new C2S_ReplayReq();

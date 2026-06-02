@@ -16,7 +16,7 @@ MonoBehaviour:
   boardSprite: {fileID: 21300000, guid: eddc11a9aebe78d4a9863509feabbce6, type: 3}
   blackColor:
     serializedVersion: 2
-    rgba: 7364697
+    rgba: 4285554777
   whiteColor:
     serializedVersion: 2
-    rgba: 11772566
+    rgba: 4289962646
