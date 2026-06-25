@@ -1,25 +1,35 @@
 ﻿using Cysharp.Threading.Tasks;
 using NetworkChess.Core;
-using Newtonsoft.Json;
+using NetworkLibrary;
 using System;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class NetworkManager : MonoBehaviour
 {
     public static NetworkManager Instance { get; private set; }
-    public Socket clientSocket;
+
+    #region 필드
+    private Socket _tcpSocket;
+    private Socket _udpSocket;
+    private IPEndPoint _serverUdpEP;
 
     private readonly ConcurrentQueue<Action> workQueue = new ConcurrentQueue<Action>();
+    private PacketHandler _handler = new PacketHandler();
+
+    [SerializeField] private string ip = "127.0.0.1";
+    [SerializeField] private int tcpPort = 7777;
+    [SerializeField] private int udpPort = 7778;
+
+    #endregion
 
     public string MyNickname { get; private set; }
     public string nicknameReq = string.Empty;
 
-    public string CurrentRoomId { get; private set; } = string.Empty;
-
+    #region 이벤트
     // 로그인 이벤트
     public static event Action<string> OnLoginFailed;
 
@@ -53,6 +63,7 @@ public class NetworkManager : MonoBehaviour
     public static event Action<bool> OnCancelNetworkTimer;
 
     public static event Action<string, string, bool> OnChatReceived;
+    #endregion
 
     #region + 유니티 함수
 
@@ -68,6 +79,13 @@ public class NetworkManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+    #endregion
+
+    #region Start 함수
+    void Start()
+    {
+        InitializePacketHandler();
     }
     #endregion
 
@@ -97,152 +115,82 @@ public class NetworkManager : MonoBehaviour
 
     #endregion - 유니티 함수
 
-    #region 정확한 바이트 수신 함수
-    private async UniTask<int> ReceiveExactAsync(byte[] buffer, int size)
+    #region PacketHandler 초기화 함수
+    private void InitializePacketHandler()
     {
-        int totalRead = 0;
-        while (totalRead < size)
-        {
-            int read = await clientSocket.ReceiveAsync(new ArraySegment<byte>(buffer, totalRead, size - totalRead), SocketFlags.None).AsUniTask();
+        this._handler.Register<S2C_LoginRes>((uint)PacketType.S2C_LoginRes, (res) => this.workQueue.Enqueue(() => HandleLoginRes(res)));
 
-            if (read == 0) return 0;
+        this._handler.Register<S2C_RoomCreateRes>((uint)PacketType.S2C_RoomCreateRes, (res) => this.workQueue.Enqueue(() => HandleRoomCreateRes(res)));
+        this._handler.Register<S2C_RoomJoinRes>((uint)PacketType.S2C_RoomJoinRes, (res) => this.workQueue.Enqueue(() => HandleRoomJoinRes(res)));
+        this._handler.Register<S2C_RoomLeaveRes>((uint)PacketType.S2C_RoomLeaveRes, (res) => this.workQueue.Enqueue(() => HandleRoomLeaveRes(res)));
+        this._handler.Register<S2C_RoomMatchNoti>((uint)PacketType.S2C_RoomMatchNoti, (noti) => this.workQueue.Enqueue(() => HandleRoomMatchNoti(noti).Forget()));
+        this._handler.Register<S2C_RoomSpectateRes>((uint)PacketType.S2C_RoomSpectateRes, (res) => this.workQueue.Enqueue(() => HandleRoomSpectate(res)));
 
-            totalRead += read;
-        }
+        this._handler.Register<S2C_GameMoveRes>((uint)PacketType.S2C_GameMoveRes, (res) => this.workQueue.Enqueue(() => HandleGameMoveRes(res)));
+        this._handler.Register<S2C_GameStateNoti>((uint)PacketType.S2C_GameStateNoti, (noti) => this.workQueue.Enqueue(() => HandleGameStateNoti(noti)));
+        this._handler.Register<S2C_GameOverNoti>((uint)PacketType.S2C_GameOverNoti, (noti) => this.workQueue.Enqueue(() => HandleGameOverNoti(noti)));
 
-        return totalRead;
+        this._handler.Register<S2C_ReplayRes>((uint)PacketType.S2C_ReplayRes, (res) => this.workQueue.Enqueue(() => HandleReplayRes(res)));
+        this._handler.Register<S2C_FindReplayCodeRes>((uint)PacketType.S2C_FindReplayCodeRes, (res) => this.workQueue.Enqueue(() => HandleFindReplayCode(res)));
+
+        this._handler.Register<S2C_ProposalNoti>((uint)PacketType.S2C_ProposalNoti, (noti) => this.workQueue.Enqueue(() => HandleProposalNoti(noti)));
+        this._handler.Register<S2C_ProposalReplyNoti>((uint)PacketType.S2C_ProposalReplyNoti, (noti) => this.workQueue.Enqueue(() => HandleProposalReplyNoti(noti)));
+        this._handler.Register<S2C_TakebackNoti>((uint)PacketType.S2C_TakebackNoti, (noti) => this.workQueue.Enqueue(() => HandleTakebackNoti(noti)));
+
+        this._handler.Register<S2C_ChatNoti>((uint)PacketType.S2C_ChatNoti, (noti) => this.workQueue.Enqueue(() => HandleChat(noti)));
     }
     #endregion
 
     #region 비동기서버 연결 함수
     public async UniTask<bool> ConnectAsync()
     {
-        bool isSuccess = await ConnectToServerAsync("chess.all298lie.dev", 7777);
+        try
+        {
+            if (this._tcpSocket != null && this._tcpSocket.Connected == true) return true;
 
-        return isSuccess;
+            // 1. 소켓 생성
+            this._tcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            await this._tcpSocket.ConnectAsync(this.ip, this.tcpPort).AsUniTask().Timeout(TimeSpan.FromSeconds(3));
+
+            CLog.Log($"<color=green>[네트워크]</color> 서버({this.ip}:{this.tcpPort}) 연결 성공!");
+
+            this._udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            this._serverUdpEP = await CreateEndPointAsync(this.ip, this.udpPort);
+
+            // UDP를 수신받지 않으므로 Bind 필요 X
+
+            ReceiveLoopAsync().Forget();
+            HeartbeatLoopAsync().Forget();
+
+            return true;
+        }
+        catch (TimeoutException) // 시간초과 될 경우
+        {
+            CLog.LogWarning($"<color=red>[네트워크]</color> 서버 연결 시간 초과(3초). 서버가 닫혀있을 수 있습니다.");
+
+            this._tcpSocket?.Close();
+            return false;
+        }
+        catch (Exception ex) // 그 외의 오류 발생 시
+        {
+            CLog.LogError($"<color=red>[네트워크]</color> 서버 연결 실패 에러 : {ex.Message}");
+
+            this._tcpSocket?.Close();
+            return false;
+        }
     }
     #endregion
 
     #region 비동기 패킷 수신 함수
     private async UniTaskVoid ReceiveLoopAsync()
     {
-        byte[] headerBuffer = new byte[4];
-
-        while (clientSocket != null && clientSocket.Connected == true)
+        while (this._tcpSocket != null && this._tcpSocket.Connected == true)
         {
             try
             {
-                // 1. header 데이터(4바이트) 수신
-                int headerRead = await ReceiveExactAsync(headerBuffer, 4);
-                if (headerRead == 0)
-                {
-                    CLog.LogWarning("<color=red>[네트워크]</color> 서버에서 연결 종료(0 byte) 신호를 보냈습니다.");
-                    Disconnect();
-                    break;
-                }
+                string json = await PacketHelper.TcpReceiveAsync(this._tcpSocket);
 
-                int payloadLength = BitConverter.ToInt32(headerBuffer, 0);
-                byte[] payloadBuffer = new byte[payloadLength];
-
-                // 2.payload 데이터 수신
-                int payloadRead = await ReceiveExactAsync(payloadBuffer, payloadLength);
-                if (payloadRead == 0)
-                {
-                    Disconnect();
-                    break;
-                }
-
-                // 3. JSON 문자열로 디코딩
-                string jsonPayload = Encoding.UTF8.GetString(payloadBuffer);
-
-                // 4. 부모 클래스 형태로 타입 확인
-                BasePacket basePacket = JsonConvert.DeserializeObject<BasePacket>(jsonPayload);
-                if (basePacket == null) continue;
-
-                CLog.Log($"<color=green>[네트워크]</color> 패킷 수신 : {basePacket.Type}");
-
-                // 5. 패킷 라우터
-                switch (basePacket.Type)
-                {
-                    case PacketType.S2C_LoginRes:
-                        S2C_LoginRes loginRes = JsonConvert.DeserializeObject<S2C_LoginRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleLoginRes(loginRes));
-                        break;
-
-                    case PacketType.S2C_RoomCreateRes:
-                        S2C_RoomCreateRes createRes = JsonConvert.DeserializeObject<S2C_RoomCreateRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleRoomCreateRes(createRes));
-                        break;
-
-                    case PacketType.S2C_RoomJoinRes:
-                        S2C_RoomJoinRes roomJoinRes = JsonConvert.DeserializeObject<S2C_RoomJoinRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleRoomJoinRes(roomJoinRes));
-                        break;
-
-                    case PacketType.S2C_RoomLeaveRes:
-                        S2C_RoomLeaveRes roomLeaveRes = JsonConvert.DeserializeObject<S2C_RoomLeaveRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleRoomLeaveRes(roomLeaveRes));
-                        break;
-
-                    case PacketType.S2C_RoomMatchNoti:
-                        S2C_RoomMatchNoti matchNoti = JsonConvert.DeserializeObject<S2C_RoomMatchNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleRoomMatchNoti(matchNoti).Forget());
-                        break;
-
-                    case PacketType.S2C_RoomSpectateRes:
-                        S2C_RoomSpectateRes roomSpectateRes = JsonConvert.DeserializeObject<S2C_RoomSpectateRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleRoomSpectate(roomSpectateRes));
-                        break;
-
-                    case PacketType.S2C_GameMoveRes:
-                        S2C_GameMoveRes moveRes = JsonConvert.DeserializeObject<S2C_GameMoveRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleGameMoveRes(moveRes));
-                        break;
-
-                    case PacketType.S2C_GameStateNoti:
-                        S2C_GameStateNoti stateNoti = JsonConvert.DeserializeObject<S2C_GameStateNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleGameStateNoti(stateNoti));
-                        break;
-
-                    case PacketType.S2C_GameOverNoti:
-                        S2C_GameOverNoti gameOverNoti = JsonConvert.DeserializeObject<S2C_GameOverNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleGameOverNoti(gameOverNoti));
-                        break;
-
-                    case PacketType.S2C_ReplayRes:
-                        S2C_ReplayRes replayRes = JsonConvert.DeserializeObject<S2C_ReplayRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleReplayRes(replayRes));
-                        break;
-
-                    case PacketType.S2C_FindReplayCodeRes:
-                        S2C_FindReplayCodeRes findReplayCodeRes = JsonConvert.DeserializeObject<S2C_FindReplayCodeRes>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleFindReplayCode(findReplayCodeRes));
-                        break;
-
-                    case PacketType.S2C_ProposalNoti:
-                        S2C_ProposalNoti proposalNoti = JsonConvert.DeserializeObject<S2C_ProposalNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleProposalNoti(proposalNoti));
-                        break;
-
-                    case PacketType.S2C_ProposalReplyNoti:
-                        S2C_ProposalReplyNoti proposalReplyNoti = JsonConvert.DeserializeObject<S2C_ProposalReplyNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleProposalReplyNoti(proposalReplyNoti));
-                        break;
-
-                    case PacketType.S2C_TakebackNoti:
-                        S2C_TakebackNoti takebackNoti = JsonConvert.DeserializeObject<S2C_TakebackNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleTakebackNoti(takebackNoti));
-                        break;
-
-                    case PacketType.S2C_ChatNoti:
-                        S2C_ChatNoti chatNoti = JsonConvert.DeserializeObject<S2C_ChatNoti>(jsonPayload);
-                        this.workQueue.Enqueue(() => HandleChat(chatNoti));
-                        break;
-
-                    default:
-                        CLog.LogError($"<color=red>[네트워크]</color> 에러 : 등록되지 않은 패킷이 요청되어 무시되었습니다. {basePacket.Type}");
-                        break;
-                }
+                this._handler.Handle(json);
             }
             catch (SocketException ex)
             {
@@ -260,15 +208,81 @@ public class NetworkManager : MonoBehaviour
     }
     #endregion
 
+    #region 비동기 하트비트 송신 함수 
+    public async UniTask HeartbeatLoopAsync()
+    {
+        while (this._tcpSocket != null && this._tcpSocket.Connected == true)
+        {
+            if (string.IsNullOrEmpty(this.MyNickname) == false && this._udpSocket != null)
+            {
+                C2S_HeartbeatReq req = new C2S_HeartbeatReq();
+                req.Nickname = this.MyNickname;
+
+                try
+                {
+                    await PacketHelper.UdpSendAsync(this._udpSocket, req, this._serverUdpEP);
+                }
+                catch (Exception ex)
+                {
+                    CLog.LogWarning($"[하트비트] 전송 실패 : {ex.Message}");
+                }
+            }
+
+            // 3초마다 반복
+            await UniTask.Delay(3 * 1_000); // 3초
+        } // while 문
+    }
+    #endregion
+
+    #region 패킷 송신 함수
+    public async UniTask SendPacket<T>(T packet)
+    {
+        if (this._tcpSocket == null || this._tcpSocket.Connected == false)
+        {
+            CLog.LogWarning("[네트워크] 서버와 연결되어있지 않아 패킷을 보낼 수 없습니다.");
+            return;
+        }
+
+        try
+        {
+            await PacketHelper.TcpSendAsync(this._tcpSocket, packet);
+
+            CLog.Log($"[네트워크] 패킷 전송 완료 : {packet.GetType().Name}");
+        }
+        catch (Exception ex)
+        {
+            CLog.LogError($"[네트워크] <color=red>패킷 전송 실패 에러</color> : {ex.Message}");
+        }
+    }
+    #endregion
+
     #region 연결 종료 처리하는 함수
     private void Disconnect()
     {
-        if (this.clientSocket != null)
+        // 1. UDP 소켓 리소스 정리
+        if (this._udpSocket != null)
         {
             try
             {
-                this.clientSocket.Shutdown(SocketShutdown.Both);
-                this.clientSocket.Close();
+                this._udpSocket.Close();
+            }
+            catch
+            {
+                // 이미 끊긴 경우 무시
+            }
+            finally
+            {
+                this._udpSocket = null;
+            }
+        }
+
+        // 2. TCP 소켓 리소스 정리
+        if (this._tcpSocket != null)
+        {
+            try
+            {
+                this._tcpSocket.Shutdown(SocketShutdown.Both);
+                this._tcpSocket.Close();
 
                 CLog.Log("[네트워크] 로그아웃");
             }
@@ -278,7 +292,7 @@ public class NetworkManager : MonoBehaviour
             }
             finally
             {
-                this.clientSocket = null;
+                this._tcpSocket = null;
             }
         }
 
@@ -286,13 +300,41 @@ public class NetworkManager : MonoBehaviour
         {
             GameData.Clear();
 
-            if (SceneManager.GetActiveScene().name != "TitleScene")
-            {
-                CLog.LogWarning("<color=red>[네트워크]</color> 서버와의 연결이 끊어졌습니다. 타이틀로 돌아갑니다.");
+            CLog.LogWarning("<color=red>[네트워크]</color> 서버와의 연결이 끊어졌습니다. 타이틀로 돌아갑니다.");
 
-                SceneManager.LoadScene("TitleScene");
-            }
+            SceneManager.LoadScene("TitleScene");
         });
+    }
+    #endregion
+
+    #region 비동기 EP 생성 함수
+    private async UniTask<IPEndPoint> CreateEndPointAsync(string host, int port)
+    {
+        // 1. 일반 IP 주소인지 확인
+        if (IPAddress.TryParse(host, out IPAddress ipAddress) == true)
+        {
+            return new IPEndPoint(ipAddress, port);
+        }
+
+        // 2. 도메인 조회
+        try
+        {
+            IPAddress[] addresses = await Dns.GetHostAddressesAsync(host);
+
+            foreach (IPAddress address in addresses)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return new IPEndPoint(address, port);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            CLog.LogError($"[DNS 에러] 주소를 찾을 수 없습니다. : {ex.Message}");
+        }
+
+        throw new Exception("유효한 IPv4 주소를 찾을 수 없습니다.");
     }
     #endregion
 
@@ -328,9 +370,6 @@ public class NetworkManager : MonoBehaviour
         {
             CLog.Log($"[네트워크] <color=green>방 생성 성공</color> : {res.Message}");
 
-            // 1. 네트워크 매니저가 자신의 상태를 먼저 갱신
-            this.CurrentRoomId = this.MyNickname;
-
             // 2. 이벤트 발생
             CLog.Log("[방 생성] 생성 완료. 대기 모드로 전환");
             OnRoomCreateSuccess?.Invoke();
@@ -347,8 +386,6 @@ public class NetworkManager : MonoBehaviour
     {
         if (res.IsSuccess == true)
         {
-            // 1. 네트워크 매니저가 자신의 상태를 먼저 갱신
-            this.CurrentRoomId = res.RoomOwnerNickname;
 
             CLog.Log($"[방 참여] '{res.RoomOwnerNickname}'님 방 참가 완료.");
             OnRoomJoinSuccess?.Invoke();
@@ -512,8 +549,6 @@ public class NetworkManager : MonoBehaviour
     {
         if (res.IsSuccess == true)
         {
-            this.CurrentRoomId = res.RoomOwnerNickname;
-
             CLog.Log($"[방 관전] '{res.RoomOwnerNickname}'님 방 관전 완료.");
             OnRoomSpectateSuccess?.Invoke(res);
         }
@@ -533,67 +568,4 @@ public class NetworkManager : MonoBehaviour
     #endregion
 
     #endregion - 패킷 처리 핸들러
-
-    #region 비동기 서버 연결 함수
-    private async UniTask<bool> ConnectToServerAsync(string ip, int port)
-    {
-        try
-        {
-            // 1. 이미 연결이 되어있는지 확인
-            if (this.clientSocket != null && this.clientSocket.Connected == true) return true;
-
-            // 2. 소켓 생성
-            this.clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-            // 3. 서버로 연결
-            await this.clientSocket.ConnectAsync(ip, port).AsUniTask().Timeout(TimeSpan.FromSeconds(3));
-
-            CLog.Log($"<color=green>[네트워크]</color> 서버({ip}:{port}) 연결 성공!");
-
-            // 4. 패킷을 전송 받을 수 있도록 설정
-            ReceiveLoopAsync().Forget();
-
-            return true;
-        }
-        catch (TimeoutException) // 시간초과 될 경우
-        {
-            CLog.LogWarning($"<color=red>[네트워크]</color> 서버 연결 시간 초과(3초). 서버가 닫혀있을 수 있습니다.");
-
-            this.clientSocket?.Close();
-            return false;
-        }
-        catch (Exception ex) // 그 외의 오류 발생 시
-        {
-            CLog.LogError($"<color=red>[네트워크]</color> 서버 연결 실패 에러 : {ex.Message}");
-
-            this.clientSocket?.Close();
-            return false;
-        }
-    }
-    #endregion
-
-    #region 패킷 송신 함수
-    public async UniTask SendPacket<T>(T packet)
-    {
-        if (this.clientSocket == null || this.clientSocket.Connected == false)
-        {
-            CLog.LogWarning("[네트워크] 서버와 연결되어있지 않아 패킷을 보낼 수 없습니다.");
-            return;
-        }
-
-        try
-        {
-            // 1. PacketHelper를 통해 JSON 직렬화 및 프레이밍
-            byte[] sendData = PacketHelper.SerializeAndFrame(packet);
-
-            // 2. 서버로 전송
-            await this.clientSocket.SendAsync(new ArraySegment<byte>(sendData), SocketFlags.None).AsUniTask();
-            CLog.Log($"[네트워크] 패킷 전송 완료 : {packet.GetType().Name}");
-        }
-        catch (Exception ex)
-        {
-            CLog.LogError($"[네트워크] <color=red>패킷 전송 실패 에러</color> : {ex.Message}");
-        }
-    }
-    #endregion
 }
